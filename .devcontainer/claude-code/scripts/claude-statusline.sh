@@ -248,7 +248,7 @@ if [ -n "$PROJECT_DIR" ] && [ -n "$CWD" ] && [ "$CWD" != "$PROJECT_DIR" ]; then
 else
   DISPLAY_DIR="${CWD##*/}"
 fi
-[ "${#DISPLAY_DIR}" -gt 22 ] && DISPLAY_DIR="…${DISPLAY_DIR: -21}"
+[ "${#DISPLAY_DIR}" -gt 32 ] && DISPLAY_DIR="…${DISPLAY_DIR: -31}"
 
 if [ "$DURATION_MS" -gt 0 ] 2>/dev/null; then
   TS=$((DURATION_MS / 1000))
@@ -380,7 +380,8 @@ build_bar() {
   local tokens_suffix=""
   [ -n "$tokens" ] && tokens_suffix=" ${bar_label}${tokens}"
 
-  printf '%b %b%b %b%b' "${bar_label}ctx${RST}" "$bar" "${RST}" "${c_pct}${BOLD}${pct}%%${RST}" "${tokens_suffix}${RST}"
+  printf '%b %b%b %b%b' "${bar_label}ctx${RST}" "$bar" "${RST}" "${c_pct}${BOLD}${pct}%${RST}" "${tokens_suffix}${RST}"
+}
 }
 
 # ══════════════════════════════════════════════════════════════════════
@@ -410,12 +411,14 @@ fi
 
 seg "${MODEL}" "$mdl_bg" "$mdl_fg" "$mdl_arrow"
 
-# 4. Context — THE SIGNAL with token count
-CTX_DISPLAY="${CTX_PCT}%%"
-if [ -n "$CTX_TOKENS" ]; then
-  CTX_DISPLAY="${CTX_PCT}%% ${DIM}${CTX_TOKENS}${RST}${c_bg}${BOLD}${c_fg}"
+# 4. Context — shown on bar in multiline mode, inline in single-line mode
+if [ "$MULTILINE" != "2" ]; then
+  CTX_DISPLAY="${CTX_PCT}%"
+  if [ -n "$CTX_TOKENS" ]; then
+    CTX_DISPLAY="${CTX_PCT}% ${DIM}${CTX_TOKENS}${RST}${c_bg}${BOLD}${c_fg}"
+  fi
+  seg "${CTX_DISPLAY}" "$c_bg" "${BOLD}${c_fg}" "$c_arrow"
 fi
-seg "${CTX_DISPLAY}" "$c_bg" "${BOLD}${c_fg}" "$c_arrow"
 
 COST_TEXT="${COST_FMT}"
 [ -n "$BURN_FMT" ] && COST_TEXT="${COST_TEXT} ${DIM}${BURN_FMT}${RST}${cost_bg}${cost_fg}"
