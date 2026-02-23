@@ -10,7 +10,6 @@
 #
 # OPTIONS:
 #   --json              Output in JSON format (includes gate_passed boolean)
-#   --quiet             Suppress output (exit code only)
 #   --help, -h          Show help message
 #
 # EXIT CODES:
@@ -22,15 +21,11 @@ set -euo pipefail
 
 # Parse command line arguments
 JSON_MODE=false
-QUIET_MODE=false
 
 for arg in "$@"; do
     case "$arg" in
         --json)
             JSON_MODE=true
-            ;;
-        --quiet)
-            QUIET_MODE=true
             ;;
         --help|-h)
             cat << 'EOF'
@@ -57,7 +52,6 @@ WARN CHECKS:
 
 OPTIONS:
   --json              Output in JSON format (includes gate_passed, checks array)
-  --quiet             Suppress output (exit code only)
   --help, -h          Show this help message
 
 EXIT CODES:
@@ -145,8 +139,15 @@ else
 fi
 
 # WARN: TFLint
+# NOTE: version extraction uses bash regex instead of piped grep to avoid
+# SIGPIPE under pipefail (see Terraform check comment above for rationale).
 if command -v tflint &> /dev/null; then
-    TFLINT_VERSION=$(tflint --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
+    TFLINT_RAW=$(tflint --version 2>/dev/null || true)
+    if [[ "$TFLINT_RAW" =~ ([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+        TFLINT_VERSION="${BASH_REMATCH[1]}"
+    else
+        TFLINT_VERSION="unknown"
+    fi
     add_check "TFLINT" "WARN" "true" "INSTALLED (v${TFLINT_VERSION})"
 else
     add_check "TFLINT" "WARN" "false" "NOT INSTALLED — code quality linting unavailable"
@@ -154,7 +155,12 @@ fi
 
 # WARN: pre-commit
 if command -v pre-commit &> /dev/null; then
-    PRE_COMMIT_VERSION=$(pre-commit --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "unknown")
+    PRE_COMMIT_RAW=$(pre-commit --version 2>/dev/null || true)
+    if [[ "$PRE_COMMIT_RAW" =~ ([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+        PRE_COMMIT_VERSION="${BASH_REMATCH[1]}"
+    else
+        PRE_COMMIT_VERSION="unknown"
+    fi
     add_check "PRE_COMMIT" "WARN" "true" "INSTALLED (v${PRE_COMMIT_VERSION})"
 else
     add_check "PRE_COMMIT" "WARN" "false" "NOT INSTALLED — git hooks unavailable"
@@ -162,7 +168,12 @@ fi
 
 # WARN: Trivy
 if command -v trivy &> /dev/null; then
-    TRIVY_VERSION=$(trivy --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "unknown")
+    TRIVY_RAW=$(trivy --version 2>/dev/null || true)
+    if [[ "$TRIVY_RAW" =~ ([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+        TRIVY_VERSION="${BASH_REMATCH[1]}"
+    else
+        TRIVY_VERSION="unknown"
+    fi
     add_check "TRIVY" "WARN" "true" "INSTALLED (v${TRIVY_VERSION})"
 else
     add_check "TRIVY" "WARN" "false" "NOT INSTALLED — security scanning unavailable. See: https://aquasecurity.github.io/trivy"
@@ -170,7 +181,12 @@ fi
 
 # WARN: terraform-docs
 if command -v terraform-docs &> /dev/null; then
-    TFDOCS_VERSION=$(terraform-docs --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "unknown")
+    TFDOCS_RAW=$(terraform-docs --version 2>/dev/null || true)
+    if [[ "$TFDOCS_RAW" =~ ([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+        TFDOCS_VERSION="${BASH_REMATCH[1]}"
+    else
+        TFDOCS_VERSION="unknown"
+    fi
     add_check "TERRAFORM_DOCS" "WARN" "true" "INSTALLED (v${TFDOCS_VERSION})"
 else
     add_check "TERRAFORM_DOCS" "WARN" "false" "NOT INSTALLED — documentation generation unavailable. See: https://terraform-docs.io"
@@ -201,9 +217,7 @@ else
 fi
 
 # --- Output ---
-if $QUIET_MODE; then
-    exit $EXIT_CODE
-elif $JSON_MODE; then
+if $JSON_MODE; then
     # Build checks JSON array
     checks_json=""
     for i in "${!check_names[@]}"; do
@@ -249,26 +263,28 @@ else
     fi
 fi
 
-# Initialize tools in text mode only (non-blocking)
-if ! $QUIET_MODE && ! $JSON_MODE && [[ $EXIT_CODE -ne 1 ]]; then
-    echo ""
-    echo "Tool Initialization"
-    echo "==================="
-    echo ""
-
-    if command -v tflint &> /dev/null; then
-        echo "Initializing TFLint..."
-        if ! tflint --init; then
-            echo "WARNING: TFLint initialization failed, but continuing..."
-        fi
+# Initialize tools (idempotent — always run when gates pass)
+if [[ $EXIT_CODE -ne 1 ]]; then
+    if ! $JSON_MODE; then
+        echo ""
+        echo "Tool Initialization"
+        echo "==================="
         echo ""
     fi
 
-    if command -v pre-commit &> /dev/null; then
-        echo "Installing pre-commit hooks..."
-        pre-commit install
+    if command -v tflint &> /dev/null; then
+        if ! $JSON_MODE; then echo "Initializing TFLint..."; fi
+        if ! tflint --init >/dev/null 2>&1; then
+            if ! $JSON_MODE; then echo "WARNING: TFLint init failed, continuing..."; fi
+        fi
+        if ! $JSON_MODE; then echo ""; fi
     fi
-    echo ""
+
+    if command -v pre-commit &> /dev/null; then
+        if ! $JSON_MODE; then echo "Installing pre-commit hooks..."; fi
+        pre-commit install >/dev/null 2>&1 || true
+        if ! $JSON_MODE; then echo ""; fi
+    fi
 fi
 
 exit $EXIT_CODE
