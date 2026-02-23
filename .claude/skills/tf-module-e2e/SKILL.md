@@ -1,6 +1,6 @@
 ---
-name: tf-e2e-test-module
-description: "Non-interactive test harness for end-to-end Terraform workflow testing. Runs full `/tf-plan-module` -> `/tf-implement-module` cycle with test defaults, bypassing user prompts for automated validation. Pass the prompt filename as the skill argument."
+name: tf-module-e2e
+description: "Non-interactive test harness for end-to-end Terraform workflow testing. Runs full `/tf-module-plan` -> `/tf-module-implement` cycle with test defaults, bypassing user prompts for automated validation. Pass the prompt filename as the skill argument."
 user-invocable: true
 argument-hint: "[prompt-file] - Run E2E test from prompts/ directory"
 ---
@@ -34,11 +34,11 @@ These overrides replace interactive prompts with test defaults:
 
 ## PART 1: PLANNING
 
-Follow `/tf-plan-module` skill phases with these E2E-specific differences:
+Follow `/tf-module-plan` skill phases with these E2E-specific differences:
 
-- **Phase 1 Setup**: Read requirements from `.claude/skills/tf-e2e-test-module/prompts/$PROMPT_FILE` instead of gathering from user. Create test issue with `test:e2e` label:
+- **Phase 1 Setup**: Read requirements from `.claude/skills/tf-module-e2e/prompts/$PROMPT_FILE` instead of gathering from user. Create test issue with `test:e2e` label:
   ```bash
-  gh issue create --title "E2E Test: $PROMPT_FILE" --label "test:e2e" --body "$(cat .claude/skills/tf-e2e-test-module/prompts/$PROMPT_FILE)"
+  gh issue create --title "E2E Test: $PROMPT_FILE" --label "test:e2e" --body "$(cat .claude/skills/tf-module-e2e/prompts/$PROMPT_FILE)"
   ```
 - **Phase 2 Design**: sdd-design agent produces `design.md` using test defaults for any decisions; do not use `AskUserQuestion`
 - **Phase 3 Summary**: Do NOT add `agent:awaiting-review` label. Do NOT stop for approval. Proceed directly to implementation.
