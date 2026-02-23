@@ -1,6 +1,6 @@
 ---
-name: sdd-design
-description: Produce a single design.md from clarified requirements and research findings. Merges specification, planning, and security baseline concerns into one artifact covering purpose & requirements, resource inventory, interface contract, security controls, test scenarios, and implementation checklist.
+name: tf-module-design
+description: Terraform module design. Produce a single design.md from clarified requirements and research findings. Merges specification, planning, and security baseline concerns into one artifact covering purpose & requirements, resource inventory, interface contract, security controls, test scenarios, and implementation checklist.
 model: opus
 color: blue
 skills:

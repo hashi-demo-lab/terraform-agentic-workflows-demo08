@@ -1,10 +1,10 @@
 ---
-name: sdd-research
-description: Investigate specific via AWS docs, provider docs, and registry patterns. Each instance answers ONE research question. Use during planning phase to resolve resource behavior, best practices, and architectural unknowns.
+name: tf-module-research
+description: Investigate cloud service provider resources via docs, Terraform provider docs, and registry patterns. Each instance answers ONE research question. Use during planning phase to resolve resource behavior, best practices, and architectural unknowns.
 model: opus
 color: green
 skills:
-  - tf-research-heuristics
+  - tf-research
 tools:
   - Read
   - Bash

@@ -1,6 +1,6 @@
 ---
-name: tf-test-writer
-description: Write module scaffolding (versions.tf, variables.tf) and convert design.md test scenarios into .tftest.hcl files for TDD workflow. Reads Sections 2, 3, and 5 of the design document.
+name: tf-module-test-writer
+description: Terraform module test writer. Write module scaffolding (versions.tf, variables.tf) and convert design.md test scenarios into .tftest.hcl files for TDD workflow. Reads Sections 2, 3, and 5 of the design document.
 model: opus
 color: green
 skills:
