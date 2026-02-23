@@ -1,5 +1,5 @@
 ---
-name: tf-implement-module
+name: tf-module-implement
 description: SDD Phases 3-4. TDD implementation and validation from an existing design.md. Writes tests first, builds module, validates, creates PR.
 user-invocable: true
 argument-hint: "[feature-name] - Implement from existing specs/{feature}/design.md"
