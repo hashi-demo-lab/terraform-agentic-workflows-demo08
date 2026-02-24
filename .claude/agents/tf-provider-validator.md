@@ -5,8 +5,6 @@ model: opus
 color: purple
 skills:
   - provider-resources
-  - provider-actions
-  - provider-run-acceptance-tests
 tools:
   - Read
   - Write
@@ -66,13 +64,14 @@ Execute the following 5 steps sequentially. The design file path and service dir
 
 1. Run `go test -c -o /dev/null ./internal/service/<service>` — verify tests compile
 2. Count test functions via Grep for `func TestAcc` patterns in test files
-3. Categorize tests by scenario group:
+3. Categorize tests by scenario group (names use short resource name per constitution §2.2, NOT `{Resource}Resource`):
    - Basic: `TestAcc{Resource}_basic`
    - Disappears: `TestAcc{Resource}_disappears`
    - Full Features: `TestAcc{Resource}_fullFeatures`
    - Update: `TestAcc{Resource}_update`
    - Validation: `TestAcc{Resource}_validation`
    - Error Handling: `TestAcc{Resource}_errorHandling`
+   All 6 scenario groups are required per constitution §5.1 — flag any missing group as a conformance gap.
 4. Verify test coverage matches design §5 scenario groups
 5. Report which test categories are present/missing
 
@@ -168,7 +167,7 @@ Return the validation report as agent output. The orchestrator will use this to 
 - **Non-destructive**: Auto-fixes MUST be conservative — only fix unambiguous issues
 - **Build verification**: After auto-fixes, verify the code still compiles
 - **Structured output**: Always return the validation report in the specified format
-- **No new features**: Do not add features or refactor code — only fix conformance gaps and quality issues
+- **No new features**: Do not add features or refactor code — only fix conformance gaps and quality issues. Restoring design-specified elements (missing attributes, validators, plan modifiers) is a conformance fix, not a new feature.
 - **Constitution authority**: The constitution is the final arbiter for code quality rules
 
 ## Context

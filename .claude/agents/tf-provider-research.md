@@ -3,8 +3,6 @@ name: tf-provider-research
 description: Investigate cloud service APIs, Terraform Plugin Framework patterns, and existing provider implementations. Each instance answers ONE research question. Use during planning phase to resolve API behavior, schema design, and implementation unknowns.
 model: opus
 color: green
-skills:
-  - tf-research
 tools:
   - Read
   - Bash

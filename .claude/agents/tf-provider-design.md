@@ -5,7 +5,6 @@ model: opus
 color: blue
 skills:
   - provider-resources
-  - provider-actions
 tools:
   - Read
   - Write
@@ -39,6 +38,7 @@ Produce a single `specs/{FEATURE}/provider-design-{resource}.md` from clarified 
    - Requirements must be testable and unambiguous
    - Include API/SDK version requirements
    - Define scope boundary (what is explicitly OUT of scope)
+   - Data sources are out of scope for resource design — design only managed resources unless explicitly requested
 
    ### Section 2 — Schema Design
 
@@ -82,7 +82,7 @@ Produce a single `specs/{FEATURE}/provider-design-{resource}.md` from clarified 
    - **Full Features** — Verify all optional attributes and features
    - **Update** — Verify in-place update of mutable attributes
    - **Validation** — Verify invalid inputs are rejected
-   - **Error Handling** — Verify API errors handled gracefully (optional if covered elsewhere)
+   - **Error Handling** — Verify API errors handled gracefully (required per constitution §5.1)
    - Start with a **Test Strategy** sub-section specifying: test framework, provider factories, resource naming, cleanup approach, environment requirements
    - Each scenario specifies: Purpose, Test function name, Config function name(s), Check functions, Steps
    - Every test function maps 1:1 to a Go test function
@@ -92,7 +92,8 @@ Produce a single `specs/{FEATURE}/provider-design-{resource}.md` from clarified 
 
    Define 4-8 coarse-grained implementation items, ordered by dependency.
    - Each item = one implementation pass, completable in one agent turn
-   - Standard ordering: Schema & stubs → Finder & helpers → Create & Read → Update & Delete → Import → Tests → Docs → Polish
+   - Standard ordering: Schema & stubs → Finder & helpers → Create & Read → Update & Delete → Import → Tests → Sweep & Docs → Polish
+   - A checklist item MUST include sweep function creation per constitution §1.3
    - NO line references between sections (template rule)
    - Each item lists which files it creates or modifies — no overlap between items
 
@@ -149,6 +150,7 @@ Produce a single `specs/{FEATURE}/provider-design-{resource}.md` from clarified 
 - Every scenario has a named test function and config function(s)
 - Basic test includes import step
 - Environment requirements documented
+- Test function names MUST follow constitution §2.2: `TestAcc{ShortName}_scenario` (e.g., `TestAccExample_basic`), NOT `TestAcc{ShortName}Resource_scenario`
 
 ### Implementation Checklist (Section 6)
 

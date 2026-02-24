@@ -33,7 +33,7 @@ Execute implementation checklist items from `specs/{FEATURE}/provider-design-{re
 7. **Format**: Run `gofmt -w .` on all modified files.
 8. **Build**: Run `go build -o /dev/null .` to verify compilation.
 9. **Vet**: Run `go vet ./...` to check for common issues.
-10. **Test Compile**: Run `go test -c -o /dev/null ./internal/service/<service>` to verify test compilation. Early test compilation failures are expected in TDD — report which tests compile and which still fail so progress is visible.
+10. **Test Compile**: Run `go test -c -o /dev/null ./internal/service/<service>` to verify test compilation. Compilation MUST pass from Item A onward because stubs use `t.Skip("not implemented")`. Report skip count vs implemented count so progress is visible.
 11. **Update**: Mark the completed checklist item as `[x]` in the design file Section 6 (Implementation Checklist).
 12. **Report**: Return completion status with files modified, build results, vet results, test compilation results, and any issues encountered.
 
@@ -48,11 +48,14 @@ Execute implementation checklist items from `specs/{FEATURE}/provider-design-{re
 - **Error handling**: All CRUD operations MUST check `resp.Diagnostics.HasError()` after reading plan/state. All error paths MUST add diagnostics via `resp.Diagnostics.AddError()`. Read MUST handle NotFound by removing from state. Delete MUST silently succeed if resource is already gone.
 - **Sensitive attributes**: Attributes containing secrets MUST be marked `Sensitive: true`. Error messages MUST NOT contain sensitive data.
 - **Import support**: Every resource MUST implement `ImportState`. Import step MUST be included in the basic acceptance test.
-- **Naming conventions**: Follow Go conventions — camelCase for unexported, PascalCase for exported. Follow constitution §2.2 for function naming patterns.
+- **Naming conventions**: Follow Go conventions — camelCase for unexported, PascalCase for exported. Follow constitution §2.2 for function naming patterns. Test functions MUST use `TestAcc{ShortName}_scenario` (e.g., `TestAccExample_basic`), NOT `TestAcc{ShortName}Resource_scenario`.
 - **Model structs**: Use `types.*` values (not raw Go types) with `tfsdk` struct tags matching schema attribute names.
 - **File scope**: Do not create or modify files outside the checklist item's listed scope. Refer to the file list in the checklist item description for boundaries.
 - **Test stubs**: The first checklist item (typically Item A) creates test stubs with function signatures and `t.Skip("not implemented")`. Later items flesh out the test configs and check functions.
 - **Build verification**: Run `go build -o /dev/null .` after every implementation pass. Do NOT proceed if build fails — fix compilation errors first.
+- **500-line limit**: No single file MAY exceed 500 lines per constitution §2.1. Split large files before they reach the limit.
+- **Sweep functions**: Sweep functions MUST be provided per constitution §1.3. Include sweep function creation in the checklist item that covers test infrastructure.
+- **Data sources out of scope**: Do not implement data sources unless explicitly listed in the design document's implementation checklist.
 
 ## Examples
 
