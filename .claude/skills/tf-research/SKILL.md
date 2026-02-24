@@ -1,5 +1,5 @@
 ---
-name: tf-research-heuristics
+name: tf-research
 description: Research strategies for AWS documentation, provider docs, and public registry patterns. Use when researching AWS services, investigating provider resources, or studying public registry modules for design patterns.
 user-invocable: false
 ---

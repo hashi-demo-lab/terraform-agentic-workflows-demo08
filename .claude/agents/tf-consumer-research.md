@@ -19,10 +19,6 @@ tools:
   - mcp__terraform__search_providers
   - mcp__terraform__get_provider_details
   - mcp__terraform__search_policies
-  - mcp__aws-knowledge-mcp-server__aws___search_documentation
-  - mcp__aws-knowledge-mcp-server__aws___read_documentation
-  - mcp__aws-knowledge-mcp-server__aws___recommend
-  - mcp__aws-knowledge-mcp-server__aws___get_regional_availability
 ---
 
 # Consumer Research Investigator
@@ -34,9 +30,9 @@ Answer ONE research question per instance. Focus on private registry module avai
 1. **Parse**: Understand the research question and context from `$ARGUMENTS`
 2. **Private Registry**: Search private registry modules first — consumer workflows compose from existing modules, not raw resources. Identify available modules, their versions, inputs, outputs, and configuration patterns.
 3. **Public Registry**: Study public registry modules for design patterns, input/output conventions, and composition examples that inform how private modules should be wired together.
-4. **AWS Docs**: Search AWS documentation for service architecture, best practices, networking requirements, and integration patterns between services.
+4. **Verify Output Types**: Call `get_private_module_details` and document the actual HCL type of every output that will be referenced cross-module (see `tf-research` Output Type Verification)
 5. **Provider Docs**: Look up Terraform provider resources only for understanding module inputs/outputs and glue resource needs (e.g., `random_id`, `null_resource`).
-6. **Validate**: Verify findings are consistent — module inputs/outputs align with AWS service requirements.
+6. **Validate**: Verify findings are consistent — module inputs/outputs align with service requirements.
 7. **Synthesize**: Format structured findings per Output Format below and return as agent output.
 
 ## Output
@@ -82,7 +78,7 @@ Return concise research findings to the orchestrator. Findings are returned in-m
 
 - **ONE question per instance**: Each research agent answers exactly one question
 - **Private registry first**: Start with private registry modules — consumer workflows compose, not author
-- **AWS docs for architecture**: Use AWS documentation to understand service integration requirements and networking patterns
+
 - **Provider docs for glue**: Use provider docs only to understand glue resource needs, not to find raw resources to use directly
 - **Return output**: Format findings as concise structured text and return as agent output — do NOT write to disk
 - **MUST run in foreground** (uses MCP tools)
