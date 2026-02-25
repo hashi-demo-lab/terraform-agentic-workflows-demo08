@@ -1,6 +1,6 @@
 # Demo Repo Scripts
 
-Create and delete demo repositories across GitHub.com and GitHub Enterprise instances. Three zsh scripts handle the lifecycle: **setup** your environment, **create** repos from templates, and **delete** them when done.
+Create and delete demo repositories across GitHub.com and GitHub Enterprise instances. Scripts handle the lifecycle: **setup** your environment, **create** repos from templates, **delete** them when done, **bulk-run** Claude Code across multiple repos, and **clean up** afterwards.
 
 ## Prerequisites
 
@@ -132,12 +132,99 @@ Deletes demo repositories both remotely (via `gh`) and locally (the cloned direc
 ./delete-demo-repos.zsh -f repos-to-delete.txt
 ```
 
+## Bulk Run — `bulk-run-demo.zsh`
+
+Creates demo repos from a template, clones them to a local directory, and runs Claude Code with a prompt inside each one. Supports sequential and parallel execution.
+
+```zsh
+./bulk-run-demo.zsh [OPTIONS]
+```
+
+### Options
+
+| Flag | Description | Default |
+|---|---|---|
+| `-t`, `--template NUM\|ORG/REPO` | Template selection (index or direct reference) | Interactive menu |
+| `-c`, `--count N` | Number of repos to create | `3` |
+| `-x`, `--execute PROMPT` | Claude prompt (inline string) | |
+| `--prompt-file FILE` | Read prompt from file (takes precedence over `-x`) | |
+| `--prompt-dir DIR` | Dir of prompt files (one repo per file, overrides `--count`) | |
+| `--prompt-glob PATTERN` | Glob filter for `--prompt-dir` | `*.md` |
+| `-p`, `--path PATH` | Clone directory | `/workspace/demo-runs` |
+| `--parallel N` | Max concurrent sessions (`0` = sequential) | `3` |
+| `-a`, `--account NAME` | Target GitHub account/org | First `DEMO_REPO_TARGETS` entry |
+| `-h`, `--host HOST` | GitHub Enterprise hostname | First `DEMO_REPO_TARGETS` entry |
+| `-n`, `--name BASE_NAME` | Base repo name | Auto-derived from template |
+| `-v`, `--visibility TYPE` | `public` or `private` | `public` |
+| `--dry-run` | Show plan without executing | |
+| `--cleanup` | Delete repos after execution | |
+| `--help` | Show help | |
+
+### Examples
+
+```zsh
+# Dry run — see what would happen
+./bulk-run-demo.zsh -t 1 -c 3 -x '/help' --dry-run
+
+# Sequential execution
+./bulk-run-demo.zsh -t 1 -c 2 -x 'echo hello' --parallel 0
+
+# Parallel execution (2 at a time) with prompt file
+./bulk-run-demo.zsh -t 1 -c 3 --prompt-file prompt.txt --parallel 2
+
+# One repo per prompt file (count auto-derived from file count)
+./bulk-run-demo.zsh -t 1 --prompt-dir ./prompts --parallel 3
+
+# Run and clean up after
+./bulk-run-demo.zsh -t 2 -c 5 -x '/help' --cleanup
+```
+
+Each repo gets a `.claude-run.log` file with the Claude session output. A summary table is displayed at the end showing pass/fail status, duration, and log file paths.
+
+## Bulk Run Cleanup — `cleanup-bulk-run.zsh`
+
+Scans a directory for demo repos (by inspecting git remotes) and deletes them. Companion to `bulk-run-demo.zsh`.
+
+```zsh
+./cleanup-bulk-run.zsh [OPTIONS]
+```
+
+### Options
+
+| Flag | Description | Default |
+|---|---|---|
+| `-p`, `--path PATH` | Base directory to scan | `/workspace/demo-runs` |
+| `-a`, `--account NAME` | GitHub account filter | |
+| `-H`, `--host HOST` | GitHub hostname filter | |
+| `-y`, `--yes` | Skip confirmation | `false` |
+| `--dry-run` | Show what would be deleted | `false` |
+| `--local-only` | Only delete local clones (skip remote deletion) | `false` |
+| `--help` | Show help | |
+
+### Examples
+
+```zsh
+# See what would be deleted
+./cleanup-bulk-run.zsh --dry-run
+
+# Delete everything without confirmation
+./cleanup-bulk-run.zsh -y
+
+# Only delete local clones
+./cleanup-bulk-run.zsh --local-only -y
+
+# Filter by account and host
+./cleanup-bulk-run.zsh -a MyOrg -H github.example.com
+```
+
+The cleanup script automatically identifies repos by scanning subdirectories and reading their git remote URLs (supports both `https://` and `git@` formats).
+
 ## Environment Variables
 
 | Variable | Used by | Description | Default |
 |---|---|---|---|
-| `DEMO_REPO_TARGETS` | create, delete | `HOST::ACCOUNT` pairs (comma-separated) | *Required* — set via `setup-demo-env.zsh` |
-| `DEMO_REPO_TEMPLATES` | create | Template repos (comma-separated) | *Required* — set via `setup-demo-env.zsh` |
+| `DEMO_REPO_TARGETS` | create, delete, bulk-run | `HOST::ACCOUNT` pairs (comma-separated) | *Required* — set via `setup-demo-env.zsh` |
+| `DEMO_REPO_TEMPLATES` | create, bulk-run | Template repos (comma-separated) | *Required* — set via `setup-demo-env.zsh` |
 | `GH_TOKEN` | gh CLI | Auth token for all hosts (global override) | |
 | `GITHUB_TOKEN` | gh CLI | Auth token for github.com | |
 | `GH_ENTERPRISE_TOKEN` | gh CLI | Auth token for enterprise hosts | |
