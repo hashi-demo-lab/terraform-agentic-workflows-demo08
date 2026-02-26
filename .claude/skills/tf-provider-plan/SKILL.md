@@ -18,7 +18,7 @@ Checkpoint after each phase: `bash .foundations/scripts/bash/checkpoint-commit.s
 2. Create GitHub issue: read `.foundations/templates/issue-body-template.md`, fill in the placeholders with parsed requirements, and run `gh issue create --title "Provider Resource: {provider}_{service}_{resource}" --body "$FILLED_BODY"`. Capture `$ISSUE_NUMBER`. Update the issue body again after Step 6 (clarification) to include API decisions and scope boundaries.
 4. Create feature branch: `bash .foundations/scripts/bash/create-new-feature.sh --json --issue $ISSUE_NUMBER --short-name "<resource-name>" "<feature description>"`. Parse the JSON output to capture `$BRANCH_NAME` as `$FEATURE`.
 5. Scan requirements against the `tf-domain-category` skill — focus on API behavior ambiguity, state management decisions (ForceNew vs in-place update), and error handling patterns.
-6. Ask up to 4 clarification questions via `AskUserQuestion`. Must include update-behavior (ForceNew vs in-place), test environment, and security questions.
+6. Ask up to 5 clarification questions via `AskUserQuestion`. Must include update-behavior (ForceNew vs in-place), test environment, and security questions.
 7. Launch 3-4 concurrent `tf-provider-research` subagents for API/SDK docs, Plugin Framework patterns, existing provider implementations, and import/state patterns. Wait for all to complete.
 
 ## Phase 2: Design
