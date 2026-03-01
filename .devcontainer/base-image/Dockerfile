@@ -1,4 +1,4 @@
-FROM node:25-slim
+FROM node:25.7.0-slim
 
 # Set all build arguments at once
 ARG TZ \
@@ -18,7 +18,7 @@ ARG TZ \
 COPY --from=docker.io/astral/uv:latest /uv /uvx /usr/local/bin/
 
 # Install Go from official image (using stable version for reliability)
-COPY --from=docker.io/library/golang:1.26-bookworm /usr/local/go /usr/local/go
+COPY --from=docker.io/library/golang:1.24-bookworm /usr/local/go /usr/local/go
 
 # Install packages, configure locale, set up directories, and install delta in one layer
 # Note: node:20-slim requires ca-certificates for HTTPS operations
