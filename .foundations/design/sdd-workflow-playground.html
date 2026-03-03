@@ -511,24 +511,27 @@ body.has-selection .node.dimmed { opacity: var(--dim); }
         <div class="phase-title" style="color:var(--orange)">Validate</div>
 
         <div class="step-group">
-          <div class="step-group-title">Parallel Validation &mdash; Step 12</div>
+          <div class="step-group-title">Validation &mdash; Steps 12-13</div>
           <div class="node-row">
+            <div class="node node-agent" data-id="tf-module-validator" data-type="agent">tf-module-validator</div>
+            <div class="node node-skill" data-id="tf-judge-criteria" data-type="skill">tf-judge-criteria</div>
+          </div>
+          <div class="node-row" style="margin-top:4px">
             <div class="node node-cmd" data-id="tf-test" data-type="cmd">terraform test</div>
             <div class="node node-cmd" data-id="tf-validate" data-type="cmd">terraform validate</div>
-            <div class="node node-cmd" data-id="tf-fmt" data-type="cmd">terraform fmt -check</div>
+            <div class="node node-cmd" data-id="tf-fmt" data-type="cmd">terraform fmt</div>
             <div class="node node-cmd" data-id="trivy" data-type="cmd">trivy config .</div>
             <div class="node node-cmd" data-id="tf-docs" data-type="cmd">terraform-docs</div>
           </div>
-          <div class="step-note">All 5 tools run in parallel. Fix failures iteratively (max 3 rounds).</div>
+          <div class="step-note">Validator agent runs full pipeline: fmt, validate, test, tflint, trivy, terraform-docs. Scores quality via tf-judge-criteria, auto-fixes unambiguous issues, writes report. Fix iteratively (max 3 rounds).</div>
         </div>
 
         <div class="step-group">
-          <div class="step-group-title">Report &amp; Ship &mdash; Steps 14-15</div>
+          <div class="step-group-title">Ship &mdash; Step 14</div>
           <div class="node-row">
-            <div class="node node-skill" data-id="tf-report-template" data-type="skill">tf-report-template</div>
             <div class="node node-cmd" data-id="gh-pr-create" data-type="cmd">gh pr create</div>
           </div>
-          <div class="step-note">Write validation report using tf-report-template. Push branch, create PR linking to $ISSUE_NUMBER.</div>
+          <div class="step-note">Checkpoint commit, push branch, create PR linking to $ISSUE_NUMBER.</div>
         </div>
 
         <div class="artifacts-label">Outputs</div>
@@ -1031,6 +1034,7 @@ body.has-selection .node.dimmed { opacity: var(--dim); }
           </div>
           <div class="node-row">
             <div class="node node-mcp" data-id="mcp-terraform" data-type="mcp">terraform-mcp<span class="pref">private</span></div>
+            <div class="node node-mcp" data-id="mcp-aws-docs" data-type="mcp">aws-knowledge-mcp</div>
           </div>
           <div class="node-row" style="margin-top:4px">
             <div class="node node-cmd" data-id="tf-init" data-type="cmd">terraform init</div>
@@ -1063,7 +1067,7 @@ body.has-selection .node.dimmed { opacity: var(--dim); }
             <div class="node node-cmd" data-id="tf-validate-final" data-type="cmd">terraform validate</div>
             <div class="node node-cmd" data-id="tf-plan-final" data-type="cmd">terraform plan</div>
           </div>
-          <div class="step-note">Dedicated validator: security review, quality scoring (1-5 scale), design compliance. Optional sandbox deploy via terraform apply (orchestrator-controlled destroy).</div>
+          <div class="step-note">Dedicated validator: design conformance, static analysis, quality scoring (1-10 scale, threshold 7.0). Optional sandbox deploy via terraform apply (orchestrator-controlled destroy).</div>
         </div>
 
         <div class="step-group">
@@ -1113,7 +1117,8 @@ const agentIO = {
   },
   'module-impl': {
     'tf-module-test-writer': { reads: ['design-md'], writes: ['tf-scaffolding','tf-tests'] },
-    'tf-module-developer':   { reads: ['design-md'], writes: ['tf-code'] }
+    'tf-module-developer':   { reads: ['design-md'], writes: ['tf-code'] },
+    'tf-module-validator':   { reads: ['design-md','tf-code','tf-tests'], writes: ['validation-report','readme'] }
   },
   'provider-plan': {
     'tf-provider-research': { reads: [], writes: [] },
@@ -1159,7 +1164,7 @@ const connections = {
     'validate-env': [],
     'post-issue': ['gh-issue-updated'],
     'checkpoint-commit': [],
-    'design-md': ['tf-module-test-writer','tf-module-developer'],
+    'design-md': ['tf-module-test-writer','tf-module-developer','tf-module-validator'],
     'tf-module-test-writer': ['terraform-test','design-md','tf-scaffolding','tf-tests'],
     'terraform-test': ['tf-module-test-writer'],
     'tf-init': [],
@@ -1173,17 +1178,18 @@ const connections = {
     'tf-test-loop': ['tf-code','tf-tests'],
     'tf-test-final': ['tf-code','tf-tests','tf-module-test-writer'],
     'tf-scaffolding': ['tf-module-test-writer','tf-validate-baseline'],
-    'tf-tests': ['tf-module-test-writer','tf-test-loop','tf-test-final','tf-test'],
-    'tf-code': ['tf-module-developer','tf-validate-loop','tf-test-loop','tf-test-final','tf-test','tf-validate','tf-fmt','trivy'],
-    'tf-test': ['tf-code','tf-tests'],
-    'tf-validate': ['tf-code'],
-    'tf-fmt': ['tf-code'],
-    'trivy': ['tf-code'],
-    'tf-docs': ['readme'],
-    'tf-report-template': ['validation-report'],
+    'tf-tests': ['tf-module-test-writer','tf-test-loop','tf-test-final','tf-module-validator'],
+    'tf-code': ['tf-module-developer','tf-validate-loop','tf-test-loop','tf-test-final','tf-module-validator'],
+    'tf-module-validator': ['tf-judge-criteria','design-md','tf-code','tf-tests','validation-report','readme','tf-test','tf-validate','tf-fmt','trivy','tf-docs'],
+    'tf-judge-criteria': ['tf-module-validator'],
+    'tf-test': ['tf-module-validator'],
+    'tf-validate': ['tf-module-validator'],
+    'tf-fmt': ['tf-module-validator'],
+    'trivy': ['tf-module-validator'],
+    'tf-docs': ['tf-module-validator'],
     'gh-pr-create': ['pr','gh-issue-updated'],
-    'readme': ['tf-docs'],
-    'validation-report': ['tf-report-template'],
+    'readme': ['tf-module-validator'],
+    'validation-report': ['tf-module-validator'],
     'pr': ['gh-pr-create'],
     'gh-issue-updated': ['gh-pr-create','post-issue']
   },
@@ -1252,10 +1258,11 @@ const connections = {
     'post-issue': ['gh-issue-updated'],
     'checkpoint-commit': [],
     'consumer-design-md': ['tf-consumer-developer','tf-consumer-validator'],
-    'tf-consumer-developer': ['terraform-style-guide','tf-implementation-patterns','mcp-terraform','consumer-design-md','consumer-tf-code'],
+    'tf-consumer-developer': ['terraform-style-guide','tf-implementation-patterns','mcp-terraform','mcp-aws-docs','consumer-design-md','consumer-tf-code'],
     'terraform-style-guide': ['tf-consumer-developer'],
     'tf-implementation-patterns': ['tf-consumer-developer'],
     'mcp-terraform': ['tf-consumer-developer'],
+    'mcp-aws-docs': ['tf-consumer-developer'],
     'tf-init': [],
     'tf-validate': ['consumer-tf-code'],
     'tf-plan': ['consumer-tf-code'],
@@ -1322,6 +1329,7 @@ const nodeDesc = {
   'tf-module-design':       'Produces specs/{FEATURE}/design.md from clarified requirements and research findings. Reads module-constitution.md and module-design-template.md itself (P9). Populates all 7 mandatory sections. Validates completeness before writing.',
   'tf-module-test-writer':  'Reads design.md Sections 2, 3, and 5. Writes scaffolding (versions.tf, variables.tf) and 4 test files: basic, complete, edge_cases, validation. Maps 1:1 from design assertions to HCL assert blocks. Runs BEFORE implementation (TDD).',
   'tf-module-developer':    'Executes one implementation checklist item from design.md Section 6. Reads Sections 2 (variables), 3 (resources), 4 (security). Writes/edits .tf files, runs fmt + validate + test, marks item [x]. Uses MCP for provider and AWS doc lookups.',
+  'tf-module-validator':    'Validates module code against design.md. Runs full pipeline: fmt, validate, test, tflint, trivy, terraform-docs. Scores quality using tf-judge-criteria (6 dimensions, 1-10 scale). Auto-fixes unambiguous issues. Writes structured validation report to specs/{FEATURE}/reports/.',
 
   /* Module skills & references */
   'tf-research':            'Research navigation strategies: start with AWS docs for service behavior, then provider docs for resource arguments, then registry for design patterns.',
@@ -1384,18 +1392,18 @@ const nodeDesc = {
   /* Consumer agents */
   'tf-consumer-research':   'Investigates ONE question per instance. Searches private registry modules via terraform-mcp, investigates module interfaces, wiring patterns, and composition best practices.',
   'tf-consumer-design':     'Produces consumer-design.md from requirements and research. Covers module selection, wiring architecture, security controls, and implementation checklist.',
-  'tf-consumer-developer':  'Executes one implementation checklist item. Composes infrastructure from private registry modules. Runs terraform init + validate + plan for verification.',
-  'tf-consumer-validator':  'Validates consumer code: security review, quality scoring (1-5 scale), design compliance. Optionally deploys to sandbox via terraform apply. Orchestrator controls destroy.',
+  'tf-consumer-developer':  'Executes one implementation checklist item. Composes infrastructure from private registry modules. Uses MCP for private module and AWS doc lookups. Runs terraform init + validate + plan for verification.',
+  'tf-consumer-validator':  'Validates consumer code: design conformance, static analysis (fmt, validate, tflint, trivy), quality scoring (1-10 scale, threshold 7.0). Optionally deploys to sandbox via terraform apply. Orchestrator controls destroy.',
 
   /* Consumer skills & references */
-  'tf-judge-criteria':      'Scoring rubrics (1-5 scale), severity classification, evaluation methodology, and iterative refinement protocol for Terraform code quality assessment.',
+  'tf-judge-criteria':      'Scoring rubrics (1-10 scale, 6 weighted dimensions), severity classification, evaluation methodology, and iterative refinement protocol for Terraform code quality assessment.',
   'consumer-design-template':'Canonical template for consumer-design.md. Covers module selection, wiring, security, and checklist.',
   'consumer-constitution':  'Consumer code standards: module sourcing, variable wiring, security defaults, environment boundaries. Read by tf-consumer-design directly.',
   'consumer-design-md':     'Consumer design artifact. Covers module selection, wiring architecture, security controls, and implementation checklist. Handoff between /tf-consumer-plan and /tf-consumer-implement.',
 
   /* Consumer artifacts & commands */
   'consumer-tf-code':       'Terraform consumer files: main.tf, variables.tf, outputs.tf, terraform.tf. Composes private registry modules with wiring.',
-  'quality-score':          'Quality assessment score (1-5 scale) produced by tf-consumer-validator using tf-judge-criteria rubrics.',
+  'quality-score':          'Quality assessment score (1-10 scale) produced by tf-consumer-validator using tf-judge-criteria rubrics. Threshold: 7.0 for production readiness.',
   'tf-plan':                'terraform plan \u2014 generates execution plan to verify module composition and variable wiring.',
   'tf-validate-final':      'terraform validate run by consumer-validator during Phase 4 quality assessment.',
   'tf-plan-final':          'terraform plan run by consumer-validator during Phase 4 quality assessment.'
