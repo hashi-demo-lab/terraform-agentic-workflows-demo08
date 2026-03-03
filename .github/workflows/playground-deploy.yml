@@ -20,28 +20,50 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
       - name: Prepare deployment directory
         run: |
-          mkdir -p .vercel-deploy
-          cp .foundations/design/sdd-workflow-playground.html .vercel-deploy/index.html
+          mkdir -p deploy
+          cp .foundations/design/sdd-workflow-playground.html deploy/index.html
+          cat > deploy/vercel.json << 'EOF'
+          {
+            "rewrites": [
+              { "source": "/", "destination": "/index.html" }
+            ]
+          }
+          EOF
 
-      - name: Pull Vercel project config
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: Build
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      - name: Create Vercel project link
+        run: |
+          mkdir -p deploy/.vercel
+          cat > deploy/.vercel/project.json << EOF
+          {"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}
+          EOF
 
       - name: Deploy to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        id: deploy
+        run: |
+          DEPLOY_URL=$(npx --yes vercel@50.15.1 deploy --prod \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --yes)
+          echo "deploy_url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          echo "Deployed to: $DEPLOY_URL"
+        working-directory: deploy
+
+      - name: Reassign tfai.vercel.app alias
+        run: |
+          DEPLOY_URL="${{ steps.deploy.outputs.deploy_url }}"
+          # Look up the deployment ID from the URL
+          DEPLOY_HOST=$(echo "$DEPLOY_URL" | sed 's|https://||')
+          DEPLOY_ID=$(curl -sf -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            "https://api.vercel.com/v13/deployments?url=$DEPLOY_HOST&limit=1" \
+            | jq -r '.deployments[0].uid')
+          echo "Deployment ID: $DEPLOY_ID"
+
+          # Reassign the tfai.vercel.app alias to the new deployment
+          curl -sf -X POST \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"alias": "tfai.vercel.app"}' \
+            "https://api.vercel.com/v2/deployments/$DEPLOY_ID/aliases"
+          echo ""
+          echo "Alias tfai.vercel.app reassigned successfully"
