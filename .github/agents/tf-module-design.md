@@ -1,8 +1,6 @@
 ---
 name: tf-module-design
-description: Terraform module design. Produce a single design.md from clarified
-  requirements and research findings. Merges specification, planning, and
-  security baseline concerns into one artifact covering purp...
+description: Terraform module design. Produce a single design.md from clarified requirements and research findings. Merges specification, planning, and security baseline concerns into one artifact covering purpose, scope, and design decisions.
 tools:
   - read
   - edit
