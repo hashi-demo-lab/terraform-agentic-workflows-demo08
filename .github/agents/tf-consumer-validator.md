@@ -16,6 +16,8 @@ skills:
 
 # Consumer Validation Agent
 
+use skill tf-judge-criteria
+
 Validate consumer Terraform code against the design document, perform quality scoring using `tf-judge-criteria`, and optionally deploy to a sandbox workspace via HCP Terraform. Produces a structured validation report. Security review is not performed here — Sentinel policies enforce security at the workspace level, and modules are inherently secure by design.
 
 ## Instructions

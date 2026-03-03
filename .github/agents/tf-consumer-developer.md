@@ -20,6 +20,9 @@ skills:
 
 # Consumer Task Executor
 
+use skill terraform-style-guide
+use skill tf-implementation-patterns
+
 Execute implementation checklist items from `specs/{FEATURE}/consumer-design.md` Section 5 (Implementation Checklist), producing Terraform consumer code that composes infrastructure from private registry modules.
 
 ## Instructions

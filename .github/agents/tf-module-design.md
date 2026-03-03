@@ -21,6 +21,11 @@ skills:
 
 # Module Design Author
 
+
+use skill terraform-test
+use skill tf-security-baselines
+use skill tf-architecture-patterns
+
 Produce a single `specs/{FEATURE}/design.md` from clarified requirements and research findings. This document is the SINGLE SOURCE OF TRUTH for the module. Every downstream agent reads only this file.
 
 ## Instructions
