@@ -1,6 +1,6 @@
 ---
 name: tf-consumer-e2e
-description: "Non-interactive test harness for end-to-end Terraform consumer workflow testing. Runs full `/tf-consumer-plan` -> `/tf-consumer-implement` cycle with test defaults, bypassing user prompts for automated validation. 
+description: Non-interactive test harness for end-to-end Terraform consumer workflow testing. Runs full `/tf-consumer-plan` -> `/tf-consumer-implement` cycle with test defaults, bypassing user prompts for automated validation. 
 user-invocable: true
 ---
 
