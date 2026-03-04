@@ -16,16 +16,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set trimmed secrets
+        id: vars
+        run: |
+          echo "team_id=$(echo '${{ secrets.VERCEL_ORG_ID }}' | xargs)" >> "$GITHUB_OUTPUT"
+          echo "project_id=$(echo '${{ secrets.VERCEL_PROJECT_ID }}' | xargs)" >> "$GITHUB_OUTPUT"
+
       - name: Deploy via Vercel API
         id: deploy
         run: |
-          # Read the HTML file and encode it as base64
           FILE_CONTENT=$(base64 -w 0 .foundations/design/sdd-workflow-playground.html)
-          FILE_SIZE=$(stat --format=%s .foundations/design/sdd-workflow-playground.html)
-          FILE_SHA=$(sha1sum .foundations/design/sdd-workflow-playground.html | cut -d' ' -f1)
+          VERCEL_JSON=$(echo '{"rewrites":[{"source":"/","destination":"/index.html"}]}' | base64 -w 0)
 
-          # Create deployment via Vercel API
-          RESPONSE=$(curl -s --fail-with-body -X POST "https://api.vercel.com/v13/deployments?teamId=${{ secrets.VERCEL_ORG_ID }}" \
+          RESPONSE=$(curl -s --fail-with-body -X POST \
+            "https://api.vercel.com/v13/deployments?teamId=${{ steps.vars.outputs.team_id }}" \
             -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d @- << PAYLOAD
@@ -43,7 +47,7 @@ jobs:
               },
               {
                 "file": "vercel.json",
-                "data": "$(echo '{"rewrites":[{"source":"/","destination":"/index.html"}]}' | base64 -w 0)",
+                "data": "$VERCEL_JSON",
                 "encoding": "base64"
               }
             ]
@@ -65,6 +69,6 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"alias": "tfai.vercel.app"}' \
-            "https://api.vercel.com/v2/deployments/$DEPLOY_ID/aliases?teamId=${{ secrets.VERCEL_ORG_ID }}")
+            "https://api.vercel.com/v2/deployments/$DEPLOY_ID/aliases?teamId=${{ steps.vars.outputs.team_id }}")
           echo "$RESULT" | jq .
           echo "Alias tfai.vercel.app reassigned to deployment $DEPLOY_ID"
