@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.foundations/design/sdd-workflow-playground.html'
+      - '.github/workflows/playground-deploy.yml'
   workflow_dispatch:
 
 jobs:
@@ -12,49 +13,58 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Prepare deployment directory
-        run: |
-          mkdir -p deploy
-          cp .foundations/design/sdd-workflow-playground.html deploy/index.html
-
-      - name: Pull Vercel project config
-        run: npx --yes vercel@50.15.1 pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: deploy
-
-      - name: Deploy to Vercel
+      - name: Deploy via Vercel API
         id: deploy
         run: |
-          DEPLOY_URL=$(npx --yes vercel@50.15.1 --prod \
-            --token=${{ secrets.VERCEL_TOKEN }} \
-            --yes)
+          # Read the HTML file and encode it as base64
+          FILE_CONTENT=$(base64 -w 0 .foundations/design/sdd-workflow-playground.html)
+          FILE_SIZE=$(stat --format=%s .foundations/design/sdd-workflow-playground.html)
+          FILE_SHA=$(sha1sum .foundations/design/sdd-workflow-playground.html | cut -d' ' -f1)
+
+          # Create deployment via Vercel API
+          RESPONSE=$(curl -sf -X POST "https://api.vercel.com/v13/deployments" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d @- << PAYLOAD
+          {
+            "name": "vercel-iac-content",
+            "target": "production",
+            "projectSettings": {
+              "framework": null
+            },
+            "files": [
+              {
+                "file": "index.html",
+                "data": "$FILE_CONTENT",
+                "encoding": "base64"
+              },
+              {
+                "file": "vercel.json",
+                "data": "$(echo '{"rewrites":[{"source":"/","destination":"/index.html"}]}' | base64 -w 0)",
+                "encoding": "base64"
+              }
+            ]
+          }
+          PAYLOAD
+          )
+
+          DEPLOY_URL=$(echo "$RESPONSE" | jq -r '.url')
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id')
           echo "deploy_url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
-          echo "Deployed to: $DEPLOY_URL"
-        working-directory: deploy
+          echo "deploy_id=$DEPLOY_ID" >> "$GITHUB_OUTPUT"
+          echo "Deployed to: https://$DEPLOY_URL"
+          echo "Deployment ID: $DEPLOY_ID"
 
       - name: Reassign tfai.vercel.app alias
         run: |
-          DEPLOY_URL="${{ steps.deploy.outputs.deploy_url }}"
-          DEPLOY_HOST=$(echo "$DEPLOY_URL" | sed 's|https://||')
-          DEPLOY_ID=$(curl -sf -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
-            "https://api.vercel.com/v13/deployments?url=$DEPLOY_HOST&limit=1" \
-            | jq -r '.deployments[0].uid')
-          echo "Deployment ID: $DEPLOY_ID"
-
+          DEPLOY_ID="${{ steps.deploy.outputs.deploy_id }}"
           curl -sf -X POST \
             -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"alias": "tfai.vercel.app"}' \
             "https://api.vercel.com/v2/deployments/$DEPLOY_ID/aliases"
           echo ""
-          echo "Alias tfai.vercel.app reassigned successfully"
+          echo "Alias tfai.vercel.app reassigned to deployment $DEPLOY_ID"
