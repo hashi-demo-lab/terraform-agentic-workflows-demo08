@@ -3787,6 +3787,180 @@ body.has-selection .node.dimmed { opacity: 0.15; }
   </div>
 </div>
 
+<div class="subsection" id="sdd-reporting" data-sub="Reporting">
+  <h3 class="subsection-title">Validation Reporting</h3>
+  <p class="subsection-desc">Structured output from every Phase 4 validation run</p>
+  <div class="svg-diagram" style="max-width:680px;margin:24px auto 32px;padding:0 28px">
+    <svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="rpt-dots" width="16" height="16" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="2" r="0.5" fill="#E0DCD4" opacity="0.5"/>
+        </pattern>
+        <filter id="rpt-shadow" x="-5%" y="-5%" width="115%" height="125%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.08"/>
+        </filter>
+      </defs>
+
+      <!-- Background -->
+      <rect x="0" y="0" width="680" height="320" rx="10" fill="#FAFAF8"/>
+      <rect x="0" y="0" width="680" height="320" rx="10" fill="url(#rpt-dots)"/>
+      <rect x="0" y="0" width="680" height="320" rx="10" fill="none" stroke="#E0DCD4" stroke-width="1"/>
+
+      <!-- Title -->
+      <text x="340" y="26" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#1A6B7A" font-weight="700">Validation Report Pipeline</text>
+      <text x="340" y="40" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="9" fill="#8A8A8A">Phase 4 runs 6 tools, scores quality, and outputs a structured report to specs/{FEATURE}/reports/</text>
+
+      <!-- Tool pipeline: 6 tool boxes in a row -->
+      <g filter="url(#rpt-shadow)">
+        <rect x="24" y="54" width="96" height="44" rx="6" fill="white"/>
+      </g>
+      <rect x="24" y="54" width="4" height="44" rx="2" fill="#1A6B7A"/>
+      <text x="42" y="72" font-family="JetBrains Mono,monospace" font-size="9" fill="#1A6B7A" font-weight="700">terraform fmt</text>
+      <text x="42" y="86" font-family="Source Sans 3,sans-serif" font-size="7.5" fill="#6B6B6B">Style compliance</text>
+      <rect x="24" y="54" width="96" height="44" rx="6" fill="none">
+        <animate attributeName="opacity" values="0.88;1.0;0.88" dur="3.5s" repeatCount="indefinite"/>
+      </rect>
+
+      <text x="128" y="78" font-family="Source Sans 3,sans-serif" font-size="10" fill="#C0BDB8">&#x2192;</text>
+
+      <g filter="url(#rpt-shadow)">
+        <rect x="136" y="54" width="96" height="44" rx="6" fill="white"/>
+      </g>
+      <rect x="136" y="54" width="4" height="44" rx="2" fill="#2D7A4F"/>
+      <text x="154" y="72" font-family="JetBrains Mono,monospace" font-size="9" fill="#2D7A4F" font-weight="700">tf validate</text>
+      <text x="154" y="86" font-family="Source Sans 3,sans-serif" font-size="7.5" fill="#6B6B6B">Config validity</text>
+      <rect x="136" y="54" width="96" height="44" rx="6" fill="none">
+        <animate attributeName="opacity" values="0.88;1.0;0.88" dur="3.7s" repeatCount="indefinite" begin="0.3s"/>
+      </rect>
+
+      <text x="240" y="78" font-family="Source Sans 3,sans-serif" font-size="10" fill="#C0BDB8">&#x2192;</text>
+
+      <g filter="url(#rpt-shadow)">
+        <rect x="248" y="54" width="96" height="44" rx="6" fill="white"/>
+      </g>
+      <rect x="248" y="54" width="4" height="44" rx="2" fill="#6B3FA0"/>
+      <text x="266" y="72" font-family="JetBrains Mono,monospace" font-size="9" fill="#6B3FA0" font-weight="700">tf test</text>
+      <text x="266" y="86" font-family="Source Sans 3,sans-serif" font-size="7.5" fill="#6B6B6B">Assertions pass</text>
+      <rect x="248" y="54" width="96" height="44" rx="6" fill="none">
+        <animate attributeName="opacity" values="0.88;1.0;0.88" dur="3.6s" repeatCount="indefinite" begin="0.6s"/>
+      </rect>
+
+      <text x="352" y="78" font-family="Source Sans 3,sans-serif" font-size="10" fill="#C0BDB8">&#x2192;</text>
+
+      <g filter="url(#rpt-shadow)">
+        <rect x="360" y="54" width="96" height="44" rx="6" fill="white"/>
+      </g>
+      <rect x="360" y="54" width="4" height="44" rx="2" fill="#B87333"/>
+      <text x="378" y="72" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="700">tflint</text>
+      <text x="378" y="86" font-family="Source Sans 3,sans-serif" font-size="7.5" fill="#6B6B6B">Lint rules</text>
+      <rect x="360" y="54" width="96" height="44" rx="6" fill="none">
+        <animate attributeName="opacity" values="0.88;1.0;0.88" dur="3.8s" repeatCount="indefinite" begin="0.9s"/>
+      </rect>
+
+      <text x="464" y="78" font-family="Source Sans 3,sans-serif" font-size="10" fill="#C0BDB8">&#x2192;</text>
+
+      <g filter="url(#rpt-shadow)">
+        <rect x="472" y="54" width="96" height="44" rx="6" fill="white"/>
+      </g>
+      <rect x="472" y="54" width="4" height="44" rx="2" fill="#C4283A"/>
+      <text x="490" y="72" font-family="JetBrains Mono,monospace" font-size="9" fill="#C4283A" font-weight="700">trivy</text>
+      <text x="490" y="86" font-family="Source Sans 3,sans-serif" font-size="7.5" fill="#6B6B6B">Security scan</text>
+      <rect x="472" y="54" width="96" height="44" rx="6" fill="none">
+        <animate attributeName="opacity" values="0.88;1.0;0.88" dur="3.4s" repeatCount="indefinite" begin="1.2s"/>
+      </rect>
+
+      <text x="576" y="78" font-family="Source Sans 3,sans-serif" font-size="10" fill="#C0BDB8">&#x2192;</text>
+
+      <g filter="url(#rpt-shadow)">
+        <rect x="584" y="54" width="72" height="44" rx="6" fill="white"/>
+      </g>
+      <rect x="584" y="54" width="4" height="44" rx="2" fill="#9A7B2D"/>
+      <text x="602" y="72" font-family="JetBrains Mono,monospace" font-size="9" fill="#9A7B2D" font-weight="700">tf-docs</text>
+      <text x="602" y="86" font-family="Source Sans 3,sans-serif" font-size="7.5" fill="#6B6B6B">Docs gen</text>
+      <rect x="584" y="54" width="72" height="44" rx="6" fill="none">
+        <animate attributeName="opacity" values="0.88;1.0;0.88" dur="4.0s" repeatCount="indefinite" begin="1.5s"/>
+      </rect>
+
+      <!-- Arrow down to report -->
+      <line x1="340" y1="98" x2="340" y2="118" stroke="#1A6B7A" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.3"/>
+      <polygon points="335,115 340,122 345,115" fill="#1A6B7A" opacity="0.4"/>
+
+      <!-- Report card -->
+      <g filter="url(#rpt-shadow)">
+        <rect x="80" y="124" width="520" height="110" rx="8" fill="white"/>
+      </g>
+      <rect x="80" y="124" width="520" height="4" rx="2" fill="#1A6B7A"/>
+
+      <text x="100" y="148" font-family="Playfair Display,serif" font-size="12" fill="#2A2A2A" font-weight="700">Validation Report</text>
+      <rect x="230" y="138" width="100" height="14" rx="4" fill="#1A6B7A" opacity="0.06" stroke="#1A6B7A" stroke-width="0.5" stroke-opacity="0.2"/>
+      <text x="280" y="148" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="#1A6B7A">tf-report-template</text>
+
+      <!-- Report sections -->
+      <text x="100" y="168" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">
+        <tspan font-weight="600" fill="#2A2A2A">Tool Results</tspan> — pass/fail for each tool with error details
+      </text>
+      <text x="100" y="182" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">
+        <tspan font-weight="600" fill="#2A2A2A">Quality Score</tspan> — 6 dimensions scored 1-10, composite score vs 7.0 threshold
+      </text>
+      <text x="100" y="196" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">
+        <tspan font-weight="600" fill="#2A2A2A">Security Checklist</tspan> — encryption, IAM, network, credentials, compliance status
+      </text>
+      <text x="100" y="210" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">
+        <tspan font-weight="600" fill="#2A2A2A">Findings</tspan> — severity-ranked issues: CRITICAL > HIGH > MEDIUM > LOW
+      </text>
+
+      <!-- Output path -->
+      <rect x="100" y="218" width="240" height="12" rx="3" fill="#F5F3EF"/>
+      <text x="108" y="227" font-family="JetBrains Mono,monospace" font-size="7" fill="#8A8A8A">specs/{FEATURE}/reports/validation.md</text>
+
+      <!-- Feedback arrows -->
+      <line x1="340" y1="234" x2="340" y2="254" stroke="#1A6B7A" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.3"/>
+      <polygon points="335,251 340,258 345,251" fill="#1A6B7A" opacity="0.4"/>
+
+      <!-- Decision row -->
+      <g filter="url(#rpt-shadow)">
+        <rect x="160" y="260" width="160" height="36" rx="8" fill="white"/>
+      </g>
+      <rect x="160" y="260" width="4" height="36" rx="2" fill="#C4283A"/>
+      <text x="178" y="282" font-family="Source Sans 3,sans-serif" font-size="10" fill="#C4283A" font-weight="700">Score &lt; 7.0</text>
+      <text x="280" y="282" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">&#x2192; Refinement round</text>
+      <rect x="160" y="260" width="160" height="36" rx="8" fill="none">
+        <animate attributeName="opacity" values="0.85;1.0;0.85" dur="2.5s" repeatCount="indefinite"/>
+      </rect>
+
+      <g filter="url(#rpt-shadow)">
+        <rect x="360" y="260" width="160" height="36" rx="8" fill="white"/>
+      </g>
+      <rect x="360" y="260" width="4" height="36" rx="2" fill="#2D7A4F"/>
+      <text x="378" y="282" font-family="Source Sans 3,sans-serif" font-size="10" fill="#2D7A4F" font-weight="700">Score &#x2265; 7.0</text>
+      <text x="478" y="282" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">&#x2192; Attach to PR</text>
+      <rect x="360" y="260" width="160" height="36" rx="8" fill="none">
+        <animate attributeName="opacity" values="0.85;1.0;0.85" dur="3.0s" repeatCount="indefinite" begin="0.5s"/>
+      </rect>
+
+      <!-- Bottom line -->
+      <line x1="200" y1="310" x2="480" y2="310" stroke="#E0DCD4" stroke-width="0.5" opacity="0.4"/>
+    </svg>
+  </div>
+  <div class="card-grid">
+    <div class="ed-card">
+      <h3>Report Structure</h3>
+      <p>Every Phase 4 run produces a structured validation report using tf-report-template. Results from terraform fmt, validate, test, tflint, trivy, and terraform-docs are aggregated alongside the quality score and security checklist.</p>
+      <div class="node-row">
+        <div class="node node-skill" data-id="tf-report-template" data-type="skill">tf-report-template</div>
+        <div class="node node-artifact" data-id="validation-report" data-type="artifact">validation report</div>
+      </div>
+    </div>
+    <div class="ed-card">
+      <h3>Refinement Loop</h3>
+      <p>If the composite score falls below 7.0, the validator triggers a refinement round — auto-fixing unambiguous issues and re-running the pipeline. Maximum 3 rounds before escalating to human review.</p>
+      <div class="node-row">
+        <div class="node node-concept" data-id="concept-quality-scoring" data-type="concept">concept-quality-scoring</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== CHAPTER: WORKFLOWS ===== -->
 <div class="chapter-divider" id="workflows" data-section="workflows">
   <div class="chapter-number">Chapter Four</div>
