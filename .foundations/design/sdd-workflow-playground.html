@@ -2500,12 +2500,16 @@ body.has-selection .node.dimmed { opacity: 0.15; }
         <animateMotion dur="2.0s" repeatCount="indefinite" begin="0.9s" path="M186,85 L228,104"/>
         <animate attributeName="opacity" values="0;0.8;0" dur="2.0s" repeatCount="indefinite" begin="0.9s"/>
       </circle>
-      <!-- Connection lines AWS MCP to tool grid -->
-      <line x1="186" y1="224" x2="228" y2="228" stroke="#B87333" stroke-width="1.2" opacity="0.35"/>
-      <line x1="186" y1="224" x2="228" y2="286" stroke="#B87333" stroke-width="1.2" opacity="0.35"/>
+      <!-- Connection lines AWS MCP to tool grid row 4 -->
+      <line x1="186" y1="210" x2="228" y2="213" stroke="#B87333" stroke-width="1.2" opacity="0.35"/>
+      <line x1="186" y1="230" x2="448" y2="213" stroke="#B87333" stroke-width="1.2" opacity="0.35"/>
       <circle r="3" fill="#B87333" opacity="0">
-        <animateMotion dur="2.2s" repeatCount="indefinite" begin="1.0s" path="M186,224 L228,286"/>
+        <animateMotion dur="2.2s" repeatCount="indefinite" begin="1.0s" path="M186,210 L228,213"/>
         <animate attributeName="opacity" values="0;0.8;0" dur="2.2s" repeatCount="indefinite" begin="1.0s"/>
+      </circle>
+      <circle r="3" fill="#B87333" opacity="0">
+        <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.4s" path="M186,230 L448,213"/>
+        <animate attributeName="opacity" values="0;0.8;0" dur="2.5s" repeatCount="indefinite" begin="1.4s"/>
       </circle>
       <!-- Tool grid row 1 -->
       <g filter="url(#mcp-shadow)">
