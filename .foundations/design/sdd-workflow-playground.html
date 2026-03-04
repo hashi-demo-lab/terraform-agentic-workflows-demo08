@@ -89,17 +89,20 @@ body {
 .hero h1 { font-family: var(--mono); font-size: 28px; font-weight: 700; letter-spacing: 3px; }
 .hero p { font-size: 12px; color: #666; margin-top: 4px; letter-spacing: 1px; }
 .pipeline {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 12px 24px 4px; position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 14px 24px 6px; position: relative; z-index: 1;
 }
+.pipeline > div { flex-shrink: 0; text-align: center; }
 .pipe-phase {
-  border: 1px solid; border-radius: 14px; padding: 5px 16px;
-  font-family: var(--mono); font-size: 12px; letter-spacing: 1px;
+  border: 1px solid; border-radius: 6px; padding: 6px 14px;
+  font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
   text-transform: uppercase; white-space: nowrap;
+  background: rgba(255,255,255,0.03);
 }
-.pipe-brace { font-size: 9px; margin-top: 2px; letter-spacing: 0.5px; opacity: 0.6; }
-.pipe-arrow { color: #555; font-size: 18px; padding: 0 4px; }
-.pipe-dim { opacity: 0.3; }
+.pipe-brace { font-size: 8px; margin-top: 3px; letter-spacing: 0.8px; opacity: 0.5; }
+.pipe-arrow { color: #444; font-size: 14px; padding: 0 2px; flex-shrink: 0; line-height: 1; }
+.pipe-dim { opacity: 0.25; }
+.pipe-dim .pipe-phase { background: transparent; border-style: dashed; }
 @keyframes gradient-shift { 0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%} }
 @keyframes dash-flow { from{stroke-dashoffset:0}to{stroke-dashoffset:-20} }
 
@@ -447,7 +450,7 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
   <p>AI-powered Terraform development using Specification-Driven Development (SDD)</p>
 </div>
 <div class="overview-svg-container">
-  <svg viewBox="0 0 900 440" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 980 440" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <!-- Glow filters -->
       <filter id="fo-glow-sm" x="-40%" y="-40%" width="180%" height="180%">
@@ -484,41 +487,41 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- ============================================ -->
     <g>
       <!-- Orchestrator box -->
-      <rect x="340" y="18" width="200" height="42" rx="8" fill="rgba(180,77,255,0.06)" stroke="rgba(180,77,255,0.45)" stroke-width="1.2">
+      <rect x="380" y="18" width="200" height="42" rx="8" fill="rgba(180,77,255,0.06)" stroke="rgba(180,77,255,0.45)" stroke-width="1.2">
         <animate attributeName="stroke-opacity" values="0.4;0.8;0.4" dur="3s" repeatCount="indefinite"/>
       </rect>
-      <text x="440" y="35" text-anchor="middle" font-family="monospace" font-size="7" fill="#b44dff" fill-opacity="0.6" letter-spacing="2" font-weight="600">ORCHESTRATOR</text>
-      <text x="440" y="50" text-anchor="middle" font-family="monospace" font-size="8" fill="#b44dff" fill-opacity="0.85" font-weight="700">Routes to workflow skills</text>
+      <text x="480" y="35" text-anchor="middle" font-family="monospace" font-size="7" fill="#b44dff" fill-opacity="0.6" letter-spacing="2" font-weight="600">ORCHESTRATOR</text>
+      <text x="480" y="50" text-anchor="middle" font-family="monospace" font-size="8" fill="#b44dff" fill-opacity="0.85" font-weight="700">Routes to workflow skills</text>
 
       <!-- Orchestrator connection lines down to phases -->
-      <line x1="370" y1="60" x2="220" y2="148" stroke="rgba(180,77,255,0.15)" stroke-width="0.8" stroke-dasharray="3 3">
+      <line x1="410" y1="60" x2="220" y2="148" stroke="rgba(180,77,255,0.15)" stroke-width="0.8" stroke-dasharray="3 3">
         <animate attributeName="stroke-opacity" values="0.1;0.3;0.1" dur="2.5s" repeatCount="indefinite"/>
       </line>
-      <line x1="420" y1="60" x2="400" y2="148" stroke="rgba(180,77,255,0.15)" stroke-width="0.8" stroke-dasharray="3 3">
+      <line x1="460" y1="60" x2="412" y2="148" stroke="rgba(180,77,255,0.15)" stroke-width="0.8" stroke-dasharray="3 3">
         <animate attributeName="stroke-opacity" values="0.1;0.3;0.1" dur="2.5s" repeatCount="indefinite" begin="0.6s"/>
       </line>
-      <line x1="490" y1="60" x2="610" y2="148" stroke="rgba(180,77,255,0.15)" stroke-width="0.8" stroke-dasharray="3 3">
+      <line x1="520" y1="60" x2="682" y2="148" stroke="rgba(180,77,255,0.15)" stroke-width="0.8" stroke-dasharray="3 3">
         <animate attributeName="stroke-opacity" values="0.1;0.3;0.1" dur="2.5s" repeatCount="indefinite" begin="1.2s"/>
       </line>
-      <line x1="510" y1="60" x2="795" y2="148" stroke="rgba(180,77,255,0.15)" stroke-width="0.8" stroke-dasharray="3 3">
+      <line x1="550" y1="60" x2="852" y2="148" stroke="rgba(180,77,255,0.15)" stroke-width="0.8" stroke-dasharray="3 3">
         <animate attributeName="stroke-opacity" values="0.1;0.3;0.1" dur="2.5s" repeatCount="indefinite" begin="1.8s"/>
       </line>
 
       <!-- Orchestrator pulse particles down lines -->
       <circle r="1.5" fill="#b44dff" opacity="0">
-        <animateMotion dur="2s" repeatCount="indefinite" path="M 370 60 L 220 148"/>
+        <animateMotion dur="2s" repeatCount="indefinite" path="M 410 60 L 220 148"/>
         <animate attributeName="opacity" values="0;0.7;0" dur="2s" repeatCount="indefinite"/>
       </circle>
       <circle r="1.5" fill="#b44dff" opacity="0">
-        <animateMotion dur="2s" repeatCount="indefinite" begin="0.5s" path="M 420 60 L 400 148"/>
+        <animateMotion dur="2s" repeatCount="indefinite" begin="0.5s" path="M 460 60 L 412 148"/>
         <animate attributeName="opacity" values="0;0.7;0" dur="2s" repeatCount="indefinite" begin="0.5s"/>
       </circle>
       <circle r="1.5" fill="#b44dff" opacity="0">
-        <animateMotion dur="2s" repeatCount="indefinite" begin="1s" path="M 490 60 L 610 148"/>
+        <animateMotion dur="2s" repeatCount="indefinite" begin="1s" path="M 520 60 L 682 148"/>
         <animate attributeName="opacity" values="0;0.7;0" dur="2s" repeatCount="indefinite" begin="1s"/>
       </circle>
       <circle r="1.5" fill="#b44dff" opacity="0">
-        <animateMotion dur="2s" repeatCount="indefinite" begin="1.5s" path="M 510 60 L 795 148"/>
+        <animateMotion dur="2s" repeatCount="indefinite" begin="1.5s" path="M 550 60 L 852 148"/>
         <animate attributeName="opacity" values="0;0.7;0" dur="2s" repeatCount="indefinite" begin="1.5s"/>
       </circle>
     </g>
@@ -526,7 +529,7 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- ============================================ -->
     <!-- GUARDRAILS: CONSTITUTION (top dashed border) -->
     <!-- ============================================ -->
-    <rect x="120" y="88" width="730" height="290" rx="10" fill="none" stroke="#ff2d7b" stroke-width="1.2" stroke-dasharray="6 4" stroke-opacity="0.3">
+    <rect x="120" y="88" width="830" height="290" rx="10" fill="none" stroke="#ff2d7b" stroke-width="1.2" stroke-dasharray="6 4" stroke-opacity="0.3">
       <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="3s" repeatCount="indefinite"/>
     </rect>
     <rect x="170" y="82" width="100" height="14" rx="3" fill="#0a0a12"/>
@@ -535,8 +538,8 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- ============================================ -->
     <!-- GUARDRAILS: MCP TOOLS (bottom dashed border) -->
     <!-- ============================================ -->
-    <rect x="620" y="372" width="80" height="14" rx="3" fill="#0a0a12"/>
-    <text x="660" y="382" text-anchor="middle" font-family="monospace" font-size="7" fill="#ffe14d" fill-opacity="0.7" letter-spacing="1.5" font-weight="600">MCP TOOLS</text>
+    <rect x="690" y="372" width="80" height="14" rx="3" fill="#0a0a12"/>
+    <text x="730" y="382" text-anchor="middle" font-family="monospace" font-size="7" fill="#ffe14d" fill-opacity="0.7" letter-spacing="1.5" font-weight="600">MCP TOOLS</text>
 
     <!-- ============================================ -->
     <!-- INPUT: REQUIREMENTS (left)                   -->
@@ -591,9 +594,9 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- ============================================ -->
     <!-- FLOW ARROW: Phase 1 → Phase 2                -->
     <!-- ============================================ -->
-    <line x1="290" y1="229" x2="320" y2="229" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" marker-end="url(#fo-arrow)"/>
+    <line x1="290" y1="229" x2="340" y2="229" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" marker-end="url(#fo-arrow)"/>
     <circle r="2.5" fill="#00f0ff" opacity="0">
-      <animateMotion dur="1.8s" repeatCount="indefinite" begin="0.3s" path="M 290 229 L 320 229"/>
+      <animateMotion dur="1.8s" repeatCount="indefinite" begin="0.3s" path="M 290 229 L 340 229"/>
       <animate attributeName="opacity" values="0;0.8;0" dur="1.8s" repeatCount="indefinite" begin="0.3s"/>
     </circle>
 
@@ -601,31 +604,31 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- PHASE 2: DESIGN (purple)                     -->
     <!-- ============================================ -->
     <g>
-      <rect x="322" y="148" width="140" height="200" rx="8" fill="rgba(180,77,255,0.03)" stroke="rgba(180,77,255,0.2)" stroke-width="1"/>
-      <rect x="322" y="148" width="140" height="3" rx="1.5" fill="rgba(180,77,255,0.5)"/>
-      <text x="392" y="166" text-anchor="middle" font-family="monospace" font-size="7" fill="#b44dff" fill-opacity="0.6" letter-spacing="2" font-weight="600">PHASE 2</text>
-      <text x="392" y="180" text-anchor="middle" font-family="monospace" font-size="10" fill="#b44dff" fill-opacity="0.9" font-weight="700">DESIGN</text>
+      <rect x="342" y="148" width="140" height="200" rx="8" fill="rgba(180,77,255,0.03)" stroke="rgba(180,77,255,0.2)" stroke-width="1"/>
+      <rect x="342" y="148" width="140" height="3" rx="1.5" fill="rgba(180,77,255,0.5)"/>
+      <text x="412" y="166" text-anchor="middle" font-family="monospace" font-size="7" fill="#b44dff" fill-opacity="0.6" letter-spacing="2" font-weight="600">PHASE 2</text>
+      <text x="412" y="180" text-anchor="middle" font-family="monospace" font-size="10" fill="#b44dff" fill-opacity="0.9" font-weight="700">DESIGN</text>
 
       <!-- Subagent: Designer -->
-      <rect x="342" y="196" width="100" height="36" rx="6" fill="rgba(180,77,255,0.06)" stroke="rgba(180,77,255,0.35)" stroke-width="1">
+      <rect x="362" y="196" width="100" height="36" rx="6" fill="rgba(180,77,255,0.06)" stroke="rgba(180,77,255,0.35)" stroke-width="1">
         <animate attributeName="stroke-opacity" values="0.4;0.9;0.4" dur="3s" repeatCount="indefinite" begin="0.5s"/>
       </rect>
-      <text x="392" y="212" text-anchor="middle" font-family="monospace" font-size="8" fill="#b44dff" fill-opacity="0.85" font-weight="700">Designer</text>
-      <text x="392" y="224" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(180,77,255,0.5)">subagent</text>
+      <text x="412" y="212" text-anchor="middle" font-family="monospace" font-size="8" fill="#b44dff" fill-opacity="0.85" font-weight="700">Designer</text>
+      <text x="412" y="224" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(180,77,255,0.5)">subagent</text>
 
       <!-- Skill badge: design-templates -->
-      <rect x="344" y="240" width="96" height="18" rx="4" fill="rgba(0,240,255,0.06)" stroke="rgba(0,240,255,0.25)" stroke-width="0.8"/>
-      <text x="392" y="253" text-anchor="middle" font-family="monospace" font-size="7" fill="#00f0ff" fill-opacity="0.75" font-weight="600">design-templates</text>
+      <rect x="364" y="240" width="96" height="18" rx="4" fill="rgba(0,240,255,0.06)" stroke="rgba(0,240,255,0.25)" stroke-width="0.8"/>
+      <text x="412" y="253" text-anchor="middle" font-family="monospace" font-size="7" fill="#00f0ff" fill-opacity="0.75" font-weight="600">design-templates</text>
 
       <!-- Constitution badge -->
-      <rect x="352" y="266" width="80" height="18" rx="4" fill="rgba(255,45,123,0.06)" stroke="rgba(255,45,123,0.2)" stroke-width="0.8"/>
-      <text x="392" y="279" text-anchor="middle" font-family="monospace" font-size="7" fill="#ff2d7b" fill-opacity="0.65" font-weight="600">constitution</text>
+      <rect x="372" y="266" width="80" height="18" rx="4" fill="rgba(255,45,123,0.06)" stroke="rgba(255,45,123,0.2)" stroke-width="0.8"/>
+      <text x="412" y="279" text-anchor="middle" font-family="monospace" font-size="7" fill="#ff2d7b" fill-opacity="0.65" font-weight="600">constitution</text>
 
       <!-- Output label -->
-      <text x="392" y="305" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,157,46,0.5)" font-weight="600">design.md</text>
+      <text x="412" y="305" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,157,46,0.5)" font-weight="600">design.md</text>
 
       <!-- Bottom glow -->
-      <rect x="322" y="345" width="140" height="2" rx="1" fill="#b44dff" opacity="0.25">
+      <rect x="342" y="345" width="140" height="2" rx="1" fill="#b44dff" opacity="0.25">
         <animate attributeName="opacity" values="0.15;0.4;0.15" dur="3s" repeatCount="indefinite" begin="0.5s"/>
       </rect>
     </g>
@@ -635,21 +638,21 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- ============================================ -->
     <g>
       <!-- Gate box -->
-      <rect x="472" y="180" width="68" height="70" rx="6" fill="rgba(255,68,68,0.03)" stroke="#ff4444" stroke-width="1.5" stroke-dasharray="4 3">
+      <rect x="512" y="180" width="68" height="70" rx="6" fill="rgba(255,68,68,0.03)" stroke="#ff4444" stroke-width="1.5" stroke-dasharray="4 3">
         <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="2.4s" repeatCount="indefinite"/>
       </rect>
       <!-- Shield icon -->
-      <path d="M506,194 L516,198 L516,205 C516,210 506,216 506,216 C506,216 496,210 496,205 L496,198 Z" fill="none" stroke="#ff4444" stroke-width="1.2" stroke-linejoin="round" stroke-opacity="0.7"/>
-      <circle cx="506" cy="203" r="2" fill="none" stroke="#ff4444" stroke-width="0.8" stroke-opacity="0.6"/>
-      <path d="M503,209 C503,207.5 504.5,206.5 506,206.5 C507.5,206.5 509,207.5 509,209" fill="none" stroke="#ff4444" stroke-width="0.8" stroke-opacity="0.6"/>
+      <path d="M546,194 L556,198 L556,205 C556,210 546,216 546,216 C546,216 536,210 536,205 L536,198 Z" fill="none" stroke="#ff4444" stroke-width="1.2" stroke-linejoin="round" stroke-opacity="0.7"/>
+      <circle cx="546" cy="203" r="2" fill="none" stroke="#ff4444" stroke-width="0.8" stroke-opacity="0.6"/>
+      <path d="M543,209 C543,207.5 544.5,206.5 546,206.5 C547.5,206.5 549,207.5 549,209" fill="none" stroke="#ff4444" stroke-width="0.8" stroke-opacity="0.6"/>
       <!-- Labels -->
-      <text x="506" y="230" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#ff4444" fill-opacity="0.8" font-weight="700" letter-spacing="0.8">HUMAN</text>
-      <text x="506" y="240" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#ff4444" fill-opacity="0.8" font-weight="700" letter-spacing="0.8">GATE</text>
+      <text x="546" y="230" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#ff4444" fill-opacity="0.8" font-weight="700" letter-spacing="0.8">HUMAN</text>
+      <text x="546" y="240" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#ff4444" fill-opacity="0.8" font-weight="700" letter-spacing="0.8">GATE</text>
       <!-- Pulse dots -->
-      <circle cx="506" cy="176" r="1.5" fill="#ff4444" opacity="0.5">
+      <circle cx="546" cy="176" r="1.5" fill="#ff4444" opacity="0.5">
         <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2.4s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="506" cy="254" r="1.5" fill="#ff4444" opacity="0.5">
+      <circle cx="546" cy="254" r="1.5" fill="#ff4444" opacity="0.5">
         <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2.4s" repeatCount="indefinite" begin="1.2s"/>
       </circle>
     </g>
@@ -657,14 +660,14 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- ============================================ -->
     <!-- FLOW ARROW: Phase 2 → Human Gate             -->
     <!-- ============================================ -->
-    <line x1="462" y1="229" x2="472" y2="229" stroke="rgba(255,68,68,0.25)" stroke-width="1"/>
+    <line x1="482" y1="229" x2="510" y2="229" stroke="rgba(255,68,68,0.25)" stroke-width="1"/>
 
     <!-- ============================================ -->
     <!-- FLOW ARROW: Human Gate → Phase 3             -->
     <!-- ============================================ -->
-    <line x1="540" y1="229" x2="560" y2="229" stroke="rgba(255,68,68,0.25)" stroke-width="1" marker-end="url(#fo-arrow)"/>
+    <line x1="580" y1="229" x2="610" y2="229" stroke="rgba(255,68,68,0.25)" stroke-width="1" marker-end="url(#fo-arrow)"/>
     <circle r="2.5" fill="#ff4444" opacity="0">
-      <animateMotion dur="2s" repeatCount="indefinite" begin="0.8s" path="M 540 229 L 560 229"/>
+      <animateMotion dur="2s" repeatCount="indefinite" begin="0.8s" path="M 580 229 L 610 229"/>
       <animate attributeName="opacity" values="0;0.7;0" dur="2s" repeatCount="indefinite" begin="0.8s"/>
     </circle>
 
@@ -672,31 +675,31 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- PHASE 3: BUILD + TEST (cyan)                 -->
     <!-- ============================================ -->
     <g>
-      <rect x="562" y="148" width="140" height="200" rx="8" fill="rgba(0,240,255,0.03)" stroke="rgba(0,240,255,0.2)" stroke-width="1"/>
-      <rect x="562" y="148" width="140" height="3" rx="1.5" fill="rgba(0,240,255,0.5)"/>
-      <text x="632" y="166" text-anchor="middle" font-family="monospace" font-size="7" fill="#00f0ff" fill-opacity="0.6" letter-spacing="2" font-weight="600">PHASE 3</text>
-      <text x="632" y="180" text-anchor="middle" font-family="monospace" font-size="10" fill="#00f0ff" fill-opacity="0.9" font-weight="700">BUILD+TEST</text>
+      <rect x="612" y="148" width="140" height="200" rx="8" fill="rgba(0,240,255,0.03)" stroke="rgba(0,240,255,0.2)" stroke-width="1"/>
+      <rect x="612" y="148" width="140" height="3" rx="1.5" fill="rgba(0,240,255,0.5)"/>
+      <text x="682" y="166" text-anchor="middle" font-family="monospace" font-size="7" fill="#00f0ff" fill-opacity="0.6" letter-spacing="2" font-weight="600">PHASE 3</text>
+      <text x="682" y="180" text-anchor="middle" font-family="monospace" font-size="10" fill="#00f0ff" fill-opacity="0.9" font-weight="700">BUILD+TEST</text>
 
       <!-- Subagent: Developer -->
-      <rect x="582" y="196" width="100" height="36" rx="6" fill="rgba(0,240,255,0.06)" stroke="rgba(0,240,255,0.35)" stroke-width="1">
+      <rect x="632" y="196" width="100" height="36" rx="6" fill="rgba(0,240,255,0.06)" stroke="rgba(0,240,255,0.35)" stroke-width="1">
         <animate attributeName="stroke-opacity" values="0.4;0.9;0.4" dur="3s" repeatCount="indefinite" begin="1s"/>
       </rect>
-      <text x="632" y="212" text-anchor="middle" font-family="monospace" font-size="8" fill="#00f0ff" fill-opacity="0.85" font-weight="700">Developer</text>
-      <text x="632" y="224" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(0,240,255,0.5)">subagent (TDD)</text>
+      <text x="682" y="212" text-anchor="middle" font-family="monospace" font-size="8" fill="#00f0ff" fill-opacity="0.85" font-weight="700">Developer</text>
+      <text x="682" y="224" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(0,240,255,0.5)">subagent (TDD)</text>
 
       <!-- Skill badge: tf-module-plan -->
-      <rect x="580" y="240" width="104" height="18" rx="4" fill="rgba(0,240,255,0.06)" stroke="rgba(0,240,255,0.25)" stroke-width="0.8"/>
-      <text x="632" y="253" text-anchor="middle" font-family="monospace" font-size="7" fill="#00f0ff" fill-opacity="0.75" font-weight="600">tf-module-plan</text>
+      <rect x="630" y="240" width="104" height="18" rx="4" fill="rgba(0,240,255,0.06)" stroke="rgba(0,240,255,0.25)" stroke-width="0.8"/>
+      <text x="682" y="253" text-anchor="middle" font-family="monospace" font-size="7" fill="#00f0ff" fill-opacity="0.75" font-weight="600">tf-module-plan</text>
 
       <!-- Style guide badge -->
-      <rect x="582" y="266" width="100" height="18" rx="4" fill="rgba(0,240,255,0.04)" stroke="rgba(0,240,255,0.15)" stroke-width="0.8"/>
-      <text x="632" y="279" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(0,240,255,0.55)" font-weight="600">style-guide</text>
+      <rect x="632" y="266" width="100" height="18" rx="4" fill="rgba(0,240,255,0.04)" stroke="rgba(0,240,255,0.15)" stroke-width="0.8"/>
+      <text x="682" y="279" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(0,240,255,0.55)" font-weight="600">style-guide</text>
 
       <!-- Output label -->
-      <text x="632" y="305" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,157,46,0.5)" font-weight="600">*.tf + tests</text>
+      <text x="682" y="305" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,157,46,0.5)" font-weight="600">*.tf + tests</text>
 
       <!-- Bottom glow -->
-      <rect x="562" y="345" width="140" height="2" rx="1" fill="#00f0ff" opacity="0.25">
+      <rect x="612" y="345" width="140" height="2" rx="1" fill="#00f0ff" opacity="0.25">
         <animate attributeName="opacity" values="0.15;0.4;0.15" dur="3s" repeatCount="indefinite" begin="1s"/>
       </rect>
     </g>
@@ -704,9 +707,9 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- ============================================ -->
     <!-- FLOW ARROW: Phase 3 → Phase 4                -->
     <!-- ============================================ -->
-    <line x1="702" y1="229" x2="732" y2="229" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" marker-end="url(#fo-arrow)"/>
+    <line x1="752" y1="229" x2="790" y2="229" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" marker-end="url(#fo-arrow)"/>
     <circle r="2.5" fill="#00f0ff" opacity="0">
-      <animateMotion dur="1.8s" repeatCount="indefinite" begin="1.2s" path="M 702 229 L 732 229"/>
+      <animateMotion dur="1.8s" repeatCount="indefinite" begin="1.2s" path="M 752 229 L 790 229"/>
       <animate attributeName="opacity" values="0;0.8;0" dur="1.8s" repeatCount="indefinite" begin="1.2s"/>
     </circle>
 
@@ -714,31 +717,31 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- PHASE 4: VALIDATE (green)                    -->
     <!-- ============================================ -->
     <g>
-      <rect x="734" y="148" width="120" height="200" rx="8" fill="rgba(57,255,142,0.03)" stroke="rgba(57,255,142,0.2)" stroke-width="1"/>
-      <rect x="734" y="148" width="120" height="3" rx="1.5" fill="rgba(57,255,142,0.5)"/>
-      <text x="794" y="166" text-anchor="middle" font-family="monospace" font-size="7" fill="#39ff8e" fill-opacity="0.6" letter-spacing="2" font-weight="600">PHASE 4</text>
-      <text x="794" y="180" text-anchor="middle" font-family="monospace" font-size="10" fill="#39ff8e" fill-opacity="0.9" font-weight="700">VALIDATE</text>
+      <rect x="792" y="148" width="120" height="200" rx="8" fill="rgba(57,255,142,0.03)" stroke="rgba(57,255,142,0.2)" stroke-width="1"/>
+      <rect x="792" y="148" width="120" height="3" rx="1.5" fill="rgba(57,255,142,0.5)"/>
+      <text x="852" y="166" text-anchor="middle" font-family="monospace" font-size="7" fill="#39ff8e" fill-opacity="0.6" letter-spacing="2" font-weight="600">PHASE 4</text>
+      <text x="852" y="180" text-anchor="middle" font-family="monospace" font-size="10" fill="#39ff8e" fill-opacity="0.9" font-weight="700">VALIDATE</text>
 
       <!-- Subagent: Validator -->
-      <rect x="752" y="196" width="84" height="36" rx="6" fill="rgba(57,255,142,0.06)" stroke="rgba(57,255,142,0.35)" stroke-width="1">
+      <rect x="810" y="196" width="84" height="36" rx="6" fill="rgba(57,255,142,0.06)" stroke="rgba(57,255,142,0.35)" stroke-width="1">
         <animate attributeName="stroke-opacity" values="0.4;0.9;0.4" dur="3s" repeatCount="indefinite" begin="1.5s"/>
       </rect>
-      <text x="794" y="212" text-anchor="middle" font-family="monospace" font-size="8" fill="#39ff8e" fill-opacity="0.85" font-weight="700">Validator</text>
-      <text x="794" y="224" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(57,255,142,0.5)">subagent</text>
+      <text x="852" y="212" text-anchor="middle" font-family="monospace" font-size="8" fill="#39ff8e" fill-opacity="0.85" font-weight="700">Validator</text>
+      <text x="852" y="224" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(57,255,142,0.5)">subagent</text>
 
       <!-- Skill badge: tf-security -->
-      <rect x="754" y="240" width="80" height="18" rx="4" fill="rgba(0,240,255,0.06)" stroke="rgba(0,240,255,0.25)" stroke-width="0.8"/>
-      <text x="794" y="253" text-anchor="middle" font-family="monospace" font-size="7" fill="#00f0ff" fill-opacity="0.75" font-weight="600">tf-security</text>
+      <rect x="812" y="240" width="80" height="18" rx="4" fill="rgba(0,240,255,0.06)" stroke="rgba(0,240,255,0.25)" stroke-width="0.8"/>
+      <text x="852" y="253" text-anchor="middle" font-family="monospace" font-size="7" fill="#00f0ff" fill-opacity="0.75" font-weight="600">tf-security</text>
 
       <!-- Judge criteria badge -->
-      <rect x="750" y="266" width="88" height="18" rx="4" fill="rgba(255,157,46,0.06)" stroke="rgba(255,157,46,0.2)" stroke-width="0.8"/>
-      <text x="794" y="279" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,157,46,0.6)" font-weight="600">judge-criteria</text>
+      <rect x="808" y="266" width="88" height="18" rx="4" fill="rgba(255,157,46,0.06)" stroke="rgba(255,157,46,0.2)" stroke-width="0.8"/>
+      <text x="852" y="279" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,157,46,0.6)" font-weight="600">judge-criteria</text>
 
       <!-- Output label -->
-      <text x="794" y="305" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,157,46,0.5)" font-weight="600">score &ge; 7.0</text>
+      <text x="852" y="305" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,157,46,0.5)" font-weight="600">score &ge; 7.0</text>
 
       <!-- Bottom glow -->
-      <rect x="734" y="345" width="120" height="2" rx="1" fill="#39ff8e" opacity="0.25">
+      <rect x="792" y="345" width="120" height="2" rx="1" fill="#39ff8e" opacity="0.25">
         <animate attributeName="opacity" values="0.15;0.4;0.15" dur="3s" repeatCount="indefinite" begin="1.5s"/>
       </rect>
     </g>
@@ -746,9 +749,9 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- ============================================ -->
     <!-- FLOW ARROW: Phase 4 → Output                 -->
     <!-- ============================================ -->
-    <line x1="854" y1="229" x2="870" y2="229" stroke="rgba(57,255,142,0.2)" stroke-width="1.2" marker-end="url(#fo-arrow)"/>
+    <line x1="912" y1="229" x2="936" y2="229" stroke="rgba(57,255,142,0.2)" stroke-width="1.2" marker-end="url(#fo-arrow)"/>
     <circle r="2.5" fill="#39ff8e" opacity="0">
-      <animateMotion dur="1.5s" repeatCount="indefinite" begin="1.5s" path="M 854 229 L 870 229"/>
+      <animateMotion dur="1.5s" repeatCount="indefinite" begin="1.5s" path="M 912 229 L 936 229"/>
       <animate attributeName="opacity" values="0;0.8;0" dur="1.5s" repeatCount="indefinite" begin="1.5s"/>
     </circle>
 
@@ -756,34 +759,34 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- OUTPUT: *.tf + PR (right)                    -->
     <!-- ============================================ -->
     <g>
-      <rect x="858" y="196" width="36" height="66" rx="8" fill="rgba(57,255,142,0.08)" stroke="rgba(57,255,142,0.45)" stroke-width="1.2"/>
-      <rect x="858" y="196" width="36" height="66" rx="8" fill="none" stroke="rgba(57,255,142,0.15)" stroke-width="4" filter="url(#fo-glow-sm)"/>
-      <text x="876" y="220" text-anchor="middle" font-family="monospace" font-size="8" fill="#39ff8e" fill-opacity="0.9" font-weight="700">*.tf</text>
-      <text x="876" y="234" text-anchor="middle" font-family="monospace" font-size="7" fill="#39ff8e" fill-opacity="0.6" font-weight="600">+ PR</text>
-      <text x="876" y="254" text-anchor="middle" font-family="monospace" font-size="6" fill="rgba(57,255,142,0.4)">output</text>
+      <rect x="938" y="196" width="36" height="66" rx="8" fill="rgba(57,255,142,0.08)" stroke="rgba(57,255,142,0.45)" stroke-width="1.2"/>
+      <rect x="938" y="196" width="36" height="66" rx="8" fill="none" stroke="rgba(57,255,142,0.15)" stroke-width="4" filter="url(#fo-glow-sm)"/>
+      <text x="956" y="220" text-anchor="middle" font-family="monospace" font-size="8" fill="#39ff8e" fill-opacity="0.9" font-weight="700">*.tf</text>
+      <text x="956" y="234" text-anchor="middle" font-family="monospace" font-size="7" fill="#39ff8e" fill-opacity="0.6" font-weight="600">+ PR</text>
+      <text x="956" y="254" text-anchor="middle" font-family="monospace" font-size="6" fill="rgba(57,255,142,0.4)">output</text>
     </g>
 
     <!-- ============================================ -->
     <!-- GUARDRAILS LABEL BAR (bottom)                -->
     <!-- ============================================ -->
     <g>
-      <text x="450" y="400" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(255,255,255,0.25)" letter-spacing="2" font-weight="600">GUARDRAILS</text>
+      <text x="490" y="400" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(255,255,255,0.25)" letter-spacing="2" font-weight="600">GUARDRAILS</text>
 
       <!-- Skills row at bottom -->
-      <rect x="140" y="410" width="90" height="20" rx="4" fill="rgba(0,240,255,0.04)" stroke="rgba(0,240,255,0.12)" stroke-width="0.8"/>
-      <text x="185" y="424" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(0,240,255,0.55)" font-weight="600">Skills</text>
+      <rect x="200" y="410" width="90" height="20" rx="4" fill="rgba(0,240,255,0.04)" stroke="rgba(0,240,255,0.12)" stroke-width="0.8"/>
+      <text x="245" y="424" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(0,240,255,0.55)" font-weight="600">Skills</text>
 
-      <rect x="244" y="410" width="90" height="20" rx="4" fill="rgba(255,45,123,0.04)" stroke="rgba(255,45,123,0.12)" stroke-width="0.8"/>
-      <text x="289" y="424" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,45,123,0.55)" font-weight="600">Constitution</text>
+      <rect x="304" y="410" width="90" height="20" rx="4" fill="rgba(255,45,123,0.04)" stroke="rgba(255,45,123,0.12)" stroke-width="0.8"/>
+      <text x="349" y="424" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,45,123,0.55)" font-weight="600">Constitution</text>
 
-      <rect x="348" y="410" width="90" height="20" rx="4" fill="rgba(255,225,77,0.04)" stroke="rgba(255,225,77,0.12)" stroke-width="0.8"/>
-      <text x="393" y="424" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,225,77,0.55)" font-weight="600">MCP Tools</text>
+      <rect x="408" y="410" width="90" height="20" rx="4" fill="rgba(255,225,77,0.04)" stroke="rgba(255,225,77,0.12)" stroke-width="0.8"/>
+      <text x="453" y="424" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,225,77,0.55)" font-weight="600">MCP Tools</text>
 
-      <rect x="452" y="410" width="100" height="20" rx="4" fill="rgba(180,77,255,0.04)" stroke="rgba(180,77,255,0.12)" stroke-width="0.8"/>
-      <text x="502" y="424" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(180,77,255,0.55)" font-weight="600">Design Templates</text>
+      <rect x="512" y="410" width="100" height="20" rx="4" fill="rgba(180,77,255,0.04)" stroke="rgba(180,77,255,0.12)" stroke-width="0.8"/>
+      <text x="562" y="424" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(180,77,255,0.55)" font-weight="600">Design Templates</text>
 
-      <rect x="566" y="410" width="110" height="20" rx="4" fill="rgba(255,68,68,0.04)" stroke="rgba(255,68,68,0.12)" stroke-width="0.8"/>
-      <text x="621" y="424" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,68,68,0.55)" font-weight="600">Human Approval</text>
+      <rect x="626" y="410" width="110" height="20" rx="4" fill="rgba(255,68,68,0.04)" stroke="rgba(255,68,68,0.12)" stroke-width="0.8"/>
+      <text x="681" y="424" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(255,68,68,0.55)" font-weight="600">Human Approval</text>
     </g>
 
     <!-- ============================================ -->
@@ -791,14 +794,14 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
     <!-- ============================================ -->
     <g>
       <!-- Plan skill bar -->
-      <rect x="150" y="356" width="312" height="22" rx="5" fill="rgba(180,77,255,0.03)" stroke="rgba(180,77,255,0.12)" stroke-width="0.8"/>
+      <rect x="150" y="356" width="332" height="22" rx="5" fill="rgba(180,77,255,0.03)" stroke="rgba(180,77,255,0.12)" stroke-width="0.8"/>
       <text x="160" y="371" font-family="monospace" font-size="7" fill="#b44dff" fill-opacity="0.65" font-weight="600">/tf-{wf}-plan</text>
-      <text x="280" y="371" font-family="monospace" font-size="6.5" fill="rgba(255,255,255,0.25)">Phases 1 &amp; 2</text>
+      <text x="300" y="371" font-family="monospace" font-size="6.5" fill="rgba(255,255,255,0.25)">Phases 1 &amp; 2</text>
 
       <!-- Implement skill bar -->
-      <rect x="562" y="356" width="292" height="22" rx="5" fill="rgba(57,255,142,0.03)" stroke="rgba(57,255,142,0.12)" stroke-width="0.8"/>
-      <text x="572" y="371" font-family="monospace" font-size="7" fill="#39ff8e" fill-opacity="0.65" font-weight="600">/tf-{wf}-implement</text>
-      <text x="720" y="371" font-family="monospace" font-size="6.5" fill="rgba(255,255,255,0.25)">Phases 3 &amp; 4</text>
+      <rect x="612" y="356" width="340" height="22" rx="5" fill="rgba(57,255,142,0.03)" stroke="rgba(57,255,142,0.12)" stroke-width="0.8"/>
+      <text x="622" y="371" font-family="monospace" font-size="7" fill="#39ff8e" fill-opacity="0.65" font-weight="600">/tf-{wf}-implement</text>
+      <text x="800" y="371" font-family="monospace" font-size="6.5" fill="rgba(255,255,255,0.25)">Phases 3 &amp; 4</text>
     </g>
 
   </svg>
@@ -4651,10 +4654,7 @@ body.has-selection .svg-diagram [data-id].dimmed { opacity: 0.15; }
       <rect x="60" y="140" width="600" height="36" rx="6" fill="rgba(57,255,142,0.03)" stroke="rgba(57,255,142,0.12)" stroke-width="0.8">
         <animate attributeName="stroke-opacity" values="0.08;0.2;0.08" dur="4s" repeatCount="indefinite"/>
       </rect>
-      <!-- Flowing dash line across the bar -->
-      <line x1="70" y1="158" x2="650" y2="158" stroke="rgba(57,255,142,0.1)" stroke-width="0.6" stroke-dasharray="4 3">
-        <animate attributeName="stroke-dashoffset" values="0;-20" dur="3s" repeatCount="indefinite"/>
-      </line>
+      <!-- (east-west line removed for cleaner look) -->
       <!-- SDD label -->
       <text x="360" y="153" text-anchor="middle" font-family="monospace" font-size="8" fill="#39ff8e" fill-opacity="0.7" font-weight="600">4-PHASE SDD</text>
       <text x="360" y="167" text-anchor="middle" font-family="monospace" font-size="7" fill="#39ff8e" fill-opacity="0.45">CLARIFY &#x2192; DESIGN &#x2192; BUILD &#x2192; VALIDATE</text>
