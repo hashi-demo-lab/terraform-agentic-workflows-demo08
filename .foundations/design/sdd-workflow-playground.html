@@ -590,11 +590,11 @@ body.has-selection .node.dimmed { opacity: 0.15; }
 <div class="pillar-grid">
   <div class="pillar-card">
     <div class="pillar-label">WHAT / The Methodology</div>
-    <p>Autonomous HCP Terraform dev powered by AI agents. Specialized subagents handle research, design, implementation, and validation. The design document is the single source of truth, human-approved before any code is written.</p>
+    <p>Autonomous Terraform dev powered by AI agents. Specialized subagents handle research, design, implementation, and validation. The design document is the single source of truth, human-approved before any code is written.</p>
   </div>
   <div class="pillar-card">
     <div class="pillar-label">WHY / The Business Case</div>
-    <p>Ship production HCP Terraform faster with built-in security controls, consistent code standards, and quality gates (>=7.0 score). Constitutions encode your team's standards into every agent invocation.</p>
+    <p>Ship production Terraform faster with built-in security controls, consistent code standards, and quality gates (>=7.0 score). Constitutions encode your team's standards into every agent invocation.</p>
   </div>
   <div class="pillar-card">
     <div class="pillar-label">WHO / The Audience</div>
@@ -1741,7 +1741,7 @@ body.has-selection .node.dimmed { opacity: 0.15; }
   <div class="card-grid single">
     <div class="ed-card">
       <h3>Keeping Agents Productive</h3>
-      <p>Use concurrent research (3-4 agents), checkpoint commits after each item, trust-but-verify gates (orchestrator validates subagent output), and in-memory result passing (&lt;500 tokens).</p>
+      <p>Use concurrent research (3-4 agents), checkpoint commits after each item, trust-but-verify gates (orchestrator validates subagent output).</p>
       <div class="node-row"><div class="node node-concept" data-id="concept-throughput" data-type="concept">concept-throughput</div></div>
     </div>
   </div>
@@ -5472,7 +5472,7 @@ const nodeDesc = {
   'concept-subagents': 'Subagents are isolated child processes spawned by an orchestrator. Each gets a focused task, limited tools, and returns results in-memory. Key benefit: blast radius containment.',
   'concept-context-engineering': 'Context engineering is the discipline of controlling what information enters an agent\'s context window. Key strategies: constitution files (always loaded), skills (loaded on demand), $ARGUMENTS (passed at invocation), and the P1-P9 priority system.',
   'concept-concurrency': 'Concurrent agent patterns: fan-out/fan-in (multiple research agents), pipeline (sequential handoffs), and map-reduce (parallel work + merge). The orchestrator controls concurrency.',
-  'concept-throughput': 'Maximizing throughput means keeping agents productive: use concurrent research (3-4 agents), checkpoint commits after each item, trust-but-verify gates, and in-memory result passing (<500 tokens).',
+  'concept-throughput': 'Maximizing throughput means keeping agents productive: use concurrent research (3-4 agents), checkpoint commits after each item, trust-but-verify gates.',
   'concept-decision-framework': 'When to use skills vs subagents vs MCP: Skills for domain knowledge injection. Subagents for parallel isolated work. MCP for external API access.',
   'concept-agentic-loop': 'The agentic loop: Plan → Execute → Observe → Reflect → Repeat. The orchestrator drives the outer loop while subagents handle inner loops.',
   'concept-observability': 'Observability for agentic systems: GitHub issue as progress dashboard, post-issue-progress.sh updates at every step, checkpoint commits for rollback points.',
