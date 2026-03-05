@@ -5674,7 +5674,7 @@ Step 12: terraform test + fmt + trivy + terraform-docs (validate phase)</pre>
 <div style="max-width:var(--max-w);margin:0 auto;padding:48px 28px 0">
   <h3 style="font-family:var(--serif);font-size:28px;font-weight:700;color:var(--text);margin-bottom:8px">Provider Workflow</h3>
   <p style="font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#1A6B7A;margin-bottom:16px">GO PLUGIN FRAMEWORK &rarr; CUSTOM TERRAFORM PROVIDER</p>
-  <p style="font-family:var(--sans);font-size:16px;line-height:1.7;color:var(--text-body);margin-bottom:24px">Provider development is the most technically complex workflow. Agents must understand both the Plugin Framework's type system and the target API's semantics. Research focuses on API behavior ambiguity, state management (ForceNew vs in-place), and error handling. The workflow produces Go code with acceptance tests that validate real API interactions.</p>
+  <p style="font-family:var(--sans);font-size:16px;line-height:1.7;color:var(--text-body);margin-bottom:24px">The provider workflow produces Terraform provider resources using Go and the Plugin Framework. Research agents study API behavior, state management patterns (ForceNew vs in-place), and error handling. The workflow produces Go code with acceptance tests that validate real API interactions.</p>
 </div>
 
 <div class="svg-diagram" style="max-width:680px;margin:0 auto 32px;padding:0 28px">
