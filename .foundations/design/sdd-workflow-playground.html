@@ -3822,7 +3822,7 @@ Step 12: terraform test + fmt + trivy + terraform-docs (validate phase)</pre>
   <h3 class="subsection-title">Sentinel Policy as Code</h3>
   <p class="subsection-desc">Automated policy enforcement on every HCP Terraform run — agent-generated plans are evaluated against organisational rules before any infrastructure change is applied.</p>
   <div class="svg-diagram" style="max-width:680px;margin:24px auto 32px;padding:0 28px">
-    <svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 680 270" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="sen-dots" width="16" height="16" patternUnits="userSpaceOnUse">
           <circle cx="2" cy="2" r="0.5" fill="#E0DCD4" opacity="0.5"/>
@@ -3831,102 +3831,95 @@ Step 12: terraform test + fmt + trivy + terraform-docs (validate phase)</pre>
           <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.08"/>
         </filter>
       </defs>
-      <rect x="0" y="0" width="680" height="260" rx="10" fill="#FAFAF8"/>
-      <rect x="0" y="0" width="680" height="260" rx="10" fill="url(#sen-dots)"/>
-      <rect x="0" y="0" width="680" height="260" rx="10" fill="none" stroke="#E0DCD4" stroke-width="1"/>
+      <rect x="0" y="0" width="680" height="270" rx="10" fill="#FAFAF8"/>
+      <rect x="0" y="0" width="680" height="270" rx="10" fill="url(#sen-dots)"/>
+      <rect x="0" y="0" width="680" height="270" rx="10" fill="none" stroke="#E0DCD4" stroke-width="1"/>
 
       <text x="340" y="26" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#C4283A" font-weight="700">Sentinel Policy Pipeline</text>
       <text x="340" y="40" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="9" fill="#8A8A8A">HCP Terraform evaluates policies between plan and apply — agents cannot bypass</text>
 
       <!-- Plan box -->
       <g filter="url(#sen-shadow)">
-        <rect x="24" y="56" width="120" height="50" rx="8" fill="white"/>
+        <rect x="24" y="56" width="136" height="50" rx="8" fill="white"/>
       </g>
       <rect x="24" y="56" width="4" height="50" rx="2" fill="#1A6B7A"/>
       <text x="42" y="78" font-family="JetBrains Mono,monospace" font-size="10" fill="#1A6B7A" font-weight="700">terraform plan</text>
       <text x="42" y="94" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">Generates plan output</text>
-      <rect x="24" y="56" width="120" height="50" rx="8" fill="none">
-        <animate attributeName="opacity" values="0.88;1.0;0.88" dur="3.5s" repeatCount="indefinite"/>
-      </rect>
 
-      <!-- Arrow -->
-      <line x1="150" y1="81" x2="185" y2="81" stroke="#1A6B7A" stroke-width="1.2" opacity="0.3"/>
-      <polygon points="181,77 189,81 181,85" fill="#C4283A" opacity="0.4"/>
+      <!-- Arrow plan → sentinel -->
+      <line x1="166" y1="81" x2="194" y2="81" stroke="#1A6B7A" stroke-width="1.2" opacity="0.3"/>
+      <polygon points="190,77 198,81 190,85" fill="#C4283A" opacity="0.4"/>
       <circle r="2.5" fill="#1A6B7A" opacity="0">
-        <animateMotion dur="2s" repeatCount="indefinite" path="M150,81 L185,81"/>
+        <animateMotion dur="2s" repeatCount="indefinite" path="M166,81 L194,81"/>
         <animate attributeName="opacity" values="0;0.7;0" dur="2s" repeatCount="indefinite"/>
       </circle>
 
       <!-- Sentinel gate (center) -->
       <g filter="url(#sen-shadow)">
-        <rect x="192" y="48" width="296" height="66" rx="8" fill="white" stroke="#C4283A" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <rect x="200" y="48" width="280" height="72" rx="8" fill="white" stroke="#C4283A" stroke-width="1.5" stroke-dasharray="4 3"/>
       </g>
-      <rect x="192" y="48" width="296" height="4" rx="2" fill="#C4283A"/>
+      <rect x="200" y="48" width="280" height="4" rx="2" fill="#C4283A"/>
       <text x="340" y="70" text-anchor="middle" font-family="Playfair Display,serif" font-size="12" fill="#C4283A" font-weight="700">Sentinel Policy Check</text>
-      <text x="340" y="86" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="8.5" fill="#6B6B6B">Evaluates plan against organization policies — hard-mandatory, soft-mandatory, advisory</text>
-      <rect x="240" y="96" width="80" height="14" rx="4" fill="#C4283A" opacity="0.06" stroke="#C4283A" stroke-width="0.5" stroke-opacity="0.2"/>
-      <text x="280" y="106" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="#C4283A">POLICY GATE</text>
-      <rect x="330" y="96" width="50" height="14" rx="4" fill="#B87333" opacity="0.06" stroke="#B87333" stroke-width="0.5" stroke-opacity="0.2"/>
-      <text x="355" y="106" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="#B87333">OPA</text>
-      <rect x="192" y="48" width="296" height="66" rx="8" fill="none">
-        <animate attributeName="opacity" values="0.85;1.0;0.85" dur="2s" repeatCount="indefinite"/>
-      </rect>
+      <text x="340" y="86" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">Evaluates plan against organization policies</text>
+      <text x="340" y="97" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">hard-mandatory, soft-mandatory, advisory</text>
+      <rect x="248" y="104" width="80" height="14" rx="4" fill="#C4283A" opacity="0.06" stroke="#C4283A" stroke-width="0.5" stroke-opacity="0.2"/>
+      <text x="288" y="114" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="#C4283A">POLICY GATE</text>
+      <rect x="338" y="104" width="50" height="14" rx="4" fill="#B87333" opacity="0.06" stroke="#B87333" stroke-width="0.5" stroke-opacity="0.2"/>
+      <text x="363" y="114" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="#B87333">OPA</text>
 
-      <!-- Arrow -->
-      <line x1="494" y1="81" x2="529" y2="81" stroke="#C4283A" stroke-width="1.2" opacity="0.3"/>
-      <polygon points="525,77 533,81 525,85" fill="#2D7A4F" opacity="0.4"/>
+      <!-- Arrow sentinel → apply -->
+      <line x1="486" y1="81" x2="514" y2="81" stroke="#C4283A" stroke-width="1.2" opacity="0.3"/>
+      <polygon points="510,77 518,81 510,85" fill="#2D7A4F" opacity="0.4"/>
 
       <!-- Apply box -->
       <g filter="url(#sen-shadow)">
-        <rect x="536" y="56" width="120" height="50" rx="8" fill="white"/>
+        <rect x="520" y="56" width="136" height="50" rx="8" fill="white"/>
       </g>
-      <rect x="536" y="56" width="4" height="50" rx="2" fill="#2D7A4F"/>
-      <text x="554" y="78" font-family="JetBrains Mono,monospace" font-size="10" fill="#2D7A4F" font-weight="700">terraform apply</text>
-      <text x="554" y="94" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">Only if policies pass</text>
-      <rect x="536" y="56" width="120" height="50" rx="8" fill="none">
-        <animate attributeName="opacity" values="0.88;1.0;0.88" dur="3.7s" repeatCount="indefinite" begin="0.5s"/>
-      </rect>
+      <rect x="520" y="56" width="4" height="50" rx="2" fill="#2D7A4F"/>
+      <text x="538" y="78" font-family="JetBrains Mono,monospace" font-size="10" fill="#2D7A4F" font-weight="700">terraform apply</text>
+      <text x="538" y="94" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">Only if policies pass</text>
 
       <!-- Policy examples row -->
       <g filter="url(#sen-shadow)">
-        <rect x="24" y="130" width="200" height="52" rx="8" fill="white"/>
+        <rect x="24" y="138" width="200" height="52" rx="8" fill="white"/>
       </g>
-      <rect x="24" y="130" width="4" height="52" rx="2" fill="#C4283A"/>
-      <rect x="36" y="136" width="70" height="14" rx="4" fill="#C4283A">
+      <rect x="24" y="138" width="4" height="52" rx="2" fill="#C4283A"/>
+      <rect x="36" y="144" width="70" height="14" rx="4" fill="#C4283A">
         <animate attributeName="opacity" values="0.85;1.0;0.85" dur="2.8s" repeatCount="indefinite"/>
       </rect>
-      <text x="71" y="146" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="6.5" fill="white" font-weight="700">HARD MANDATORY</text>
-      <text x="36" y="162" font-family="Source Sans 3,sans-serif" font-size="8" fill="#2A2A2A" font-weight="600">Encryption required on all storage</text>
-      <text x="36" y="174" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">No public S3 buckets, no unencrypted EBS</text>
+      <text x="71" y="154" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="6.5" fill="white" font-weight="700">HARD MANDATORY</text>
+      <text x="36" y="170" font-family="Source Sans 3,sans-serif" font-size="8" fill="#2A2A2A" font-weight="600">Encryption required on all storage</text>
+      <text x="36" y="182" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">No public S3 buckets, no unencrypted EBS</text>
 
       <g filter="url(#sen-shadow)">
-        <rect x="240" y="130" width="200" height="52" rx="8" fill="white"/>
+        <rect x="240" y="138" width="200" height="52" rx="8" fill="white"/>
       </g>
-      <rect x="240" y="130" width="4" height="52" rx="2" fill="#B87333"/>
-      <rect x="252" y="136" width="66" height="14" rx="4" fill="#B87333">
+      <rect x="240" y="138" width="4" height="52" rx="2" fill="#B87333"/>
+      <rect x="252" y="144" width="66" height="14" rx="4" fill="#B87333">
         <animate attributeName="opacity" values="0.85;1.0;0.85" dur="3.2s" repeatCount="indefinite" begin="0.3s"/>
       </rect>
-      <text x="285" y="146" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="6.5" fill="white" font-weight="700">SOFT MANDATORY</text>
-      <text x="252" y="162" font-family="Source Sans 3,sans-serif" font-size="8" fill="#2A2A2A" font-weight="600">Registry-only module sources</text>
-      <text x="252" y="174" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">Override requires manager approval</text>
+      <text x="285" y="154" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="6.5" fill="white" font-weight="700">SOFT MANDATORY</text>
+      <text x="252" y="170" font-family="Source Sans 3,sans-serif" font-size="8" fill="#2A2A2A" font-weight="600">Registry-only module sources</text>
+      <text x="252" y="182" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">Override requires manager approval</text>
 
       <g filter="url(#sen-shadow)">
-        <rect x="456" y="130" width="200" height="52" rx="8" fill="white"/>
+        <rect x="456" y="138" width="200" height="52" rx="8" fill="white"/>
       </g>
-      <rect x="456" y="130" width="4" height="52" rx="2" fill="#9A7B2D"/>
-      <rect x="468" y="136" width="50" height="14" rx="4" fill="#9A7B2D">
+      <rect x="456" y="138" width="4" height="52" rx="2" fill="#9A7B2D"/>
+      <rect x="468" y="144" width="50" height="14" rx="4" fill="#9A7B2D">
         <animate attributeName="opacity" values="0.85;1.0;0.85" dur="3.5s" repeatCount="indefinite" begin="0.6s"/>
       </rect>
-      <text x="493" y="146" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="6.5" fill="white" font-weight="700">ADVISORY</text>
-      <text x="468" y="162" font-family="Source Sans 3,sans-serif" font-size="8" fill="#2A2A2A" font-weight="600">Cost estimation thresholds</text>
-      <text x="468" y="174" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">Warn on monthly cost > $500</text>
+      <text x="493" y="154" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="6.5" fill="white" font-weight="700">ADVISORY</text>
+      <text x="468" y="170" font-family="Source Sans 3,sans-serif" font-size="8" fill="#2A2A2A" font-weight="600">Cost estimation thresholds</text>
+      <text x="468" y="182" font-family="Source Sans 3,sans-serif" font-size="8" fill="#6B6B6B">Warn on monthly cost > $500</text>
 
       <!-- Key differentiator -->
-      <rect x="80" y="198" width="520" height="36" rx="8" fill="white" filter="url(#sen-shadow)"/>
-      <rect x="80" y="198" width="4" height="36" rx="2" fill="#C4283A"/>
-      <text x="100" y="218" font-family="Source Sans 3,sans-serif" font-size="9" fill="#2A2A2A"><tspan font-weight="700" fill="#C4283A">Key:</tspan> Agents cannot bypass hard-mandatory policies. Even with full automation, organizational rules are enforced at the platform layer — not by the agent.</text>
+      <rect x="60" y="206" width="560" height="36" rx="8" fill="white" filter="url(#sen-shadow)"/>
+      <rect x="60" y="206" width="4" height="36" rx="2" fill="#C4283A"/>
+      <text x="80" y="220" font-family="Source Sans 3,sans-serif" font-size="8.5" fill="#2A2A2A"><tspan font-weight="700" fill="#C4283A">Key:</tspan> Agents cannot bypass hard-mandatory policies. Even with full automation,</text>
+      <text x="80" y="233" font-family="Source Sans 3,sans-serif" font-size="8.5" fill="#2A2A2A">organizational rules are enforced at the platform layer — not by the agent.</text>
 
-      <line x1="200" y1="246" x2="480" y2="246" stroke="#E0DCD4" stroke-width="0.5" opacity="0.4"/>
+      <line x1="200" y1="256" x2="480" y2="256" stroke="#E0DCD4" stroke-width="0.5" opacity="0.4"/>
     </svg>
   </div>
   <div class="card-grid">
