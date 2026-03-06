@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consumer Module Uplift Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --red: #C4283A;
+  --red-light: #D4434F;
+  --bg: #FAFAF8;
+  --bg-warm: #F5F3EF;
+  --bg-code: #F0EDE8;
+  --text: #1A1A1A;
+  --text-body: #3D3D3D;
+  --text-muted: #6B6B6B;
+  --text-caption: #8A8A8A;
+  --border: #E0DCD4;
+  --border-light: #EBE8E2;
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Source Sans 3', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --max-w: 880px;
+  --pink: #C4283A; --cyan: #1A6B7A; --purple: #6B3FA0;
+  --green: #2D7A4F; --orange: #B87333; --yellow: #9A7B2D;
+  --ice: #4A6B8A; --cmd-red: #A03030;
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--text-body);
+  font-family: var(--sans); font-size: 17px; line-height: 1.72;
+  padding: 40px 0 80px;
+}
+
+/* === HEADER === */
+#header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  height: 48px; background: rgba(250,250,248,0.97);
+  border-bottom: 1px solid var(--border-light);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  display: flex; align-items: center; padding: 0 28px;
+}
+#header-title {
+  font-family: var(--serif); font-size: 14px; font-weight: 700;
+  color: var(--text); letter-spacing: 0.3px;
+}
+#header-title span { color: var(--red); }
+#header-nav { display: flex; gap: 4px; margin-left: auto; align-items: center; }
+.header-link {
+  font-family: var(--sans); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-caption);
+  padding: 6px 12px; border-radius: 4px; cursor: pointer; border: none;
+  background: transparent; transition: all 0.2s; text-decoration: none;
+}
+.header-link:hover { color: var(--text); background: rgba(0,0,0,0.03); }
+.header-link.active { color: var(--red); }
+
+/* === LANDING === */
+#landing {
+  padding: 80px 28px 40px; text-align: center;
+  max-width: var(--max-w); margin: 0 auto;
+}
+.landing-eyebrow {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--red); margin-bottom: 20px;
+}
+.landing-headline {
+  font-family: var(--serif); font-size: 38px; font-weight: 800;
+  color: var(--text); line-height: 1.15; margin-bottom: 16px;
+}
+.landing-body {
+  font-size: 17px; line-height: 1.7; color: var(--text-muted);
+  max-width: 640px; margin: 0 auto 32px; font-weight: 300;
+}
+
+/* === MODE CARDS === */
+.mode-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  max-width: var(--max-w); margin: 0 auto 48px; padding: 0 28px;
+}
+.mode-card {
+  border: 1px solid var(--border); border-radius: 8px; padding: 24px;
+  background: white; transition: all 0.2s; cursor: pointer;
+}
+.mode-card:hover { border-color: var(--text-caption); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.mode-card.active { border-color: var(--red); box-shadow: 0 2px 12px rgba(196,40,58,0.08); }
+.mode-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.mode-card h3 {
+  font-family: var(--serif); font-size: 20px; font-weight: 700;
+  color: var(--text); margin-bottom: 6px;
+}
+.mode-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+.mode-card code {
+  font-family: var(--mono); font-size: 11px; background: var(--bg-code);
+  padding: 1px 5px; border-radius: 3px; color: var(--red);
+}
+
+/* === SECTIONS === */
+.chapter {
+  max-width: var(--max-w); margin: 0 auto; padding: 0 28px;
+}
+.chapter-divider {
+  text-align: center; padding: 48px 28px 32px;
+  border-top: 1px solid var(--border);
+  max-width: var(--max-w); margin: 0 auto;
+  scroll-margin-top: 60px;
+}
+.chapter-number {
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--red);
+  margin-bottom: 10px;
+}
+.chapter-title {
+  font-family: var(--serif); font-size: 30px; font-weight: 800;
+  color: var(--text); line-height: 1.2; margin-bottom: 10px;
+}
+.chapter-subtitle {
+  font-family: var(--sans); font-size: 15px; color: var(--text-muted);
+  font-weight: 300; max-width: 560px; margin: 0 auto;
+}
+
+/* === SUBSECTION === */
+.subsection {
+  max-width: var(--max-w); margin: 0 auto; padding: 0 28px 40px;
+  scroll-margin-top: 80px;
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.subsection.revealed { opacity: 1; transform: translateY(0); }
+.subsection-title {
+  font-family: var(--serif); font-size: 22px; font-weight: 700;
+  color: var(--text); margin-bottom: 6px;
+}
+.subsection-desc {
+  font-size: 14px; color: var(--text-muted); margin-bottom: 20px;
+  font-weight: 300;
+}
+
+/* === SVG DIAGRAM === */
+.svg-diagram { max-width: 820px; margin: 0 auto 24px; }
+.svg-diagram svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+/* === CARDS === */
+.card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.card-grid.triple { grid-template-columns: 1fr 1fr 1fr; }
+.card-grid.single { grid-template-columns: 1fr; }
+.ed-card {
+  border: 1px solid var(--border); border-radius: 8px; padding: 18px;
+  background: white; transition: border-color 0.2s;
+}
+.ed-card:hover { border-color: var(--text-caption); }
+.ed-card h3 {
+  font-family: var(--serif); font-size: 15px; font-weight: 700;
+  color: var(--text); margin-bottom: 6px;
+}
+.ed-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 4px; }
+.ed-card code {
+  font-family: var(--mono); font-size: 11px; background: var(--bg-code);
+  padding: 1px 5px; border-radius: 3px; color: var(--red);
+}
+.ed-card ul { font-size: 12px; color: var(--text-muted); line-height: 1.7; padding-left: 16px; }
+
+/* === NODES === */
+.node {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;
+  border-radius: 4px; font-size: 11px; font-family: var(--mono);
+  margin: 2px 1px; border: 1px solid; white-space: nowrap;
+}
+.node-agent { background: rgba(196,40,58,0.06); border-color: rgba(196,40,58,0.25); color: var(--pink); }
+.node-skill { background: rgba(26,107,122,0.06); border-color: rgba(26,107,122,0.25); color: var(--cyan); }
+.node-template { background: rgba(107,63,160,0.06); border-color: rgba(107,63,160,0.25); color: var(--purple); }
+.node-script { background: rgba(45,122,79,0.06); border-color: rgba(45,122,79,0.25); color: var(--green); }
+.node-artifact { background: rgba(184,115,51,0.06); border-color: rgba(184,115,51,0.25); color: var(--orange); }
+.node-mcp { background: rgba(154,123,45,0.06); border-color: rgba(154,123,45,0.25); color: var(--yellow); }
+.node-ref { background: rgba(74,107,138,0.06); border-color: rgba(74,107,138,0.25); color: var(--ice); }
+.node-cmd { background: rgba(160,48,48,0.06); border-color: rgba(160,48,48,0.25); color: var(--cmd-red); }
+.node-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+
+/* === DECISION MATRIX === */
+.matrix-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  border-radius: 8px; overflow: hidden; margin: 16px 0 24px;
+  border: 1px solid var(--border);
+}
+.matrix-table th {
+  background: var(--bg-warm); font-family: var(--mono); font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);
+  padding: 10px 14px; text-align: center; border-bottom: 1px solid var(--border);
+}
+.matrix-table th:first-child { text-align: left; }
+.matrix-table td {
+  padding: 8px 14px; font-size: 12px; color: var(--text-body);
+  border-bottom: 1px solid var(--border-light); text-align: center;
+  font-family: var(--mono); font-size: 11px;
+}
+.matrix-table td:first-child {
+  text-align: left; font-family: var(--sans); font-size: 13px;
+  color: var(--text-muted); font-weight: 400;
+}
+.matrix-table tr:last-child td { border-bottom: none; }
+.risk-low { background: rgba(45,122,79,0.08); color: var(--green); font-weight: 600; }
+.risk-med { background: rgba(154,123,45,0.08); color: var(--yellow); font-weight: 600; }
+.risk-high { background: rgba(184,115,51,0.08); color: var(--orange); font-weight: 600; }
+.risk-crit { background: rgba(196,40,58,0.08); color: var(--red); font-weight: 600; }
+
+/* === ARTIFACT TABLE === */
+.artifact-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  border-radius: 8px; overflow: hidden; margin: 12px 0 20px;
+  border: 1px solid var(--border);
+}
+.artifact-table th {
+  background: var(--bg-warm); font-family: var(--mono); font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted);
+  padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border);
+}
+.artifact-table td {
+  padding: 8px 12px; font-size: 13px; color: var(--text-body);
+  border-bottom: 1px solid var(--border-light);
+}
+.artifact-table td:first-child { font-family: var(--mono); font-size: 11px; color: var(--red); }
+.artifact-table tr:last-child td { border-bottom: none; }
+
+/* === LEGEND === */
+.legend { display: flex; justify-content: center; gap: 16px; padding: 8px 0 16px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; letter-spacing: 0.5px; color: var(--text-caption); }
+.legend-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* === PIPELINE === */
+.pipeline {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 12px 0 8px;
+}
+.pipe-phase {
+  border: 1px solid; border-radius: 6px; padding: 6px 14px;
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase; white-space: nowrap;
+  background: white;
+}
+.pipe-arrow { color: var(--text-caption); font-size: 14px; padding: 0 2px; }
+
+/* Responsive */
+@media (max-width:900px) {
+  .mode-grid { grid-template-columns: 1fr; }
+  .card-grid, .card-grid.triple { grid-template-columns: 1fr; }
+  .landing-headline { font-size: 28px; }
+}
+
+/* === ANIMATED SVG KEYFRAMES === */
+@keyframes svg-shimmer {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+@keyframes svg-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div id="header-title"><span>Consumer Module</span> Uplift Workflow</div>
+  <div id="header-nav">
+    <a class="header-link active" href="#landing">Overview</a>
+    <a class="header-link" href="#pipeline-section">Pipeline</a>
+    <a class="header-link" href="#interactive-section">Interactive</a>
+    <a class="header-link" href="#decision-section">Decision</a>
+    <a class="header-link" href="#artifacts-section">Artifacts</a>
+  </div>
+</div>
+
+<!-- ===== LANDING ===== -->
+<section id="landing">
+  <div class="landing-eyebrow">USE CASE 1 — CONSUMER MODULE UPLIFT</div>
+  <h1 class="landing-headline">Automated Module Version Upgrades for HCP Terraform Consumers</h1>
+  <p class="landing-body">When a module author publishes a new version to the private registry, consumers need their workspace code updated. This workflow combines Dependabot detection with AI-powered analysis to classify risk, adapt code, and decide whether to auto-merge, request review, or block.</p>
+</section>
+
+<!-- MODE CARDS -->
+<div class="mode-grid">
+  <div class="mode-card active" onclick="toggleMode(this, 'ci')">
+    <div class="mode-label" style="color:var(--cyan)">CI PIPELINE</div>
+    <h3>GitHub Actions</h3>
+    <p>Automated 4-job workflow triggered by Dependabot PRs. Uses Sonnet for cost-efficient analysis. Auto-merges low-risk patches, blocks breaking changes.</p>
+    <div class="node-row" style="margin-top:8px">
+      <span class="node node-script">classify</span>
+      <span class="node node-cmd">validate</span>
+      <span class="node node-agent">analyze</span>
+      <span class="node node-skill">decide</span>
+    </div>
+  </div>
+  <div class="mode-card" onclick="toggleMode(this, 'interactive')">
+    <div class="mode-label" style="color:var(--purple)">INTERACTIVE</div>
+    <h3><code>/tf-consumer-uplift</code></h3>
+    <p>Full SDD 4-phase workflow with human gates. Uses Opus for deep analysis. Produces design document, adapts code, validates with sandbox deployment.</p>
+    <div class="node-row" style="margin-top:8px">
+      <span class="node node-agent">analyze</span>
+      <span class="node node-template">design</span>
+      <span class="node node-skill">implement</span>
+      <span class="node node-script">validate</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CI PIPELINE ===== -->
+<div class="chapter-divider" id="pipeline-section">
+  <div class="chapter-number">CI Pipeline</div>
+  <h2 class="chapter-title">5-Layer Automated Pipeline</h2>
+  <p class="chapter-subtitle">Detection, validation, AI analysis, decision, and apply -- fully automated for Dependabot PRs</p>
+</div>
+
+<div class="subsection revealed" id="pipeline-diagram">
+  <div class="svg-diagram" style="max-width:820px">
+    <svg viewBox="0 0 820 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="pipe-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#E0DCD4" stroke-width="0.3" opacity="0.4"/>
+        </pattern>
+        <filter id="pipe-shadow" x="-5%" y="-5%" width="110%" height="120%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.08"/>
+        </filter>
+        <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#C4283A" opacity="0.5"/>
+        </marker>
+        <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#8A8A8A" opacity="0.4"/>
+        </marker>
+      </defs>
+
+      <!-- Background -->
+      <rect x="0" y="0" width="820" height="520" rx="10" fill="#FAFAF8"/>
+      <rect x="0" y="0" width="820" height="520" rx="10" fill="url(#pipe-grid)"/>
+      <rect x="0" y="0" width="820" height="520" rx="10" fill="none" stroke="#E0DCD4" stroke-width="1"/>
+
+      <!-- Title -->
+      <text x="410" y="28" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A" letter-spacing="2.5">CONSUMER MODULE UPLIFT CI PIPELINE</text>
+
+      <!-- === LAYER 1: DETECTION === -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="20" y="45" width="180" height="72" rx="8" fill="#1A6B7A">
+          <animate attributeName="opacity" values="0.88;1;0.88" dur="3.5s" repeatCount="indefinite"/>
+        </rect>
+      </g>
+      <text x="110" y="65" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">LAYER 1</text>
+      <text x="110" y="82" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="white" font-weight="700">Detection</text>
+      <text x="110" y="100" text-anchor="middle" font-size="10" fill="white" opacity="0.75">Dependabot + Cron Scanner</text>
+
+      <!-- Arrow L1 to L2 -->
+      <line x1="205" y1="81" x2="238" y2="81" stroke="#E0DCD4" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+      <!-- === LAYER 2: VALIDATION === -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="245" y="45" width="180" height="72" rx="8" fill="#B87333">
+          <animate attributeName="opacity" values="0.88;1;0.88" dur="3.5s" repeatCount="indefinite" begin="0.3s"/>
+        </rect>
+      </g>
+      <text x="335" y="65" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">LAYER 2</text>
+      <text x="335" y="82" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="white" font-weight="700">Validation</text>
+      <text x="335" y="100" text-anchor="middle" font-size="10" fill="white" opacity="0.75">fmt, init, validate, plan</text>
+
+      <!-- Arrow L2 to L3 -->
+      <line x1="430" y1="81" x2="463" y2="81" stroke="#E0DCD4" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+      <!-- === LAYER 3: AI ANALYSIS === -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="470" y="45" width="180" height="72" rx="8" fill="#6B3FA0">
+          <animate attributeName="opacity" values="0.88;1;0.88" dur="3.5s" repeatCount="indefinite" begin="0.6s"/>
+        </rect>
+      </g>
+      <text x="560" y="65" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">LAYER 3</text>
+      <text x="560" y="82" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="white" font-weight="700">AI Analysis</text>
+      <text x="560" y="100" text-anchor="middle" font-size="10" fill="white" opacity="0.75">Claude + Terraform MCP</text>
+
+      <!-- Arrow L3 to L4 -->
+      <line x1="655" y1="81" x2="688" y2="81" stroke="#E0DCD4" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+      <!-- === LAYER 4: DECISION === -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="695" y="45" width="110" height="72" rx="8" fill="#C4283A">
+          <animate attributeName="opacity" values="0.88;1;0.88" dur="3.5s" repeatCount="indefinite" begin="0.9s"/>
+        </rect>
+      </g>
+      <text x="750" y="65" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">LAYER 4</text>
+      <text x="750" y="82" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="white" font-weight="700">Decision</text>
+      <text x="750" y="100" text-anchor="middle" font-size="10" fill="white" opacity="0.75">Risk Matrix</text>
+
+      <!-- === LAYER 2 DETAIL: Validation Steps === -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="20" y="145" width="405" height="90" rx="8" fill="white" stroke="#B87333" stroke-width="1.5"/>
+      </g>
+      <rect x="20" y="145" width="405" height="5" rx="2.5" fill="#B87333"/>
+      <text x="40" y="168" font-family="JetBrains Mono,monospace" font-size="10" fill="#B87333" letter-spacing="1.5" font-weight="700">DETERMINISTIC VALIDATION</text>
+
+      <!-- Validation steps -->
+      <rect x="35" y="178" width="72" height="22" rx="4" fill="#B87333" opacity="0.08"/>
+      <text x="71" y="193" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">classify</text>
+      <text x="115" y="193" font-family="var(--sans)" font-size="12" fill="#8A8A8A">&rarr;</text>
+      <rect x="127" y="178" width="52" height="22" rx="4" fill="#B87333" opacity="0.08"/>
+      <text x="153" y="193" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">fmt</text>
+      <text x="187" y="193" font-family="var(--sans)" font-size="12" fill="#8A8A8A">&rarr;</text>
+      <rect x="199" y="178" width="48" height="22" rx="4" fill="#B87333" opacity="0.08"/>
+      <text x="223" y="193" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">init</text>
+      <text x="255" y="193" font-family="var(--sans)" font-size="12" fill="#8A8A8A">&rarr;</text>
+      <rect x="267" y="178" width="56" height="22" rx="4" fill="#B87333" opacity="0.08"/>
+      <text x="295" y="193" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">tflint</text>
+      <text x="331" y="193" font-family="var(--sans)" font-size="12" fill="#8A8A8A">&rarr;</text>
+      <rect x="343" y="178" width="68" height="22" rx="4" fill="#B87333" opacity="0.1"/>
+      <text x="377" y="193" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="700">plan</text>
+
+      <!-- Plan exit codes -->
+      <text x="40" y="222" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A">exit 0 &rarr; close PR</text>
+      <text x="180" y="222" font-family="JetBrains Mono,monospace" font-size="9" fill="#C4283A">exit 1 &rarr; label breaking</text>
+      <text x="340" y="222" font-family="JetBrains Mono,monospace" font-size="9" fill="#2D7A4F">exit 2 &rarr; continue</text>
+
+      <!-- === LAYER 3 DETAIL: AI Analysis === -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="20" y="255" width="785" height="110" rx="8" fill="white" stroke="#6B3FA0" stroke-width="1.5"/>
+      </g>
+      <rect x="20" y="255" width="785" height="5" rx="2.5" fill="#6B3FA0"/>
+      <text x="40" y="280" font-family="JetBrains Mono,monospace" font-size="10" fill="#6B3FA0" letter-spacing="1.5" font-weight="700">AI AGENT ANALYSIS (CLAUDE + TERRAFORM MCP)</text>
+
+      <!-- 5 analysis sub-tasks -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="35" y="292" width="130" height="56" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/>
+      </g>
+      <text x="100" y="310" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">5A</text>
+      <text x="100" y="324" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="11" fill="#3D3D3D">Interface Diff</text>
+      <text x="100" y="340" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#9A7B2D">MCP: module details</text>
+
+      <g filter="url(#pipe-shadow)">
+        <rect x="175" y="292" width="130" height="56" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/>
+      </g>
+      <text x="240" y="310" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">5B</text>
+      <text x="240" y="324" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="11" fill="#3D3D3D">Config Adaptation</text>
+      <text x="240" y="340" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#1A6B7A">code changes</text>
+
+      <g filter="url(#pipe-shadow)">
+        <rect x="315" y="292" width="130" height="56" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/>
+      </g>
+      <text x="380" y="310" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">5C</text>
+      <text x="380" y="324" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="11" fill="#3D3D3D">Security Review</text>
+      <text x="380" y="340" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#C4283A">IAM, encryption</text>
+
+      <g filter="url(#pipe-shadow)">
+        <rect x="455" y="292" width="130" height="56" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/>
+      </g>
+      <text x="520" y="310" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">5D</text>
+      <text x="520" y="324" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="11" fill="#3D3D3D">Plan Analysis</text>
+      <text x="520" y="340" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#B87333">add/change/destroy</text>
+
+      <!-- Aggregation arrow to 5E -->
+      <path d="M165,332 L605,332" fill="none" stroke="rgba(107,63,160,0.15)" stroke-width="1"/>
+      <line x1="595" y1="332" x2="595" y2="308" stroke="rgba(107,63,160,0.2)" stroke-width="1"/>
+
+      <g filter="url(#pipe-shadow)">
+        <rect x="595" y="292" width="195" height="56" rx="6" fill="#6B3FA0" opacity="0.06" stroke="#6B3FA0" stroke-width="1.5"/>
+      </g>
+      <text x="692" y="310" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">5E: RECOMMENDATION</text>
+      <text x="692" y="324" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="11" fill="#3D3D3D">Decision Matrix</text>
+      <text x="692" y="340" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#C4283A">JSON output</text>
+
+      <!-- Animated particles from 5A-5D to 5E -->
+      <circle r="3" fill="#6B3FA0" opacity="0">
+        <animateMotion dur="2s" repeatCount="indefinite" begin="0s" path="M100,348 L100,356 L692,356 L692,348"/>
+        <animate attributeName="opacity" values="0;0.8;0" dur="2s" repeatCount="indefinite" begin="0s"/>
+      </circle>
+      <circle r="3" fill="#6B3FA0" opacity="0">
+        <animateMotion dur="2s" repeatCount="indefinite" begin="0.5s" path="M240,348 L240,356 L692,356 L692,348"/>
+        <animate attributeName="opacity" values="0;0.8;0" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+      </circle>
+      <circle r="3" fill="#6B3FA0" opacity="0">
+        <animateMotion dur="2s" repeatCount="indefinite" begin="1.0s" path="M380,348 L380,356 L692,356 L692,348"/>
+        <animate attributeName="opacity" values="0;0.8;0" dur="2s" repeatCount="indefinite" begin="1.0s"/>
+      </circle>
+      <circle r="3" fill="#6B3FA0" opacity="0">
+        <animateMotion dur="2s" repeatCount="indefinite" begin="1.5s" path="M520,348 L520,356 L692,356 L692,348"/>
+        <animate attributeName="opacity" values="0;0.8;0" dur="2s" repeatCount="indefinite" begin="1.5s"/>
+      </circle>
+
+      <!-- === LAYER 4 DETAIL: Decision Outcomes === -->
+      <!-- Auto-merge -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="20" y="390" width="240" height="56" rx="8" fill="white" stroke="#2D7A4F" stroke-width="1.5"/>
+      </g>
+      <rect x="20" y="390" width="240" height="4" rx="2" fill="#2D7A4F"/>
+      <circle cx="44" cy="420" r="8" fill="#2D7A4F" opacity="0.15"/>
+      <text x="44" y="424" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="11" fill="#2D7A4F" font-weight="700">&#10003;</text>
+      <text x="62" y="416" font-family="JetBrains Mono,monospace" font-size="10" fill="#2D7A4F" font-weight="700" letter-spacing="1">AUTO-MERGE</text>
+      <text x="62" y="432" font-family="Source Sans 3,sans-serif" font-size="11" fill="#6B6B6B">Squash merge, risk:low</text>
+
+      <!-- Needs review -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="275" y="390" width="240" height="56" rx="8" fill="white" stroke="#9A7B2D" stroke-width="1.5"/>
+      </g>
+      <rect x="275" y="390" width="240" height="4" rx="2" fill="#9A7B2D"/>
+      <circle cx="299" cy="420" r="8" fill="#9A7B2D" opacity="0.15"/>
+      <text x="299" y="424" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="11" fill="#9A7B2D" font-weight="700">!</text>
+      <text x="317" y="416" font-family="JetBrains Mono,monospace" font-size="10" fill="#9A7B2D" font-weight="700" letter-spacing="1">NEEDS-REVIEW</text>
+      <text x="317" y="432" font-family="Source Sans 3,sans-serif" font-size="11" fill="#6B6B6B">Request reviewer, risk:medium+</text>
+
+      <!-- Breaking change -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="530" y="390" width="275" height="56" rx="8" fill="white" stroke="#C4283A" stroke-width="1.5"/>
+      </g>
+      <rect x="530" y="390" width="275" height="4" rx="2" fill="#C4283A"/>
+      <circle cx="554" cy="420" r="8" fill="#C4283A" opacity="0.15"/>
+      <text x="554" y="424" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="11" fill="#C4283A" font-weight="700">&#10007;</text>
+      <text x="572" y="416" font-family="JetBrains Mono,monospace" font-size="10" fill="#C4283A" font-weight="700" letter-spacing="1">BREAKING-CHANGE</text>
+      <text x="572" y="432" font-family="Source Sans 3,sans-serif" font-size="11" fill="#6B6B6B">Block merge, risk:high/critical</text>
+
+      <!-- Arrows from recommendation to outcomes -->
+      <path d="M640,352 C640,370 140,372 140,390" fill="none" stroke="#2D7A4F" stroke-width="1.5" opacity="0.3"/>
+      <path d="M692,352 C692,370 395,372 395,390" fill="none" stroke="#9A7B2D" stroke-width="1.5" opacity="0.3"/>
+      <path d="M740,352 C740,370 667,372 667,390" fill="none" stroke="#C4283A" stroke-width="1.5" opacity="0.3"/>
+
+      <!-- Animated particles for decision paths -->
+      <circle r="3" fill="#2D7A4F" opacity="0">
+        <animateMotion dur="2.5s" repeatCount="indefinite" begin="0s" path="M640,352 C640,370 140,372 140,390"/>
+        <animate attributeName="opacity" values="0;0.7;0" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="3" fill="#9A7B2D" opacity="0">
+        <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.8s" path="M692,352 C692,370 395,372 395,390"/>
+        <animate attributeName="opacity" values="0;0.7;0" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="3" fill="#C4283A" opacity="0">
+        <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.6s" path="M740,352 C740,370 667,372 667,390"/>
+        <animate attributeName="opacity" values="0;0.7;0" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+
+      <!-- Layer 5: Apply bar -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="20" y="468" width="785" height="36" rx="6" fill="#F5F3EF" stroke="#E0DCD4" stroke-width="1"/>
+      </g>
+      <text x="410" y="490" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A" letter-spacing="2">LAYER 5: ON MERGE &rarr; POST /api/v2/runs &rarr; HCP TERRAFORM APPLY &rarr; COMMENT RESULTS ON PR</text>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#1A6B7A"></div> Detection</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#B87333"></div> Validation</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6B3FA0"></div> AI Analysis</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#C4283A"></div> Decision</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2D7A4F"></div> Apply</div>
+  </div>
+</div>
+
+<!-- ===== INTERACTIVE SDD WORKFLOW ===== -->
+<div class="chapter-divider" id="interactive-section">
+  <div class="chapter-number">Interactive Mode</div>
+  <h2 class="chapter-title">SDD 4-Phase Workflow</h2>
+  <p class="chapter-subtitle">Full human-gated workflow for complex upgrades that need judgment and design review</p>
+</div>
+
+<div class="subsection revealed">
+  <div class="svg-diagram" style="max-width:820px">
+    <svg viewBox="0 0 820 310" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="sdd-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#E0DCD4" stroke-width="0.3" opacity="0.4"/>
+        </pattern>
+        <filter id="sdd-shadow" x="-5%" y="-5%" width="110%" height="120%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.08"/>
+        </filter>
+      </defs>
+
+      <!-- Background -->
+      <rect x="0" y="0" width="820" height="310" rx="10" fill="#FAFAF8"/>
+      <rect x="0" y="0" width="820" height="310" rx="10" fill="url(#sdd-grid)"/>
+      <rect x="0" y="0" width="820" height="310" rx="10" fill="none" stroke="#E0DCD4" stroke-width="1"/>
+
+      <!-- SDD Title -->
+      <text x="410" y="26" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A" letter-spacing="2.5">/tf-consumer-uplift &mdash; OPUS AGENTS</text>
+
+      <!-- Phase 1: Detect & Analyze -->
+      <g filter="url(#sdd-shadow)">
+        <rect x="20" y="44" width="180" height="100" rx="8" fill="#C4283A">
+          <animate attributeName="opacity" values="0.88;1;0.88" dur="3.5s" repeatCount="indefinite"/>
+        </rect>
+      </g>
+      <text x="110" y="64" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">PHASE 1</text>
+      <text x="110" y="82" text-anchor="middle" font-family="Playfair Display,serif" font-size="15" fill="white" font-weight="700">Detect &amp; Analyze</text>
+      <text x="110" y="100" text-anchor="middle" font-size="10" fill="white" opacity="0.75">Uplift Analyzers x3</text>
+      <rect x="38" y="110" width="62" height="16" rx="8" fill="white" opacity="0.15"/>
+      <text x="69" y="121" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" opacity="0.9">MCP tools</text>
+      <rect x="106" y="110" width="76" height="16" rx="8" fill="white" opacity="0.15"/>
+      <text x="144" y="121" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" opacity="0.9">interface diff</text>
+
+      <!-- Arrow 1 to 2 -->
+      <line x1="205" y1="94" x2="218" y2="94" stroke="#E0DCD4" stroke-width="1.5"/>
+      <polygon points="214,90 222,94 214,98" fill="#6B3FA0" opacity="0.5"/>
+
+      <!-- Phase 2: Plan Adaptation -->
+      <g filter="url(#sdd-shadow)">
+        <rect x="225" y="44" width="180" height="100" rx="8" fill="#6B3FA0">
+          <animate attributeName="opacity" values="0.88;1;0.88" dur="3.5s" repeatCount="indefinite" begin="0.4s"/>
+        </rect>
+      </g>
+      <text x="315" y="64" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">PHASE 2</text>
+      <text x="315" y="82" text-anchor="middle" font-family="Playfair Display,serif" font-size="15" fill="white" font-weight="700">Plan Adaptation</text>
+      <text x="315" y="100" text-anchor="middle" font-size="10" fill="white" opacity="0.75">uplift-design.md</text>
+      <rect x="240" y="110" width="68" height="16" rx="8" fill="white" opacity="0.15"/>
+      <text x="274" y="121" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" opacity="0.9">template</text>
+      <rect x="314" y="110" width="78" height="16" rx="8" fill="white" opacity="0.15"/>
+      <text x="353" y="121" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" opacity="0.9">constitution</text>
+
+      <!-- HUMAN GATE -->
+      <rect x="416" y="42" width="58" height="104" rx="4" fill="none" stroke="#A03030" stroke-width="1.5" stroke-dasharray="4 3">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+      </rect>
+      <text x="445" y="86" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#A03030" font-weight="700">HUMAN</text>
+      <text x="445" y="98" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#A03030" font-weight="700">GATE</text>
+      <text x="445" y="115" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="#A03030" opacity="0.6">approve</text>
+
+      <!-- Phase 3: Execute -->
+      <g filter="url(#sdd-shadow)">
+        <rect x="485" y="44" width="160" height="100" rx="8" fill="#1A6B7A">
+          <animate attributeName="opacity" values="0.88;1;0.88" dur="3.5s" repeatCount="indefinite" begin="0.8s"/>
+        </rect>
+      </g>
+      <text x="565" y="64" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">PHASE 3</text>
+      <text x="565" y="82" text-anchor="middle" font-family="Playfair Display,serif" font-size="15" fill="white" font-weight="700">Execute</text>
+      <text x="565" y="100" text-anchor="middle" font-size="10" fill="white" opacity="0.75">consumer-developer</text>
+      <rect x="500" y="110" width="56" height="16" rx="8" fill="white" opacity="0.15"/>
+      <text x="528" y="121" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" opacity="0.9">version</text>
+      <rect x="562" y="110" width="68" height="16" rx="8" fill="white" opacity="0.15"/>
+      <text x="596" y="121" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" opacity="0.9">variables</text>
+
+      <!-- Arrow 3 to 4 -->
+      <line x1="650" y1="94" x2="663" y2="94" stroke="#E0DCD4" stroke-width="1.5"/>
+      <polygon points="659,90 667,94 659,98" fill="#2D7A4F" opacity="0.5"/>
+
+      <!-- Phase 4: Validate -->
+      <g filter="url(#sdd-shadow)">
+        <rect x="670" y="44" width="135" height="100" rx="8" fill="#2D7A4F">
+          <animate attributeName="opacity" values="0.88;1;0.88" dur="3.5s" repeatCount="indefinite" begin="1.2s"/>
+        </rect>
+      </g>
+      <text x="737" y="64" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">PHASE 4</text>
+      <text x="737" y="82" text-anchor="middle" font-family="Playfair Display,serif" font-size="15" fill="white" font-weight="700">Validate</text>
+      <text x="737" y="100" text-anchor="middle" font-size="10" fill="white" opacity="0.75">plan + security</text>
+      <rect x="685" y="110" width="50" height="16" rx="8" fill="white" opacity="0.15"/>
+      <text x="710" y="121" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" opacity="0.9">risk</text>
+      <rect x="741" y="110" width="50" height="16" rx="8" fill="white" opacity="0.15"/>
+      <text x="766" y="121" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" opacity="0.9">PR</text>
+
+      <!-- Agent detail cards below -->
+      <!-- Analyzer agents -->
+      <g filter="url(#sdd-shadow)">
+        <rect x="20" y="170" width="180" height="60" rx="6" fill="white" stroke="#C4283A" stroke-width="1"/>
+      </g>
+      <rect x="20" y="170" width="180" height="4" rx="2" fill="#C4283A"/>
+      <text x="110" y="192" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#C4283A" font-weight="600">tf-consumer-uplift-analyzer</text>
+      <text x="110" y="208" text-anchor="middle" font-size="10" fill="#6B6B6B">x3 parallel: diff, impact, security</text>
+      <text x="110" y="222" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#9A7B2D">MCP: get_private_module_details</text>
+
+      <!-- Design agent (reused) -->
+      <g filter="url(#sdd-shadow)">
+        <rect x="225" y="170" width="180" height="60" rx="6" fill="white" stroke="#6B3FA0" stroke-width="1"/>
+      </g>
+      <rect x="225" y="170" width="180" height="4" rx="2" fill="#6B3FA0"/>
+      <text x="315" y="192" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6B3FA0" font-weight="600">tf-consumer-design</text>
+      <text x="315" y="208" text-anchor="middle" font-size="10" fill="#6B6B6B">reused with uplift args</text>
+      <text x="315" y="222" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#B87333">uplift-design-template.md</text>
+
+      <!-- Developer agent (reused) -->
+      <g filter="url(#sdd-shadow)">
+        <rect x="485" y="170" width="160" height="60" rx="6" fill="white" stroke="#1A6B7A" stroke-width="1"/>
+      </g>
+      <rect x="485" y="170" width="160" height="4" rx="2" fill="#1A6B7A"/>
+      <text x="565" y="192" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1A6B7A" font-weight="600">tf-consumer-developer</text>
+      <text x="565" y="208" text-anchor="middle" font-size="10" fill="#6B6B6B">reused with UPLIFT MODE</text>
+      <text x="565" y="222" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#2D7A4F">version + vars + outputs</text>
+
+      <!-- Validator agent (reused) -->
+      <g filter="url(#sdd-shadow)">
+        <rect x="670" y="170" width="135" height="60" rx="6" fill="white" stroke="#2D7A4F" stroke-width="1"/>
+      </g>
+      <rect x="670" y="170" width="135" height="4" rx="2" fill="#2D7A4F"/>
+      <text x="737" y="192" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#2D7A4F" font-weight="600">tf-consumer-validator</text>
+      <text x="737" y="208" text-anchor="middle" font-size="10" fill="#6B6B6B">reused, uplift instructions</text>
+      <text x="737" y="222" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#C4283A">risk + quality >= 7.0</text>
+
+      <!-- Connecting lines from phases to agents -->
+      <line x1="110" y1="144" x2="110" y2="170" stroke="#C4283A" stroke-width="1" stroke-dasharray="4 2" opacity="0.3"/>
+      <line x1="315" y1="144" x2="315" y2="170" stroke="#6B3FA0" stroke-width="1" stroke-dasharray="4 2" opacity="0.3"/>
+      <line x1="565" y1="144" x2="565" y2="170" stroke="#1A6B7A" stroke-width="1" stroke-dasharray="4 2" opacity="0.3"/>
+      <line x1="737" y1="144" x2="737" y2="170" stroke="#2D7A4F" stroke-width="1" stroke-dasharray="4 2" opacity="0.3"/>
+
+      <!-- Artifact flow bar -->
+      <g filter="url(#sdd-shadow)">
+        <rect x="20" y="256" width="785" height="36" rx="6" fill="#F5F3EF" stroke="#E0DCD4" stroke-width="1"/>
+      </g>
+      <text x="410" y="278" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A" letter-spacing="1.5">ARTIFACTS: impact report &rarr; consumer-uplift-design.md &rarr; adapted .tf files &rarr; PR + analysis summary</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ===== DECISION MATRIX ===== -->
+<div class="chapter-divider" id="decision-section">
+  <div class="chapter-number">Risk Assessment</div>
+  <h2 class="chapter-title">Decision Matrix</h2>
+  <p class="chapter-subtitle">Risk classification drives automated decisions in CI mode and informs reviewers in interactive mode</p>
+</div>
+
+<div class="subsection revealed">
+  <table class="matrix-table">
+    <tr>
+      <th></th>
+      <th>Patch</th>
+      <th>Minor</th>
+      <th>Major</th>
+    </tr>
+    <tr>
+      <td>No breaking, plan changes &lt;= 5</td>
+      <td class="risk-low">AUTO-MERGE<br/>risk:low</td>
+      <td class="risk-low">AUTO-MERGE<br/>risk:low</td>
+      <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
+    </tr>
+    <tr>
+      <td>No breaking, plan changes &gt; 5</td>
+      <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
+      <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
+      <td class="risk-high">NEEDS-REVIEW<br/>risk:high</td>
+    </tr>
+    <tr>
+      <td>Breaking (adapted)</td>
+      <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
+      <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
+      <td class="risk-high">BREAKING-CHANGE<br/>risk:high</td>
+    </tr>
+    <tr>
+      <td>Breaking (cannot adapt)</td>
+      <td class="risk-high">BREAKING-CHANGE<br/>risk:high</td>
+      <td class="risk-high">BREAKING-CHANGE<br/>risk:high</td>
+      <td class="risk-crit">BREAKING-CHANGE<br/>risk:critical</td>
+    </tr>
+    <tr>
+      <td>Any DESTROY in plan</td>
+      <td class="risk-high">NEEDS-REVIEW<br/>risk:high</td>
+      <td class="risk-high">NEEDS-REVIEW<br/>risk:high</td>
+      <td class="risk-crit">BREAKING-CHANGE<br/>risk:critical</td>
+    </tr>
+    <tr>
+      <td>Security finding >= HIGH</td>
+      <td class="risk-high">NEEDS-REVIEW<br/>risk:high</td>
+      <td class="risk-high">NEEDS-REVIEW<br/>risk:high</td>
+      <td class="risk-crit">BREAKING-CHANGE<br/>risk:critical</td>
+    </tr>
+  </table>
+
+  <div class="subsection-title" style="margin-top:28px">Key Principles</div>
+  <div class="card-grid">
+    <div class="ed-card">
+      <h3>Never Auto-Merge Majors</h3>
+      <p>Major version bumps always require human review, even with zero breaking changes detected. The semantic version signal itself warrants attention.</p>
+    </div>
+    <div class="ed-card">
+      <h3>DESTROY Escalates</h3>
+      <p>Any resource destruction in the plan escalates to at minimum NEEDS-REVIEW. Infrastructure deletion demands human oversight.</p>
+    </div>
+    <div class="ed-card">
+      <h3>Conservative Bias</h3>
+      <p>When uncertain, the system recommends <code>needs-review</code> over <code>auto-merge</code>. False positives are preferable to missed breaking changes.</p>
+    </div>
+    <div class="ed-card">
+      <h3>Security Trumps Semver</h3>
+      <p>Security findings of HIGH or above always escalate regardless of version type. IAM, encryption, and exposure changes get special scrutiny.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ARTIFACTS ===== -->
+<div class="chapter-divider" id="artifacts-section">
+  <div class="chapter-number">Implementation</div>
+  <h2 class="chapter-title">Artifacts &amp; Integration</h2>
+  <p class="chapter-subtitle">New components and their integration with the existing SDD framework</p>
+</div>
+
+<div class="subsection revealed">
+  <div class="subsection-title">New Artifacts</div>
+  <div class="subsection-desc">Components created for the consumer uplift workflow</div>
+
+  <table class="artifact-table">
+    <tr>
+      <th>File</th>
+      <th>Type</th>
+      <th>Purpose</th>
+    </tr>
+    <tr>
+      <td>.claude/skills/tf-consumer-uplift/SKILL.md</td>
+      <td><span class="node node-skill">skill</span></td>
+      <td>Orchestrator for interactive 4-phase uplift workflow</td>
+    </tr>
+    <tr>
+      <td>.claude/agents/tf-consumer-uplift-analyzer.md</td>
+      <td><span class="node node-agent">agent</span></td>
+      <td>Module interface diff, consumer impact, security review</td>
+    </tr>
+    <tr>
+      <td>.foundations/templates/consumer-uplift-design-template.md</td>
+      <td><span class="node node-template">template</span></td>
+      <td>Design document for uplift scenarios (6 sections)</td>
+    </tr>
+    <tr>
+      <td>.github/workflows/terraform-consumer-uplift.yml</td>
+      <td><span class="node node-script">workflow</span></td>
+      <td>4-job CI pipeline: classify, validate, analyze, decide</td>
+    </tr>
+    <tr>
+      <td>.github/workflows/terraform-consumer-uplift-apply.yml</td>
+      <td><span class="node node-script">workflow</span></td>
+      <td>Post-merge apply to HCP Terraform</td>
+    </tr>
+    <tr>
+      <td>.github/agents/module-upgrade-analyst.md</td>
+      <td><span class="node node-agent">agent</span></td>
+      <td>Claude Code Action prompt for CI analysis</td>
+    </tr>
+    <tr>
+      <td>.foundations/scripts/bash/classify-version-bump.sh</td>
+      <td><span class="node node-script">script</span></td>
+      <td>Parse git diff to classify semver bump type</td>
+    </tr>
+    <tr>
+      <td>.foundations/scripts/bash/scan-module-versions.sh</td>
+      <td><span class="node node-script">script</span></td>
+      <td>TFC API fallback scanner for version detection</td>
+    </tr>
+    <tr>
+      <td>.github/dependabot.yml</td>
+      <td><span class="node node-ref">config</span></td>
+      <td>Private registry module scanning configuration</td>
+    </tr>
+  </table>
+
+  <div class="subsection-title" style="margin-top:28px">Reused Components</div>
+  <div class="subsection-desc">Existing SDD components leveraged with mode-specific arguments</div>
+
+  <div class="card-grid triple">
+    <div class="ed-card">
+      <h3>tf-consumer-developer</h3>
+      <p>Reused with <code>UPLIFT MODE</code> in $ARGUMENTS. Updates version constraints, adds variables, fixes output references.</p>
+    </div>
+    <div class="ed-card">
+      <h3>tf-consumer-validator</h3>
+      <p>Reused with uplift instructions. Focuses on regression analysis, plan diff review, and risk classification.</p>
+    </div>
+    <div class="ed-card">
+      <h3>Consumer Constitution</h3>
+      <p>No changes needed. Uplift produces consumer code governed by the same rules. Section 4.3 already covers version management.</p>
+    </div>
+  </div>
+
+  <div class="subsection-title" style="margin-top:28px">Implementation Order</div>
+  <div class="subsection-desc">Three phases of incremental delivery</div>
+
+  <div class="card-grid triple">
+    <div class="ed-card" style="border-top: 3px solid var(--purple)">
+      <h3>Phase A: Foundation</h3>
+      <ul>
+        <li>Uplift design template</li>
+        <li>Uplift analyzer agent</li>
+        <li>Orchestrator skill</li>
+        <li>AGENTS.md + CLAUDE.md updates</li>
+      </ul>
+    </div>
+    <div class="ed-card" style="border-top: 3px solid var(--cyan)">
+      <h3>Phase B: CI Pipeline</h3>
+      <ul>
+        <li>classify-version-bump.sh</li>
+        <li>scan-module-versions.sh</li>
+        <li>CI agent definition</li>
+        <li>GitHub Actions workflows</li>
+        <li>Dependabot config</li>
+      </ul>
+    </div>
+    <div class="ed-card" style="border-top: 3px solid var(--green)">
+      <h3>Phase C: Documentation</h3>
+      <ul>
+        <li>Visual workflow diagram</li>
+        <li>Playground integration</li>
+        <li>Usage examples</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="text-align:center; padding: 40px 28px 0; max-width:var(--max-w); margin:0 auto; border-top: 1px solid var(--border)">
+  <p style="font-family:var(--mono); font-size:10px; letter-spacing:1.5px; color:var(--text-caption); text-transform:uppercase">Consumer Module Uplift &mdash; Use Case 1 of Issue #3</p>
+  <p style="font-size:13px; color:var(--text-caption); margin-top:4px">Part of the <span style="color:var(--red); font-weight:600">HCP Terraform x AI Agents</span> SDD framework</p>
+</div>
+
+<script>
+// Reveal on scroll
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('revealed'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.subsection').forEach(el => observer.observe(el));
+
+// Active header link tracking
+const sections = ['landing', 'pipeline-section', 'interactive-section', 'decision-section', 'artifacts-section'];
+window.addEventListener('scroll', () => {
+  const links = document.querySelectorAll('.header-link');
+  let current = sections[0];
+  for (const id of sections) {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 100) current = id;
+  }
+  links.forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+  });
+});
+
+// Mode card toggle
+function toggleMode(card, mode) {
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+}
+</script>
+</body>
+</html>
