@@ -89,3 +89,7 @@ after AI adaptations, and rollback on failed applies. These aren't design flaws 
 Addressing them now (even as brief notes) will prevent rework later.
 
 The consistency error between the diagram and the plan (Classify inside Validate vs. separate job) should be fixed before this leaves Draft status.
+
+the line from NEEDS-REVIEW to PATH B: issue_comment @claude needs to be clearer it's within the main part of the diagram and
+crosses lines and boxes making it hard to understand could we use striaght lines and angle propelry rather than curved
+lined it currently does which causes it to cut through the diagram
