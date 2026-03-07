@@ -2760,7 +2760,7 @@ Step 12: terraform test + fmt + trivy + terraform-docs (validate phase)</pre>
 
 <div style="max-width:680px;margin:0 auto 8px;padding:0 28px;">
   <p style="font-family:'Source Sans 3','Source Sans Pro',sans-serif;font-size:17px;line-height:1.7;color:#4A4A48;text-align:left;">
-    Autonomous agents need hard boundaries. Without guardrails, an AI agent with write access to your infrastructure is indistinguishable from an insider threat. This chapter layers nine complementary controls &mdash; from network isolation and secret detection to policy-as-code, identity federation, and project-scoped RBAC &mdash; so agents operate with the minimum privilege needed and every action is auditable.
+    Autonomous agents need hard boundaries. Without guardrails, an AI agent with write access to your infrastructure is indistinguishable from an insider threat. This chapter layers eleven complementary controls &mdash; from network isolation and secret detection to policy-as-code, identity federation, and project-scoped RBAC &mdash; so agents operate with the minimum privilege needed and every action is auditable.
   </p>
 </div>
 
@@ -2895,79 +2895,98 @@ Step 12: terraform test + fmt + trivy + terraform-docs (validate phase)</pre>
     <!-- Vertical connector: Git → Vault Radar -->
     <line x1="390" y1="104" x2="390" y2="118" stroke="rgba(74,107,138,0.2)" stroke-width="1"/>
 
+    <!-- Vertical connector: Vault Radar → Branch Protection -->
+    <line x1="390" y1="166" x2="390" y2="180" stroke="rgba(212,132,58,0.2)" stroke-width="1"/>
+
+    <!-- === Branch Protection Rulesets card === -->
+    <g filter="url(#ge2e-shadow)">
+      <rect x="292" y="180" width="196" height="48" rx="6" fill="white"/>
+    </g>
+    <rect x="292" y="180" width="4" height="48" rx="2" fill="#2D7A4F"/>
+    <text x="304" y="198" font-family="Source Sans 3,sans-serif" font-size="11" fill="#1A1A1A" font-weight="700">Branch Protection Rulesets</text>
+    <text x="304" y="214" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">PR approval before merge</text>
+    <!-- GATE badge -->
+    <rect x="446" y="189" width="34" height="14" rx="3" fill="none" stroke="#C4283A" stroke-width="1" stroke-dasharray="3 2">
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
+    </rect>
+    <text x="463" y="199" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="#C4283A" font-weight="700">GATE</text>
+    <rect x="292" y="180" width="196" height="48" rx="6" fill="none" stroke="rgba(45,122,79,0.08)" stroke-width="1">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="4s" repeatCount="indefinite" begin="1.65s"/>
+    </rect>
+
     <!-- "git push" label -->
-    <text x="390" y="188" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#9A7B2D" opacity="0.5">git push</text>
+    <text x="390" y="250" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#9A7B2D" opacity="0.5">git push</text>
 
     <!-- === Horizontal flow: Commit phase → Deploy phase === -->
-    <line x1="488" y1="142" x2="522" y2="142" stroke="#2D7A4F" stroke-width="1" opacity="0.4"/>
+    <line x1="488" y1="204" x2="522" y2="204" stroke="#2D7A4F" stroke-width="1" opacity="0.4"/>
 
     <!-- === HCP Terraform boundary (wraps all deploy sub-components) === -->
-    <rect x="522" y="44" width="278" height="322" rx="8" fill="none" stroke="#1A6B7A" stroke-width="1" stroke-dasharray="5 3" opacity="0.4"/>
+    <rect x="522" y="44" width="278" height="334" rx="8" fill="none" stroke="#1A6B7A" stroke-width="1" stroke-dasharray="5 3" opacity="0.4"/>
     <text x="661" y="55" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="#1A6B7A" font-weight="600" letter-spacing="0.5">HCP TERRAFORM</text>
 
     <!-- === Agent Identity card === -->
     <g filter="url(#ge2e-shadow)">
-      <rect x="526" y="56" width="268" height="48" rx="6" fill="white"/>
+      <rect x="526" y="68" width="268" height="48" rx="6" fill="white"/>
     </g>
-    <rect x="526" y="56" width="4" height="48" rx="2" fill="#5C5CA8"/>
-    <text x="538" y="74" font-family="Source Sans 3,sans-serif" font-size="11" fill="#1A1A1A" font-weight="700">Agent Identity &amp; OIDC</text>
-    <text x="538" y="90" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">Short-lived tokens, no secrets</text>
-    <rect x="526" y="56" width="268" height="48" rx="6" fill="none" stroke="rgba(92,92,168,0.08)" stroke-width="1">
+    <rect x="526" y="68" width="4" height="48" rx="2" fill="#5C5CA8"/>
+    <text x="538" y="86" font-family="Source Sans 3,sans-serif" font-size="11" fill="#1A1A1A" font-weight="700">Agent Identity &amp; OIDC</text>
+    <text x="538" y="102" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">Short-lived tokens, no secrets</text>
+    <rect x="526" y="68" width="268" height="48" rx="6" fill="none" stroke="rgba(92,92,168,0.08)" stroke-width="1">
       <animate attributeName="opacity" values="0.5;1;0.5" dur="4s" repeatCount="indefinite" begin="1.8s"/>
     </rect>
 
     <!-- === Agent Isolation / RBAC card (2nd in deploy) === -->
     <g filter="url(#ge2e-shadow)">
-      <rect x="526" y="118" width="268" height="48" rx="6" fill="white"/>
+      <rect x="526" y="130" width="268" height="48" rx="6" fill="white"/>
     </g>
-    <rect x="526" y="118" width="4" height="48" rx="2" fill="#1A6B7A"/>
-    <text x="538" y="136" font-family="Source Sans 3,sans-serif" font-size="11" fill="#1A1A1A" font-weight="700">Project RBAC &amp; Isolation</text>
-    <text x="538" y="152" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">Project &#x2192; workspace &#x2192; cloud account</text>
-    <rect x="526" y="118" width="268" height="48" rx="6" fill="none" stroke="rgba(26,107,122,0.08)" stroke-width="1">
+    <rect x="526" y="130" width="4" height="48" rx="2" fill="#1A6B7A"/>
+    <text x="538" y="148" font-family="Source Sans 3,sans-serif" font-size="11" fill="#1A1A1A" font-weight="700">Project RBAC &amp; Isolation</text>
+    <text x="538" y="164" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">Project &#x2192; workspace &#x2192; cloud account</text>
+    <rect x="526" y="130" width="268" height="48" rx="6" fill="none" stroke="rgba(26,107,122,0.08)" stroke-width="1">
       <animate attributeName="opacity" values="0.5;1;0.5" dur="4s" repeatCount="indefinite" begin="2.1s"/>
     </rect>
 
     <!-- === Private Registry card === -->
     <g filter="url(#ge2e-shadow)">
-      <rect x="526" y="180" width="268" height="48" rx="6" fill="white"/>
+      <rect x="526" y="192" width="268" height="48" rx="6" fill="white"/>
     </g>
-    <rect x="526" y="180" width="4" height="48" rx="2" fill="#2D7A4F"/>
-    <text x="538" y="198" font-family="Source Sans 3,sans-serif" font-size="11" fill="#1A1A1A" font-weight="700">Private Module Registry</text>
-    <text x="538" y="214" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">Approved modules only</text>
-    <rect x="526" y="180" width="268" height="48" rx="6" fill="none" stroke="rgba(45,122,79,0.08)" stroke-width="1">
+    <rect x="526" y="192" width="4" height="48" rx="2" fill="#2D7A4F"/>
+    <text x="538" y="210" font-family="Source Sans 3,sans-serif" font-size="11" fill="#1A1A1A" font-weight="700">Private Module Registry</text>
+    <text x="538" y="226" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">Approved modules only</text>
+    <rect x="526" y="192" width="268" height="48" rx="6" fill="none" stroke="rgba(45,122,79,0.08)" stroke-width="1">
       <animate attributeName="opacity" values="0.5;1;0.5" dur="4s" repeatCount="indefinite" begin="2.4s"/>
     </rect>
 
     <!-- === Sentinel card === -->
     <g filter="url(#ge2e-shadow)">
-      <rect x="526" y="242" width="268" height="48" rx="6" fill="white"/>
+      <rect x="526" y="254" width="268" height="48" rx="6" fill="white"/>
     </g>
-    <rect x="526" y="242" width="4" height="48" rx="2" fill="#C4283A"/>
-    <text x="538" y="260" font-family="Source Sans 3,sans-serif" font-size="11" fill="#1A1A1A" font-weight="700">Sentinel Policy</text>
-    <text x="538" y="276" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">Policy check on every plan</text>
+    <rect x="526" y="254" width="4" height="48" rx="2" fill="#C4283A"/>
+    <text x="538" y="272" font-family="Source Sans 3,sans-serif" font-size="11" fill="#1A1A1A" font-weight="700">Sentinel Policy</text>
+    <text x="538" y="288" font-family="Source Sans 3,sans-serif" font-size="9" fill="#6B6B6B">Policy check on every plan</text>
     <!-- GATE badge -->
-    <rect x="738" y="250" width="50" height="14" rx="3" fill="none" stroke="#C4283A" stroke-width="1" stroke-dasharray="3 2">
+    <rect x="738" y="262" width="50" height="14" rx="3" fill="none" stroke="#C4283A" stroke-width="1" stroke-dasharray="3 2">
       <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
     </rect>
-    <text x="763" y="260" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="#C4283A" font-weight="700">GATE</text>
+    <text x="763" y="272" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="#C4283A" font-weight="700">GATE</text>
 
     <!-- Vertical connectors: Deploy phase -->
-    <line x1="661" y1="104" x2="661" y2="118" stroke="rgba(92,92,168,0.2)" stroke-width="1"/>
-    <line x1="661" y1="166" x2="661" y2="180" stroke="rgba(26,107,122,0.2)" stroke-width="1"/>
-    <line x1="661" y1="228" x2="661" y2="242" stroke="rgba(45,122,79,0.2)" stroke-width="1"/>
+    <line x1="661" y1="116" x2="661" y2="130" stroke="rgba(92,92,168,0.2)" stroke-width="1"/>
+    <line x1="661" y1="178" x2="661" y2="192" stroke="rgba(26,107,122,0.2)" stroke-width="1"/>
+    <line x1="661" y1="240" x2="661" y2="254" stroke="rgba(45,122,79,0.2)" stroke-width="1"/>
 
     <!-- Arrow: Sentinel → terraform apply -->
-    <line x1="661" y1="290" x2="661" y2="310" stroke="#2D7A4F" stroke-width="1" marker-end="url(#ge2e-arr-g)"/>
+    <line x1="661" y1="302" x2="661" y2="322" stroke="#2D7A4F" stroke-width="1" marker-end="url(#ge2e-arr-g)"/>
 
     <!-- === terraform apply (output) === -->
-    <rect x="591" y="320" width="140" height="32" rx="6" fill="#2D7A4F">
+    <rect x="591" y="332" width="140" height="32" rx="6" fill="#2D7A4F">
       <animate attributeName="opacity" values="0.88;1;0.88" dur="3s" repeatCount="indefinite"/>
     </rect>
-    <text x="661" y="340" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="white" font-weight="700">terraform apply</text>
+    <text x="661" y="352" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="white" font-weight="700">terraform apply</text>
 
     <!-- === Animated flow particle: left to right across all phases === -->
     <circle r="3" fill="#C4283A" opacity="0">
-      <animateMotion dur="6s" repeatCount="indefinite" path="M62,80 L183,80 L183,266 L254,204 L390,80 L390,142 L488,142 L661,80 L661,290"/>
+      <animateMotion dur="8s" repeatCount="indefinite" path="M62,80 L183,80 L183,290 L254,204 L390,80 L390,228 L488,204 L661,92 L661,348"/>
       <animate attributeName="opacity" values="0;0.5;0.5;0.5;0" dur="6s" repeatCount="indefinite"/>
     </circle>
 
@@ -2995,7 +3014,7 @@ Step 12: terraform test + fmt + trivy + terraform-docs (validate phase)</pre>
 
     <!-- === Caption bar === -->
     <rect x="210" y="454" width="400" height="16" rx="8" fill="#F5F3EF"/>
-    <text x="410" y="465" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A" letter-spacing="1.5">END-TO-END GUARDRAIL COVERAGE — 9 CONTROLS, 3 PHASES</text>
+    <text x="410" y="465" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A" letter-spacing="1.5">END-TO-END GUARDRAIL COVERAGE — 11 CONTROLS, 3 PHASES</text>
   </svg>
 </div>
 
