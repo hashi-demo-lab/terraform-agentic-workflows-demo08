@@ -7322,7 +7322,7 @@ const nodeDesc = {
   'concept-agentic-loop': 'The agentic loop: Plan → Execute → Observe → Reflect → Repeat. The orchestrator drives the outer loop while subagents handle inner loops.',
   'concept-observability': 'Observability for agentic systems: GitHub issue as progress dashboard, post-issue-progress.sh updates at every step, checkpoint commits for rollback points. Drives iterative improvement of workflows, constitutions, and scoring rubrics.',
   'concept-mcp-tools': 'MCP (Model Context Protocol) tools provide controlled access to external APIs. Tools are allow-listed per agent — not globally available.',
-  'concept-deny-permissions': 'Deny permissions restrict what agents can do. Key restrictions: no internet access except via MCP, no file writes outside workspace, no git push without approval.',
+  'concept-deny-permissions': 'Deny permissions are agent configuration rules that block specific tools, actions, and shell commands. They prevent agents from modifying their own guardrail files, executing destructive operations, or calling disallowed MCP tools.',
   'concept-dev-containers': 'Dev containers provide reproducible, isolated environments with pre-installed tools. They enforce tool versions, restrict network access, and ensure consistent behavior.',
   'concept-git-integration': 'Git integration patterns: feature branches per task, checkpoint commits after each phase/item, structured commit messages, GitHub issues for tracking, PRs as final deliverable.',
   'concept-agent-identity': 'Agent identity defines the boundary between orchestrator and subagents. The orchestrator owns the workflow; subagents execute focused tasks.',
