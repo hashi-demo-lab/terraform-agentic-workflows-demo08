@@ -155,10 +155,11 @@ jobs:
         id: plan-summary
         if: steps.plan.outputs.exitcode == '2'
         run: |
-          ADD=$(grep -c '# .* will be created' plan_readable.txt 2>/dev/null || echo 0)
-          CHANGE=$(grep -c '# .* will be updated' plan_readable.txt 2>/dev/null || echo 0)
-          DESTROY=$(grep -c '# .* will be destroyed' plan_readable.txt 2>/dev/null || echo 0)
-          REPLACE=$(grep -c '# .* must be replaced' plan_readable.txt 2>/dev/null || echo 0)
+          ADD=$(grep -c '# .* will be created' plan_readable.txt 2>/dev/null || true)
+          CHANGE=$(grep -c '# .* will be updated' plan_readable.txt 2>/dev/null || true)
+          DESTROY=$(grep -c '# .* will be destroyed' plan_readable.txt 2>/dev/null || true)
+          REPLACE=$(grep -c '# .* must be replaced' plan_readable.txt 2>/dev/null || true)
+          ADD=${ADD:-0}; CHANGE=${CHANGE:-0}; DESTROY=${DESTROY:-0}; REPLACE=${REPLACE:-0}
 
           SUMMARY=$(jq -n \
             --argjson add "$ADD" \
