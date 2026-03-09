@@ -231,9 +231,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          claude_args: "--model claude-sonnet-4-6 --max-turns 15 --mcp-config .mcp-ci.json"
-          settings: |
-            {"enableAllProjectMcpServers": false}
+          claude_args: "--model claude-sonnet-4-6 --max-turns 15 --mcp-config .mcp-ci.json --setting-sources user"
           prompt: |
             You are a Terraform module upgrade analyst. Analyze this PR and produce a structured JSON recommendation.
 
@@ -496,9 +494,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          claude_args: "--model claude-sonnet-4-6 --max-turns 15 --mcp-config .mcp-ci.json"
-          settings: |
-            {"enableAllProjectMcpServers": false}
+          claude_args: "--model claude-sonnet-4-6 --max-turns 15 --mcp-config .mcp-ci.json --setting-sources user"
           prompt: |
             You are a Terraform module upgrade analyst responding to a question on a PR.
 
