@@ -232,6 +232,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_args: "--model claude-sonnet-4-6 --max-turns 15"
+          show_full_output: "true"
           prompt: |
             You are a Terraform module upgrade analyst. Analyze this PR and produce a structured JSON recommendation.
 
