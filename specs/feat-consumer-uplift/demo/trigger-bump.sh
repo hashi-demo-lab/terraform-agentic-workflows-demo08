@@ -4,11 +4,12 @@
 # Scenarios:
 #   patch    — Bump version constraint, add a tag (plan shows changes)
 #   minor    — Bump version + add versioning config change (plan shows changes)
+#   major    — Encryption upgrade + logging bucket + lifecycle rules (risk:high)
 #   breaking — Change to non-existent output reference (plan errors)
 #   no-op    — Same version, different constraint format (plan shows no changes)
 #
 # Usage:
-#   bash specs/feat-consumer-uplift/demo/trigger-bump.sh [--scenario patch|minor|breaking|no-op]
+#   bash specs/feat-consumer-uplift/demo/trigger-bump.sh [--scenario patch|minor|major|breaking|no-op]
 
 set -euo pipefail
 
@@ -180,6 +181,195 @@ BREAKOUTPUT
     success "Applied breaking scenario (invalid output reference)"
     ;;
 
+  major)
+    # Major version upgrade: encryption change + new resources + lifecycle rules
+    # Produces >5 plan changes and security-relevant modifications → risk:high
+    #
+    # Changes vs baseline:
+    #   1. KMS key + alias resources (encryption upgrade AES256 → aws:kms)
+    #   2. Dedicated logging bucket (new module instance)
+    #   3. Lifecycle rules on main bucket (cost optimization)
+    #   4. Access logging enabled on main bucket
+    #   5. New outputs (KMS key, logging bucket, domain name)
+    #   6. Compliance tags added
+    #
+    # Expected plan: ~15+ resource changes (2 new resources + 2 module instances with sub-resources)
+    # Expected risk: high (encryption change = security finding, >5 plan changes, major version)
+    info "Applying major version upgrade with infrastructure changes"
+
+    # ── Write complete main.tf (avoids fragile sed on multiple blocks) ──
+    cat > main.tf <<MAJORMAIN
+provider "aws" {
+  region = var.aws_region
+}
+
+# ── KMS Key for S3 encryption (upgrade from AES256 → aws:kms) ──
+
+resource "aws_kms_key" "bucket_encryption" {
+  description             = "KMS key for S3 bucket encryption"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project
+    ManagedBy   = "terraform"
+    Purpose     = "s3-encryption"
+  }
+}
+
+resource "aws_kms_alias" "bucket_encryption" {
+  name          = "alias/\${var.bucket_prefix}-\${var.environment}-key"
+  target_key_id = aws_kms_key.bucket_encryption.key_id
+}
+
+# ── Dedicated logging bucket ──
+
+module "logging_bucket" {
+  source  = "${MODULE_SOURCE}"
+  version = "${MODULE_TARGET_VERSION}"
+
+  bucket_prefix = "\${var.bucket_prefix}-\${var.environment}-logs"
+  force_destroy = var.force_destroy
+
+  versioning = {
+    enabled = false
+  }
+
+  server_side_encryption_configuration = {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm     = "aws:kms"
+        kms_master_key_id = aws_kms_key.bucket_encryption.arn
+      }
+    }
+  }
+
+  lifecycle_rule = [
+    {
+      id      = "expire-logs"
+      enabled = true
+      expiration = {
+        days = 90
+      }
+    }
+  ]
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project
+    ManagedBy   = "terraform"
+    Purpose     = "access-logging"
+  }
+}
+
+# ── Main S3 bucket (upgraded) ──
+
+module "demo_bucket" {
+  source  = "${MODULE_SOURCE}"
+  version = "${MODULE_TARGET_VERSION}"
+
+  bucket_prefix = "\${var.bucket_prefix}-\${var.environment}"
+  force_destroy = var.force_destroy
+
+  versioning = {
+    enabled = true
+  }
+
+  server_side_encryption_configuration = {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm     = "aws:kms"
+        kms_master_key_id = aws_kms_key.bucket_encryption.arn
+      }
+    }
+  }
+
+  logging = {
+    target_bucket = module.logging_bucket.s3_bucket_id
+    target_prefix = "demo-bucket-logs/"
+  }
+
+  lifecycle_rule = [
+    {
+      id      = "transition-to-ia"
+      enabled = true
+      transition = [
+        {
+          days          = 30
+          storage_class = "STANDARD_IA"
+        },
+        {
+          days          = 90
+          storage_class = "GLACIER"
+        }
+      ]
+      noncurrent_version_expiration = {
+        days = 365
+      }
+    }
+  ]
+
+  tags = {
+    Environment     = var.environment
+    Application     = "consumer-uplift-demo"
+    Project         = var.project
+    ManagedBy       = "terraform"
+    Purpose         = "consumer-uplift-demo"
+    EncryptionType  = "aws:kms"
+    ComplianceLevel = "enhanced"
+  }
+}
+MAJORMAIN
+    success "Rewrote main.tf with KMS encryption + logging bucket + lifecycle rules"
+
+    # ── Write extended outputs ──
+    cat > outputs.tf <<'MAJOROUTPUTS'
+output "bucket_id" {
+  description = "The name of the S3 bucket"
+  value       = module.demo_bucket.s3_bucket_id
+}
+
+output "bucket_arn" {
+  description = "The ARN of the S3 bucket"
+  value       = module.demo_bucket.s3_bucket_arn
+}
+
+output "bucket_region" {
+  description = "The AWS region the bucket resides in"
+  value       = module.demo_bucket.s3_bucket_region
+}
+
+output "bucket_domain_name" {
+  description = "The bucket domain name"
+  value       = module.demo_bucket.s3_bucket_bucket_domain_name
+}
+
+output "kms_key_arn" {
+  description = "ARN of the KMS key used for bucket encryption"
+  value       = aws_kms_key.bucket_encryption.arn
+}
+
+output "kms_key_alias" {
+  description = "Alias of the KMS encryption key"
+  value       = aws_kms_alias.bucket_encryption.name
+}
+
+output "logging_bucket_id" {
+  description = "The ID of the dedicated logging bucket"
+  value       = module.logging_bucket.s3_bucket_id
+}
+
+output "logging_bucket_arn" {
+  description = "The ARN of the dedicated logging bucket"
+  value       = module.logging_bucket.s3_bucket_arn
+}
+MAJOROUTPUTS
+    success "Rewrote outputs.tf with KMS + logging bucket outputs"
+
+    success "Applied major scenario (KMS encryption + logging bucket + lifecycle rules + 8 outputs)"
+    ;;
+
   no-op)
     # Change constraint format but resolves to same version
     info "Changing constraint format (same resolved version)"
@@ -189,7 +379,7 @@ BREAKOUTPUT
 
   *)
     error "Unknown scenario: ${SCENARIO}"
-    echo "  Valid scenarios: patch, minor, breaking, no-op"
+    echo "  Valid scenarios: patch, minor, major, breaking, no-op"
     exit 1
     ;;
 esac
@@ -252,6 +442,10 @@ case "$SCENARIO" in
     ;;
   minor)
     printf "  ${C_DIM}Expected: Classify → Validate (exit 2) → AI Analysis → Decision (needs-review)${C_RESET}\n"
+    ;;
+  major)
+    printf "  ${C_DIM}Expected: Classify → Validate (exit 2) → AI Analysis → Decision (needs-review, risk:high)${C_RESET}\n"
+    printf "  ${C_DIM}Changes: KMS encryption + logging bucket + lifecycle rules + new outputs${C_RESET}\n"
     ;;
   breaking)
     printf "  ${C_DIM}Expected: Classify → Validate (exit 1) → Labels: breaking-change, risk:critical${C_RESET}\n"

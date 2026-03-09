@@ -183,6 +183,15 @@ bash specs/feat-consumer-uplift/demo/publish-module-version.sh --bump patch
 bash specs/feat-consumer-uplift/demo/trigger-bump.sh --scenario patch
 ```
 
+For the **major** scenario (risk:high demo), use `--bump major` to publish:
+
+```bash
+bash specs/feat-consumer-uplift/demo/publish-module-version.sh --bump major
+bash specs/feat-consumer-uplift/demo/trigger-bump.sh --scenario major
+```
+
+This adds KMS encryption, a dedicated logging bucket, lifecycle rules, and new outputs — producing ~15+ plan changes with security findings that the AI analyst will flag as risk:high.
+
 This works repeatedly — each cycle publishes a new PMR version and creates a fresh PR. No manual `demo.env` editing needed between runs.
 
 ## Demo Scenarios
@@ -191,6 +200,7 @@ This works repeatedly — each cycle publishes a new PMR version and creates a f
 |----------|-------------|---------------|-----------------|
 | `patch` | Version constraint + DemoRun tag | Classify → Validate (exit 2) → AI Analysis → Decision | Auto-merge for low-risk patches |
 | `minor` | Version + logging config + new output | Classify → Validate (exit 2) → AI Analysis → Decision | Full AI analysis with config changes |
+| `major` | KMS encryption + logging bucket + lifecycle rules + 5 outputs | Classify → Validate (exit 2) → AI Analysis → Decision (risk:high) | Security-relevant changes, deep AI analysis, needs-review |
 | `breaking` | Version + invalid output reference | Classify → Validate (exit 1) → Breaking label | Breaking change detection and blocking |
 | `no-op` | Constraint format change only | Classify → Validate (exit 0) → PR auto-closed | No-change detection with explanation |
 
@@ -198,6 +208,7 @@ Run multiple scenarios (each creates a separate PR):
 ```bash
 bash specs/feat-consumer-uplift/demo/trigger-bump.sh --scenario patch
 bash specs/feat-consumer-uplift/demo/trigger-bump.sh --scenario minor
+bash specs/feat-consumer-uplift/demo/trigger-bump.sh --scenario major
 bash specs/feat-consumer-uplift/demo/trigger-bump.sh --scenario breaking
 ```
 
