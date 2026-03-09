@@ -90,22 +90,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure TFE credentials
-        id: tfe-creds
-        run: |
-          CREDS_FILE="$HOME/.terraformrc"
-          cat > "$CREDS_FILE" <<TFRC
-          credentials "app.terraform.io" {
-            token = "${TFE_TOKEN}"
-          }
-          TFRC
-          echo "credentials_file=${CREDS_FILE}" >> "$GITHUB_OUTPUT"
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
-          cli_config_file: ${{ steps.tfe-creds.outputs.credentials_file }}
+          cli_config_credentials_hostname: app.terraform.io
+          cli_config_credentials_token: ${{ secrets.TFE_TOKEN }}
 
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
