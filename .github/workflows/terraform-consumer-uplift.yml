@@ -231,7 +231,11 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          claude_args: "--model claude-sonnet-4-6 --max-turns 15 --mcp-config .mcp-ci.json"
+          claude_args: >-
+            --model claude-sonnet-4-6
+            --max-turns 15
+            --mcp-config .mcp-ci.json
+            --output-format json
           prompt: |
             You are a Terraform module upgrade analyst. Analyze this PR and produce a structured JSON recommendation.
 
@@ -257,25 +261,51 @@ jobs:
       - name: Parse structured output
         id: parse-output
         run: |
-          # Extract JSON from Claude's response
-          RESPONSE='${{ steps.claude.outputs.response }}'
+          # Read Claude's execution output file
+          EXEC_FILE='${{ steps.claude.outputs.execution_file }}'
 
-          # Try to parse JSON from the response
-          RESULT=$(echo "$RESPONSE" | grep -o '{[^}]*"decision"[^}]*}' | head -1) || true
+          if [[ -n "$EXEC_FILE" && -f "$EXEC_FILE" ]]; then
+            # Extract the last assistant message's text content from the execution JSON
+            RESPONSE=$(jq -r '
+              [.[] | select(.type == "assistant") | .message.content[] | select(.type == "text") | .text] | last // ""
+            ' "$EXEC_FILE")
+          else
+            echo "Warning: No execution file found at: $EXEC_FILE" >&2
+            RESPONSE=""
+          fi
+
+          # Try to extract JSON from Claude's response (find object with "decision" key)
+          RESULT=$(echo "$RESPONSE" | jq -r '
+            if type == "object" and has("decision") then .
+            else empty end
+          ' 2>/dev/null) || true
+
+          # If direct parse failed, try to extract JSON block from markdown
+          if [[ -z "$RESULT" ]]; then
+            RESULT=$(echo "$RESPONSE" | sed -n '/```json/,/```/p' | sed '1d;$d' | jq -c '.' 2>/dev/null) || true
+          fi
+
+          # If still no result, try grep for JSON with decision field
+          if [[ -z "$RESULT" ]]; then
+            RESULT=$(echo "$RESPONSE" | grep -oP '\{[^{}]*"decision"[^{}]*\}' | head -1 | jq -c '.' 2>/dev/null) || true
+          fi
 
           if [[ -z "$RESULT" ]] || ! echo "$RESULT" | jq empty 2>/dev/null; then
             echo "Warning: Could not parse structured JSON from AI response. Defaulting to needs-review." >&2
-            RESULT=$(jq -n '{
-              "decision": "needs-review",
-              "risk_level": "medium",
-              "version_type": "${{ needs.classify.outputs.version_type }}",
-              "breaking_changes": [],
-              "security_findings": [],
-              "plan_summary": ${{ needs.validate.outputs.plan_summary || '{"add":0,"change":0,"destroy":0,"replace":0,"total":0}' }},
-              "adaptations_applied": [],
-              "interface_diff": {"inputs_added":[],"inputs_removed":[],"inputs_changed":[],"outputs_added":[],"outputs_removed":[],"outputs_changed":[]},
-              "rationale": "JSON parse failure - defaulting to needs-review for safety"
-            }')
+            RESULT=$(jq -n \
+              --arg vtype "${{ needs.classify.outputs.version_type }}" \
+              --argjson plan '${{ needs.validate.outputs.plan_summary }}' \
+              '{
+                decision: "needs-review",
+                risk_level: "medium",
+                version_type: $vtype,
+                breaking_changes: [],
+                security_findings: [],
+                plan_summary: $plan,
+                adaptations_applied: [],
+                interface_diff: {inputs_added:[],inputs_removed:[],inputs_changed:[],outputs_added:[],outputs_removed:[],outputs_changed:[]},
+                rationale: "JSON parse failure - defaulting to needs-review for safety"
+              }')
           fi
 
           echo "result=$(echo "$RESULT" | jq -c '.')" >> "$GITHUB_OUTPUT"
