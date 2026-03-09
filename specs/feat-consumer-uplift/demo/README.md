@@ -94,7 +94,7 @@ gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo <owner/repo>
 gh secret set TFE_TOKEN_DEPENDABOT --repo <owner/repo>
 ```
 
-**`CLAUDE_CODE_OAUTH_TOKEN`**: Get the value from `~/.claude/.credentials.json` → `accessToken` field. This is used by `claude-code-action` for the AI Analysis step. (An `ANTHROPIC_API_KEY` also works if you have API credits, but OAuth token uses your Claude Pro/Team subscription instead.)
+**`CLAUDE_CODE_OAUTH_TOKEN`**: Get the value from `~/.claude/.credentials.json` → `accessToken` field. This is used by `claude-code-action` for the AI Analysis step. It uses your Claude Pro/Team subscription rather than API credits.
 
 ### Step 6: Verify `.mcp.json` in demo repo
 

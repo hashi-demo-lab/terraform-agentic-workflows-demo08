@@ -324,6 +324,15 @@ header "Setup Complete"
 echo ""
 printf "  ${C_WHITE}Next steps:${C_RESET}\n\n"
 STEP=1
+
+# Check if default branch matches BASE_BRANCH (required for claude-code-action)
+DEFAULT_BRANCH=$(gh api "repos/${GITHUB_REPO}" --jq '.default_branch' 2>/dev/null || echo "")
+if [[ -n "$DEFAULT_BRANCH" && "$DEFAULT_BRANCH" != "$BASE_BRANCH" ]]; then
+  printf "  ${C_CYAN}${STEP}.${C_RESET} ${C_YELLOW}Set default branch${C_RESET} (required for claude-code-action):\n"
+  printf "     ${C_DIM}gh repo edit %s --default-branch %s${C_RESET}\n" "$GITHUB_REPO" "$BASE_BRANCH"
+  STEP=$((STEP + 1))
+fi
+
 if [[ ${#MISSING_SECRETS[@]} -gt 0 ]]; then
   printf "  ${C_CYAN}${STEP}.${C_RESET} Set the missing secrets listed above\n"
   STEP=$((STEP + 1))
