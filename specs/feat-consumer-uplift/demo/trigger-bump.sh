@@ -106,58 +106,84 @@ success "Branch created: ${BRANCH_NAME}"
 # ─── Apply scenario changes ─────────────────────────────────────────────────
 header "Applying Scenario: ${SCENARIO}"
 
+  # Replace version constraint in main.tf — matches any existing constraint format
+  # e.g., "5.8.2", "~> 5.8.2", ">= 5.8.2"
+  replace_version() {
+    local target="$1"
+    local replaced
+    replaced=$(sed "s|version[[:space:]]*=[[:space:]]*\"[^\"]*\"|version = \"${target}\"|" main.tf)
+    echo "$replaced" > main.tf
+
+    # Verify the replacement actually happened
+    if ! grep -q "version = \"${target}\"" main.tf; then
+      error "Failed to replace version constraint in main.tf"
+      exit 1
+    fi
+    success "Version constraint updated to: ${target}"
+  }
+
 case "$SCENARIO" in
   patch)
     # Simple version constraint change + add a tag
     info "Changing version constraint and adding demo tag"
-    sed -i "s|version = \"${MODULE_CURRENT_VERSION}\"|version = \"~> ${MODULE_TARGET_VERSION}\"|" main.tf
-    sed -i 's|Purpose     = "consumer-uplift-demo"|Purpose     = "consumer-uplift-demo"\n    DemoRun     = "patch-bump"|' main.tf
+    replace_version "~> ${MODULE_TARGET_VERSION}"
+    if ! grep -q 'DemoRun' main.tf; then
+      sed -i 's|Purpose     = "consumer-uplift-demo"|Purpose     = "consumer-uplift-demo"\n    DemoRun     = "patch-bump"|' main.tf
+    else
+      sed -i "s|DemoRun.*|DemoRun     = \"patch-bump-$(date +%s | tail -c 5)\"|" main.tf
+    fi
     success "Applied patch scenario"
     ;;
 
   minor)
     # Version bump + add logging configuration
     info "Bumping version and adding logging configuration"
-    sed -i "s|version = \"${MODULE_CURRENT_VERSION}\"|version = \"~> ${MODULE_TARGET_VERSION}\"|" main.tf
+    replace_version "~> ${MODULE_TARGET_VERSION}"
 
-    # Add logging config to the module block (before the tags block)
-    sed -i '/tags = {/i\
+    # Add logging config to the module block (before the tags block) if not already present
+    if ! grep -q 'logging' main.tf; then
+      sed -i '/tags = {/i\
   logging = {\
     target_bucket = "access-logs-bucket"\
     target_prefix = "demo-bucket-logs/"\
   }\
 ' main.tf
+    fi
 
     # Add a new output
-    cat >> outputs.tf <<'NEWOUTPUT'
+    if ! grep -q 'bucket_domain_name' outputs.tf 2>/dev/null; then
+      cat >> outputs.tf <<'NEWOUTPUT'
 
 output "bucket_domain_name" {
   description = "The bucket domain name"
   value       = module.demo_bucket.s3_bucket_bucket_domain_name
 }
 NEWOUTPUT
+    fi
     success "Applied minor scenario (added logging + output)"
     ;;
 
   breaking)
     # Reference a non-existent output to trigger plan failure
     info "Introducing breaking output reference"
-    sed -i "s|version = \"${MODULE_CURRENT_VERSION}\"|version = \"~> ${MODULE_TARGET_VERSION}\"|" main.tf
+    replace_version "~> ${MODULE_TARGET_VERSION}"
 
-    cat >> outputs.tf <<'BREAKOUTPUT'
+    if ! grep -q 'bucket_acceleration' outputs.tf 2>/dev/null; then
+      cat >> outputs.tf <<'BREAKOUTPUT'
 
 output "bucket_acceleration" {
   description = "This output references a removed attribute"
   value       = module.demo_bucket.s3_bucket_acceleration_status
 }
 BREAKOUTPUT
+    fi
     success "Applied breaking scenario (invalid output reference)"
     ;;
 
   no-op)
     # Change constraint format but resolves to same version
     info "Changing constraint format (same resolved version)"
-    sed -i "s|version = \"${MODULE_CURRENT_VERSION}\"|version = \"~> ${MODULE_TARGET_VERSION}\"|" main.tf
+    replace_version "~> ${MODULE_TARGET_VERSION}"
     success "Applied no-op scenario (constraint format change only)"
     ;;
 
