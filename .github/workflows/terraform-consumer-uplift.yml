@@ -267,26 +267,32 @@ jobs:
       - name: Parse structured output
         id: parse-output
         run: |
-          # Claude posts its analysis as a PR comment. Extract the JSON from the latest comment.
-          COMMENTS=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
-            --jq '[.[] | select(.body | test("decision")) | .body] | last // ""' 2>/dev/null) || true
-
-          # Try to extract JSON from the comment
+          # Read Claude's execution output file (known path from claude-code-action)
+          EXEC_FILE="${RUNNER_TEMP}/claude-execution-output.json"
           RESULT=""
 
-          if [[ -n "$COMMENTS" ]]; then
-            # Try: raw JSON object
-            RESULT=$(echo "$COMMENTS" | jq -c 'select(has("decision"))' 2>/dev/null) || true
+          if [[ -f "$EXEC_FILE" ]]; then
+            # Extract the last assistant text message containing "decision"
+            RESPONSE=$(jq -r '
+              [.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text] | last // ""
+            ' "$EXEC_FILE" 2>/dev/null) || true
 
-            # Try: JSON in markdown code block
-            if [[ -z "$RESULT" ]]; then
-              RESULT=$(echo "$COMMENTS" | sed -n '/```json/,/```/{/```/d;p}' | jq -c '.' 2>/dev/null) || true
-            fi
+            if [[ -n "$RESPONSE" ]]; then
+              # Try: response is already valid JSON with decision
+              RESULT=$(echo "$RESPONSE" | jq -c 'select(has("decision"))' 2>/dev/null) || true
 
-            # Try: find JSON object with decision field anywhere in text
-            if [[ -z "$RESULT" ]]; then
-              RESULT=$(echo "$COMMENTS" | grep -oP '\{[^{}]*"decision"\s*:\s*"[^"]*"[^{}]*\}' | head -1 | jq -c '.' 2>/dev/null) || true
+              # Try: parse as JSON string (escaped JSON)
+              if [[ -z "$RESULT" ]]; then
+                RESULT=$(echo "$RESPONSE" | jq -rc '. | fromjson | select(has("decision"))' 2>/dev/null) || true
+              fi
+
+              # Try: extract JSON from markdown code block
+              if [[ -z "$RESULT" ]]; then
+                RESULT=$(echo "$RESPONSE" | sed -n '/```json/,/```/{/```/d;p}' | jq -c '.' 2>/dev/null) || true
+              fi
             fi
+          else
+            echo "Warning: Execution file not found at $EXEC_FILE" >&2
           fi
 
           if [[ -z "$RESULT" ]] || ! echo "$RESULT" | jq empty 2>/dev/null; then
