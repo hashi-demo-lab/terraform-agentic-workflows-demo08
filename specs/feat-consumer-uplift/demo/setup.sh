@@ -301,7 +301,7 @@ header "GitHub Repo Secrets"
 
 MISSING_SECRETS=()
 
-for secret_name in TFE_TOKEN ANTHROPIC_API_KEY TFE_TOKEN_DEPENDABOT; do
+for secret_name in TFE_TOKEN CLAUDE_CODE_OAUTH_TOKEN TFE_TOKEN_DEPENDABOT; do
   if gh secret list --repo "$GITHUB_REPO" 2>/dev/null | grep -q "^${secret_name}[[:space:]]"; then
     success "${secret_name} already set"
   else
