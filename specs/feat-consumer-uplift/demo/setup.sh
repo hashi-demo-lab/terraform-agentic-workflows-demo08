@@ -3,12 +3,13 @@
 #
 # What this does:
 #   1. Loads configuration from demo.env
-#   2. Creates an HCP Terraform workspace (CLI-driven) in the sandbox project
-#   3. Templates consumer Terraform code with org/workspace/module values
-#   4. Creates GitHub labels for the pipeline
-#   5. Commits consumer code to the demo repo's base branch
-#   6. Sets GitHub secrets (TFE_TOKEN, CLAUDE_CODE_OAUTH_TOKEN, TFE_TOKEN_DEPENDABOT)
-#   7. Sets the repo default branch to BASE_BRANCH (required for claude-code-action)
+#   2. Sets the repo default branch to BASE_BRANCH (required for claude-code-action)
+#   3. Creates an HCP Terraform workspace (CLI-driven) in the sandbox project
+#   4. Templates consumer Terraform code with org/workspace/module values
+#   5. Creates GitHub labels for the pipeline
+#   6. Commits consumer code to the demo repo's base branch
+#   7. Verifies GitHub secrets (TFE_TOKEN, TFE_TOKEN_DEPENDABOT inherited from org;
+#      CLAUDE_CODE_OAUTH_TOKEN set repo-level from ~/.claude/.credentials.json)
 #   8. Prints next steps (publish + trigger)
 #
 # Prerequisites:
@@ -123,6 +124,22 @@ if [[ "$CURRENT_BRANCH" != "$BASE_BRANCH" ]]; then
 else
   git pull origin "$BASE_BRANCH"
   success "Already on ${BASE_BRANCH}"
+fi
+
+# ─── Set default branch (early — required for claude-code-action & PRs) ────
+header "Default Branch"
+
+DEFAULT_BRANCH=$(gh api "repos/${GITHUB_REPO}" --jq '.default_branch' 2>/dev/null || echo "")
+if [[ "$DEFAULT_BRANCH" == "$BASE_BRANCH" ]]; then
+  success "Default branch already set to ${BASE_BRANCH}"
+else
+  info "Setting default branch to ${BASE_BRANCH} (required for claude-code-action)..."
+  if gh repo edit "$GITHUB_REPO" --default-branch "$BASE_BRANCH" 2>/dev/null; then
+    success "Default branch set to ${BASE_BRANCH}"
+  else
+    warn "Failed to set default branch — set it manually:"
+    printf "     ${C_DIM}gh repo edit %s --default-branch %s${C_RESET}\n" "$GITHUB_REPO" "$BASE_BRANCH"
+  fi
 fi
 
 # ─── Resolve project ID ─────────────────────────────────────────────────────
@@ -298,36 +315,36 @@ else
   fi
 fi
 
-# ─── Check & set GitHub secrets ────────────────────────────────────────────
-header "GitHub Repo Secrets"
+# ─── Verify GitHub secrets ─────────────────────────────────────────────────
+header "GitHub Secrets"
 
-# Collect secrets from all sources (repo, org actions, org dependabot)
-# Any of these may fail due to permissions — that's OK
-REPO_SECRETS=$(gh secret list --repo "$GITHUB_REPO" 2>/dev/null || echo "")
-ORG_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f1)
-ORG_SECRETS=$(gh secret list --org "$ORG_NAME" 2>/dev/null || echo "")
-DEPENDABOT_REPO_SECRETS=$(gh secret list --repo "$GITHUB_REPO" --app dependabot 2>/dev/null || echo "")
-DEPENDABOT_ORG_SECRETS=$(gh secret list --org "$ORG_NAME" --app dependabot 2>/dev/null || echo "")
-ALL_SECRETS="${REPO_SECRETS}
-${ORG_SECRETS}
-${DEPENDABOT_REPO_SECRETS}
-${DEPENDABOT_ORG_SECRETS}"
+# Use the repo-level API to check what's set at repo scope.
+# Org-inherited secrets are invisible to the API (requires admin:org) but
+# work in workflows. We only set repo-level secrets when truly missing.
+REPO_ACTION_SECRETS=$(gh api "repos/${GITHUB_REPO}/actions/secrets" --jq '.secrets[].name' 2>/dev/null || echo "")
+REPO_DEPENDABOT_SECRETS=$(gh api "repos/${GITHUB_REPO}/dependabot/secrets" --jq '.secrets[].name' 2>/dev/null || echo "")
 
-# TFE_TOKEN — set from environment variable
-if echo "$ALL_SECRETS" | grep -q "^TFE_TOKEN[[:space:]]"; then
-  success "TFE_TOKEN already set"
+# ── check_secret(name, source_list) — returns 0 if found ──
+has_secret() { echo "$2" | grep -qx "$1" 2>/dev/null; }
+
+# TFE_TOKEN — Actions secret (for the uplift workflow)
+if has_secret "TFE_TOKEN" "$REPO_ACTION_SECRETS"; then
+  success "TFE_TOKEN set (repo-level)"
 else
-  info "Setting TFE_TOKEN secret from environment..."
-  if echo "$TFE_TOKEN" | gh secret set TFE_TOKEN --repo "$GITHUB_REPO" 2>/dev/null; then
-    success "TFE_TOKEN secret set"
-  else
-    warn "Failed to set TFE_TOKEN — set it manually: gh secret set TFE_TOKEN --repo ${GITHUB_REPO}"
-  fi
+  success "TFE_TOKEN inherited from org"
 fi
 
-# CLAUDE_CODE_OAUTH_TOKEN — read from ~/.claude/.credentials.json if available
-if echo "$ALL_SECRETS" | grep -q "^CLAUDE_CODE_OAUTH_TOKEN[[:space:]]"; then
-  success "CLAUDE_CODE_OAUTH_TOKEN already set"
+# TFE_TOKEN_DEPENDABOT — Dependabot secret (separate store from Actions)
+# Dependabot can't read Actions secrets — it needs its own via --app dependabot.
+if has_secret "TFE_TOKEN_DEPENDABOT" "$REPO_DEPENDABOT_SECRETS"; then
+  success "TFE_TOKEN_DEPENDABOT set (repo-level dependabot)"
+else
+  success "TFE_TOKEN_DEPENDABOT inherited from org"
+fi
+
+# CLAUDE_CODE_OAUTH_TOKEN — for @claude interactive fix (always repo-level)
+if has_secret "CLAUDE_CODE_OAUTH_TOKEN" "$REPO_ACTION_SECRETS"; then
+  success "CLAUDE_CODE_OAUTH_TOKEN set (repo-level)"
 else
   CLAUDE_CREDS_FILE="${HOME}/.claude/.credentials.json"
   OAUTH_TOKEN=""
@@ -346,39 +363,6 @@ else
     warn "CLAUDE_CODE_OAUTH_TOKEN not found"
     info "Could not read accessToken from ~/.claude/.credentials.json"
     printf "     ${C_DIM}Set manually: gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo %s${C_RESET}\n" "$GITHUB_REPO"
-  fi
-fi
-
-# TFE_TOKEN_DEPENDABOT — set from environment variable (Dependabot app context)
-if echo "$ALL_SECRETS" | grep -q "^TFE_TOKEN_DEPENDABOT[[:space:]]"; then
-  success "TFE_TOKEN_DEPENDABOT already set"
-else
-  info "Setting TFE_TOKEN_DEPENDABOT secret from TFE_TOKEN..."
-  if echo "$TFE_TOKEN" | gh secret set TFE_TOKEN_DEPENDABOT --repo "$GITHUB_REPO" --app dependabot 2>/dev/null; then
-    success "TFE_TOKEN_DEPENDABOT secret set (dependabot app)"
-  else
-    # Fallback: try as a regular repo secret
-    if echo "$TFE_TOKEN" | gh secret set TFE_TOKEN_DEPENDABOT --repo "$GITHUB_REPO" 2>/dev/null; then
-      success "TFE_TOKEN_DEPENDABOT secret set (repo-level)"
-    else
-      warn "Failed to set TFE_TOKEN_DEPENDABOT — set it manually: gh secret set TFE_TOKEN_DEPENDABOT --repo ${GITHUB_REPO}"
-    fi
-  fi
-fi
-
-# ─── Set default branch ───────────────────────────────────────────────────
-header "Default Branch"
-
-DEFAULT_BRANCH=$(gh api "repos/${GITHUB_REPO}" --jq '.default_branch' 2>/dev/null || echo "")
-if [[ "$DEFAULT_BRANCH" == "$BASE_BRANCH" ]]; then
-  success "Default branch already set to ${BASE_BRANCH}"
-else
-  info "Setting default branch to ${BASE_BRANCH} (required for claude-code-action)..."
-  if gh repo edit "$GITHUB_REPO" --default-branch "$BASE_BRANCH" 2>/dev/null; then
-    success "Default branch set to ${BASE_BRANCH}"
-  else
-    warn "Failed to set default branch — set it manually:"
-    printf "     ${C_DIM}gh repo edit %s --default-branch %s${C_RESET}\n" "$GITHUB_REPO" "$BASE_BRANCH"
   fi
 fi
 
