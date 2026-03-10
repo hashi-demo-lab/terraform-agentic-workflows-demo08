@@ -316,12 +316,14 @@ jobs:
 
           # ── Apply decision matrix ──
           #
-          #                       PATCH           MINOR           MAJOR
-          # Plan OK, no changes  auto-merge/low  auto-merge/low  auto-merge/low
-          # Plan OK, changes     needs-review/med needs-review/med needs-review/high
-          # DESTROY/REPLACE      breaking/high   breaking/high   breaking/critical
-          # Plan fails (exit 1)  breaking/high   breaking/high   breaking/critical
+          #                              PATCH/MINOR       MAJOR
+          # No adds, no changes         auto-merge/low    auto-merge/low
+          # Adds only, no changes       needs-review/low  needs-review/medium
+          # Changes (with or w/o adds)  needs-review/med  needs-review/high
+          # DESTROY/REPLACE             breaking/high     breaking/critical
+          # Plan fails (exit 1)         breaking/high     breaking/critical
           #
+          # "adds" = new resources created. "changes" = existing resources modified.
           # (Plan exit 1 is handled in validate job; this job only runs on exit 2)
 
           if [[ "$HAS_DESTRUCTIVE" == "true" ]]; then
@@ -335,21 +337,30 @@ jobs:
               RISK_LEVEL="high"
               RATIONALE="Plan contains destructive operations (destroy: ${DESTROY}, replace: ${REPLACE}) — merge blocked regardless of semver type."
             fi
-          elif [[ "$TOTAL" -eq 0 ]]; then
-            # No changes — safe to auto-merge
+          elif [[ "$ADD" -eq 0 ]] && [[ "$CHANGE" -eq 0 ]]; then
+            # No adds, no changes — safe to auto-merge
             DECISION="auto-merge"
             RISK_LEVEL="low"
             RATIONALE="${VERSION_TYPE^} version bump with no planned changes — safe to auto-merge."
-          else
-            # Plan succeeds with changes — always needs review
+          elif [[ "$ADD" -gt 0 ]] && [[ "$CHANGE" -eq 0 ]]; then
+            # Adds only, no changes to existing resources — low risk but needs review
+            DECISION="needs-review"
             if [[ "$VERSION_TYPE" == "major" ]]; then
-              DECISION="needs-review"
-              RISK_LEVEL="high"
-              RATIONALE="Major version bump with ${TOTAL} planned change(s) — requires review."
-            else
-              DECISION="needs-review"
               RISK_LEVEL="medium"
-              RATIONALE="${VERSION_TYPE^} version bump with ${TOTAL} planned change(s) — any infrastructure change requires review."
+              RATIONALE="Major version bump adding ${ADD} new resource(s) — new resources on a major bump require review."
+            else
+              RISK_LEVEL="low"
+              RATIONALE="${VERSION_TYPE^} version bump adding ${ADD} new resource(s) with no changes to existing — low risk, review recommended."
+            fi
+          else
+            # Changes to existing resources (with or without adds) — medium risk
+            DECISION="needs-review"
+            if [[ "$VERSION_TYPE" == "major" ]]; then
+              RISK_LEVEL="high"
+              RATIONALE="Major version bump with ${CHANGE} change(s) to existing resources — requires careful review."
+            else
+              RISK_LEVEL="medium"
+              RATIONALE="${VERSION_TYPE^} version bump with ${CHANGE} change(s) to existing resources (${ADD} add(s)) — modifications require review."
             fi
           fi
 

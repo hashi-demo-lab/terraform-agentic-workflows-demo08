@@ -2,9 +2,9 @@
 # trigger-bump.sh — Create a Dependabot-style PR that triggers the uplift pipeline
 #
 # Scenarios:
-#   patch    — Bump version constraint, add a tag (plan shows changes)
-#   minor    — Bump version + add versioning config change (plan shows changes)
-#   major    — Encryption upgrade + logging bucket + lifecycle rules (risk:high)
+#   patch    — Bump version constraint, add a tag (adds only → risk:low, needs-review)
+#   minor    — Bump version + add logging config (changes to existing → risk:medium)
+#   major    — Encryption upgrade + logging bucket + lifecycle rules (adds + changes → risk:high)
 #   breaking — Change to non-existent output reference (plan errors)
 #   no-op    — Same version, different constraint format (plan shows no changes)
 #
@@ -183,18 +183,18 @@ BREAKOUTPUT
 
   major)
     # Major version upgrade: encryption change + new resources + lifecycle rules
-    # Produces >5 plan changes and security-relevant modifications → risk:high
+    # Produces adds + changes to existing resources → risk:high (major version with changes)
     #
     # Changes vs baseline:
-    #   1. KMS key + alias resources (encryption upgrade AES256 → aws:kms)
-    #   2. Dedicated logging bucket (new module instance)
-    #   3. Lifecycle rules on main bucket (cost optimization)
-    #   4. Access logging enabled on main bucket
+    #   1. KMS key + alias resources (encryption upgrade AES256 → aws:kms) — new resources (adds)
+    #   2. Dedicated logging bucket (new module instance) — new resources (adds)
+    #   3. Lifecycle rules on main bucket (cost optimization) — changes to existing
+    #   4. Access logging enabled on main bucket — changes to existing
     #   5. New outputs (KMS key, logging bucket, domain name)
-    #   6. Compliance tags added
+    #   6. Compliance tags added — changes to existing
     #
-    # Expected plan: ~15+ resource changes (2 new resources + 2 module instances with sub-resources)
-    # Expected risk: high (encryption change = security finding, >5 plan changes, major version)
+    # Expected plan: adds (new KMS + logging bucket) + changes to existing (main bucket modified)
+    # Expected risk: high (major version + changes to existing resources)
     info "Applying major version upgrade with infrastructure changes"
 
     # ── Write complete main.tf (avoids fragile sed on multiple blocks) ──
@@ -440,17 +440,17 @@ echo ""
 
 case "$SCENARIO" in
   patch)
-    printf "  ${C_DIM}Expected: Classify → Validate (exit 2) → Risk Assessment → Decision (auto-merge or needs-review)${C_RESET}\n"
+    printf "  ${C_DIM}Expected: Classify → Validate (exit 2) → Risk Assessment → Decision (needs-review, risk:low — adds only)${C_RESET}\n"
     ;;
   minor)
-    printf "  ${C_DIM}Expected: Classify → Validate (exit 2) → Risk Assessment → Decision (needs-review)${C_RESET}\n"
+    printf "  ${C_DIM}Expected: Classify → Validate (exit 2) → Risk Assessment → Decision (needs-review, risk:medium — changes to existing)${C_RESET}\n"
     ;;
   major)
-    printf "  ${C_DIM}Expected: Classify → Validate (exit 2) → Risk Assessment → Decision (needs-review, risk:high)${C_RESET}\n"
-    printf "  ${C_DIM}Changes: KMS encryption + logging bucket + lifecycle rules + new outputs${C_RESET}\n"
+    printf "  ${C_DIM}Expected: Classify → Validate (exit 2) → Risk Assessment → Decision (needs-review, risk:high — major + changes)${C_RESET}\n"
+    printf "  ${C_DIM}Changes: adds (KMS + logging bucket) + changes to existing (main bucket)${C_RESET}\n"
     ;;
   breaking)
-    printf "  ${C_DIM}Expected: Classify → Validate (exit 1) → Labels: breaking-change, risk:critical${C_RESET}\n"
+    printf "  ${C_DIM}Expected: Classify → Validate (exit 1) → Labels: breaking-change, risk:high/critical${C_RESET}\n"
     ;;
   no-op)
     printf "  ${C_DIM}Expected: Classify → Validate (exit 0) → PR auto-closed with explanation${C_RESET}\n"

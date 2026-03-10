@@ -190,7 +190,7 @@ bash specs/feat-consumer-uplift/demo/publish-module-version.sh --bump major
 bash specs/feat-consumer-uplift/demo/trigger-bump.sh --scenario major
 ```
 
-This adds KMS encryption, a dedicated logging bucket, lifecycle rules, and new outputs — producing ~15+ plan changes that the deterministic matrix will flag as risk:high.
+This adds KMS encryption, a dedicated logging bucket, lifecycle rules, and new outputs — producing both adds (new resources) and changes to existing resources, which the deterministic matrix will flag as risk:high for a major version bump.
 
 This works repeatedly — each cycle publishes a new PMR version and creates a fresh PR. No manual `demo.env` editing needed between runs.
 
@@ -198,9 +198,9 @@ This works repeatedly — each cycle publishes a new PMR version and creates a f
 
 | Scenario | What Changes | Pipeline Path | Best For Showing |
 |----------|-------------|---------------|-----------------|
-| `patch` | Version constraint + DemoRun tag | Classify → Validate (exit 2) → Risk Assessment → Decision | Auto-merge for low-risk patches |
-| `minor` | Version + logging config + new output | Classify → Validate (exit 2) → Risk Assessment → Decision | Deterministic risk assessment with config changes |
-| `major` | KMS encryption + logging bucket + lifecycle rules + 5 outputs | Classify → Validate (exit 2) → Risk Assessment → Decision (risk:high) | High change count, needs-review, `@claude` remediation |
+| `patch` | Version constraint + DemoRun tag | Classify → Validate (exit 2) → Risk Assessment → Decision | Adds-only path (risk:low, needs-review) |
+| `minor` | Version + logging config + new output | Classify → Validate (exit 2) → Risk Assessment → Decision | Changes to existing (risk:medium, needs-review) |
+| `major` | KMS encryption + logging bucket + lifecycle rules + 5 outputs | Classify → Validate (exit 2) → Risk Assessment → Decision (risk:high) | Adds + changes with major version, `@claude` remediation |
 | `breaking` | Version + invalid output reference | Classify → Validate (exit 1) → Breaking label | Breaking change detection and blocking |
 | `no-op` | Constraint format change only | Classify → Validate (exit 0) → PR auto-closed | No-change detection with explanation |
 

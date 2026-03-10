@@ -115,29 +115,36 @@ Copilot runs independently via repository rulesets (Settings > Rulesets), not a 
 Risk classification drives the automated decision. The matrix is applied deterministically by a bash script in Job 3.
 
 ```
-                      PATCH           MINOR           MAJOR
-                      -----           -----           -----
-Plan succeeds,        AUTO-MERGE      AUTO-MERGE      AUTO-MERGE
-no changes (exit 0)   risk:low        risk:low        risk:low
+                              PATCH/MINOR     MAJOR
+                              -----------     -----
+No adds, no changes           AUTO-MERGE      AUTO-MERGE
+                              risk:low        risk:low
 
-Plan succeeds         NEEDS-REVIEW    NEEDS-REVIEW    NEEDS-REVIEW
-with changes          risk:medium     risk:medium     risk:high
+Adds only, no changes         NEEDS-REVIEW    NEEDS-REVIEW
+to existing                   risk:low        risk:medium
 
-Any DESTROY/REPLACE   BREAKING-       BREAKING-       BREAKING-
-in plan               CHANGE          CHANGE          CHANGE
-                      risk:high       risk:high       risk:critical
+Changes to existing           NEEDS-REVIEW    NEEDS-REVIEW
+(with or without adds)        risk:medium     risk:high
 
-Plan fails (exit 1)   BREAKING-       BREAKING-       BREAKING-
-                      CHANGE          CHANGE          CHANGE
-                      risk:high       risk:high       risk:critical
+Any DESTROY/REPLACE           BREAKING-       BREAKING-
+in plan                       CHANGE          CHANGE
+                              risk:high       risk:critical
+
+Plan fails (exit 1)           BREAKING-       BREAKING-
+                              CHANGE          CHANGE
+                              risk:high       risk:critical
 ```
 
+"Adds" = new resources created. "Changes" = modifications to existing resources.
+
 **Key principles:**
-1. Only zero-change plans are auto-merged — any infrastructure change requires human review
-2. Any DESTROY or REPLACE action in the plan classifies as BREAKING-CHANGE (merge blocked)
-3. Plan failures (exit 1) always classify as BREAKING-CHANGE
-4. Major version bumps with changes get risk:high; patch/minor with changes get risk:medium
-5. The matrix is fully deterministic — no AI involved in risk assessment
+1. Only zero-change plans (no adds, no changes) are auto-merged
+2. Adds-only (no changes to existing) is low risk but still requires review
+3. Changes to existing resources always require review at medium risk or higher
+4. Any DESTROY or REPLACE action classifies as BREAKING-CHANGE (merge blocked)
+5. Plan failures (exit 1) always classify as BREAKING-CHANGE
+6. Major version bumps escalate risk by one tier (low→medium, medium→high, high→critical)
+7. The matrix is fully deterministic — no AI involved in risk assessment
 
 ---
 
@@ -503,7 +510,7 @@ This gives the ops team full context, a prepared rollback path, and human contro
 ## 12. Success Criteria
 
 1. Dependabot PR triggers the pipeline and produces a structured analysis
-2. Zero-change plans (any semver type) auto-merge; any plan with changes requires review
+2. Zero-change plans auto-merge; adds-only gets low-risk review; changes to existing get medium-risk review
 3. High-risk changes are blocked with detailed analysis and `@claude` follow-up instructions
 4. `@claude` mention on a blocked PR provides interactive deep analysis with MCP tools
 5. Post-merge apply successfully triggers HCP Terraform run

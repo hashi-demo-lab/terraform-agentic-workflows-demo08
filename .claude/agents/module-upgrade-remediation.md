@@ -76,22 +76,27 @@ The push triggers a `synchronize` event → pipeline re-runs Jobs 1-4 → new ri
 The automated pipeline uses this matrix. Your fixes should aim to move the PR toward `auto-merge` or at minimum reduce the risk level:
 
 ```
-                      PATCH           MINOR           MAJOR
-                      -----           -----           -----
-Plan succeeds,        AUTO-MERGE      AUTO-MERGE      AUTO-MERGE
-no changes (exit 0)   risk:low        risk:low        risk:low
+                          PATCH/MINOR     MAJOR
+                          -----------     -----
+No adds, no changes       AUTO-MERGE      AUTO-MERGE
+                          risk:low        risk:low
 
-Plan succeeds         NEEDS-REVIEW    NEEDS-REVIEW    NEEDS-REVIEW
-with changes          risk:medium     risk:medium     risk:high
+Adds only, no changes     NEEDS-REVIEW    NEEDS-REVIEW
+to existing               risk:low        risk:medium
 
-Any DESTROY/REPLACE   BREAKING-       BREAKING-       BREAKING-
-in plan               CHANGE          CHANGE          CHANGE
-                      risk:high       risk:high       risk:critical
+Changes to existing       NEEDS-REVIEW    NEEDS-REVIEW
+(with or without adds)    risk:medium     risk:high
 
-Plan fails (exit 1)   BREAKING-       BREAKING-       BREAKING-
-                      CHANGE          CHANGE          CHANGE
-                      risk:high       risk:high       risk:critical
+Any DESTROY/REPLACE       BREAKING-       BREAKING-
+in plan                   CHANGE          CHANGE
+                          risk:high       risk:critical
+
+Plan fails (exit 1)       BREAKING-       BREAKING-
+                          CHANGE          CHANGE
+                          risk:high       risk:critical
 ```
+
+"Adds" = new resources created. "Changes" = modifications to existing resources.
 
 ## Response Format
 

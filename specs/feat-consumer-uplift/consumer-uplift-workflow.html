@@ -24,7 +24,7 @@
   --serif: 'Playfair Display', Georgia, serif;
   --sans: 'Source Sans 3', -apple-system, sans-serif;
   --mono: 'JetBrains Mono', 'SF Mono', monospace;
-  --max-w: 820px;
+  --max-w: 1100px;
   --pink: #C4283A; --cyan: #1A6B7A; --purple: #6B3FA0;
   --green: #2D7A4F; --orange: #B87333; --yellow: #9A7B2D;
   --ice: #4A6B8A; --cmd-red: #A03030;
@@ -221,7 +221,7 @@ body {
 }
 
 /* === SVG DIAGRAM === */
-.svg-diagram { max-width: 820px; margin: 0 auto 24px; }
+.svg-diagram { max-width: 100%; margin: 0 auto 24px; }
 .svg-diagram svg { width: 100%; height: auto; display: block; overflow: visible; }
 
 /* === CARDS === */
@@ -358,7 +358,7 @@ details.ed-card[open]::details-content { height: auto; }
   .landing-headline { font-size: 32px; }
   .chapter-title { font-size: 28px; }
   .svg-diagram { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .svg-diagram svg { min-width: 700px; }
+  .svg-diagram svg { min-width: 1000px; }
 }
 </style>
 </head>
@@ -427,8 +427,8 @@ details.ed-card[open]::details-content { height: auto; }
 </div>
 
 <div class="subsection" id="pipeline-diagram" data-sub="Pipeline Diagram">
-  <div class="svg-diagram" style="max-width:820px">
-    <svg id="pipeline-svg" viewBox="0 0 820 530" xmlns="http://www.w3.org/2000/svg">
+  <div class="svg-diagram" style="max-width:100%">
+    <svg id="pipeline-svg" viewBox="0 0 1200 520" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="pipe-grid" width="20" height="20" patternUnits="userSpaceOnUse">
           <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#E0DCD4" stroke-width="0.3" opacity="0.4"/>
@@ -436,8 +436,6 @@ details.ed-card[open]::details-content { height: auto; }
         <filter id="pipe-shadow" x="-5%" y="-5%" width="110%" height="120%">
           <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.08"/>
         </filter>
-
-        <!-- Glow filters for animated dots -->
         <filter id="glow-teal" x="-100%" y="-100%" width="300%" height="300%">
           <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
           <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.42  0 0 0 0 0.48  0 0 0 1 0" result="color"/>
@@ -476,299 +474,322 @@ details.ed-card[open]::details-content { height: auto; }
       </defs>
 
       <!-- Background -->
-      <rect id="bg-fill" x="0" y="0" width="820" height="530" rx="10" fill="#FAFAF8"/>
-      <rect id="bg-grid" x="0" y="0" width="820" height="530" rx="10" fill="url(#pipe-grid)"/>
-      <rect id="bg-border" x="0" y="0" width="820" height="530" rx="10" fill="none" stroke="none"/>
+      <rect id="bg-fill" x="0" y="0" width="1200" height="520" rx="12" fill="#FAFAF8"/>
+      <rect id="bg-grid" x="0" y="0" width="1200" height="520" rx="12" fill="url(#pipe-grid)"/>
+      <rect id="bg-border" x="0" y="0" width="1200" height="520" rx="12" fill="none" stroke="none"/>
 
       <!-- ============================================ -->
-      <!-- === DEPENDABOT ============================= -->
+      <!-- === DEPENDABOT (centered above workflow) === -->
       <!-- ============================================ -->
       <g filter="url(#pipe-shadow)">
-        <rect x="325" y="8" width="170" height="54" rx="8" fill="#4A6B8A"/>
+        <rect x="275" y="15" width="200" height="65" rx="10" fill="#4A6B8A"/>
       </g>
-      <text x="410" y="26" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">GITHUB</text>
-      <text x="410" y="42" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="white" font-weight="700">Dependabot</text>
-      <text x="410" y="55" text-anchor="middle" font-size="10" fill="white" opacity="0.75">Monthly registry scan</text>
+      <text x="375" y="37" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="white" letter-spacing="2.5" font-weight="600" opacity="0.8">GITHUB</text>
+      <text x="375" y="56" text-anchor="middle" font-family="Playfair Display,serif" font-size="19" fill="white" font-weight="700">Dependabot</text>
+      <text x="375" y="72" text-anchor="middle" font-size="11" fill="white" opacity="0.75">Monthly registry scan</text>
 
-      <!-- Faint path: Dependabot to workflow -->
-      <line x1="410" y1="62" x2="410" y2="100" stroke="#4A6B8A" stroke-width="1" opacity="0.12"/>
-      <!-- Glowing dot: Dependabot down -->
-      <circle r="5" fill="#4A6B8A" filter="url(#glow-ice)" opacity="0">
-        <animateMotion dur="4s" repeatCount="indefinite" path="M410,62 L410,100"/>
-        <animate attributeName="opacity" values="0;0.9;0.9;0" dur="4s" repeatCount="indefinite" keyTimes="0;0.1;0.8;1"/>
-      </circle>
+      <!-- Path: Dependabot to workflow box -->
+      <line x1="375" y1="80" x2="375" y2="110" stroke="#4A6B8A" stroke-width="1.5" opacity="0.15"/>
 
       <!-- ============================================ -->
-      <!-- === WORKFLOW BOX =========================== -->
+      <!-- === WORKFLOW BOX ============================ -->
       <!-- ============================================ -->
-      <rect x="10" y="82" width="800" height="440" rx="8" fill="none" stroke="#E0DCD4" stroke-width="1.5" stroke-dasharray="6 3"/>
-      <text x="410" y="98" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A" letter-spacing="2.5">terraform-consumer-uplift.yml</text>
+      <rect x="25" y="110" width="700" height="280" rx="10" fill="none" stroke="#E0DCD4" stroke-width="1.5" stroke-dasharray="6 3"/>
+      <text x="375" y="132" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#8A8A8A" letter-spacing="3">terraform-consumer-uplift.yml</text>
 
-      <text x="40" y="120" font-family="JetBrains Mono,monospace" font-size="9" fill="#1A6B7A" font-weight="700" letter-spacing="1">on: pull_request</text>
-      <text x="200" y="120" font-family="Source Sans 3,sans-serif" font-size="11" fill="#6B6B6B">triggers Jobs 1 &#8594; 2 &#8594; 3 &#8594; 4</text>
-
-      <!-- Faint path: trigger to jobs -->
-      <line x1="410" y1="128" x2="410" y2="158" stroke="#C0BDB5" stroke-width="1" opacity="0.1"/>
+      <!-- Trigger labels -->
+      <text x="50" y="155" font-family="JetBrains Mono,monospace" font-size="10" fill="#1A6B7A" font-weight="700" letter-spacing="1.5">on: pull_request</text>
+      <text x="220" y="155" font-family="Source Sans 3,sans-serif" font-size="12" fill="#6B6B6B">Jobs 1 &#8594; 2 &#8594; 3 &#8594; 4</text>
+      <text x="410" y="155" font-family="JetBrains Mono,monospace" font-size="10" fill="#9A7B2D" font-weight="700" letter-spacing="1.5">on: issue_comment</text>
+      <text x="580" y="155" font-family="Source Sans 3,sans-serif" font-size="12" fill="#6B6B6B">@claude interactive</text>
 
       <!-- ============================================ -->
-      <!-- === JOBS 1-3 ROW =========================== -->
+      <!-- === JOBS 1-4 ROW ============================ -->
       <!-- ============================================ -->
 
-      <!-- JOB 1 -->
+      <!-- JOB 1: x=45, w=155, center=122 -->
       <g id="job1-box" style="cursor:pointer" onclick="toggleJobDetail(1)">
         <g filter="url(#pipe-shadow)">
-          <rect x="20" y="158" width="195" height="62" rx="8" fill="#1A6B7A"/>
+          <rect x="45" y="175" width="155" height="78" rx="10" fill="#1A6B7A"/>
         </g>
-        <text x="117" y="176" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">JOB 1</text>
-        <text x="117" y="194" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="white" font-weight="700">Classify</text>
-        <text x="117" y="211" text-anchor="middle" font-size="10" fill="white" opacity="0.75">Semver from git diff</text>
-        <text x="197" y="174" font-size="10" fill="white" opacity="0.5">&#9660;</text>
+        <text x="122" y="197" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="white" letter-spacing="2.5" font-weight="600" opacity="0.8">JOB 1</text>
+        <text x="122" y="218" text-anchor="middle" font-family="Playfair Display,serif" font-size="18" fill="white" font-weight="700">Classify</text>
+        <text x="122" y="240" text-anchor="middle" font-size="11" fill="white" opacity="0.75">Semver from git diff</text>
+        <text x="185" y="194" font-size="10" fill="white" opacity="0.5">&#9660;</text>
       </g>
 
-      <!-- Faint path: Job1 to Job2 -->
-      <line x1="215" y1="189" x2="247" y2="189" stroke="#C0BDB5" stroke-width="1" opacity="0.08"/>
+      <!-- Arrow: Job1 to Job2 -->
+      <line x1="200" y1="214" x2="215" y2="214" stroke="#C0BDB5" stroke-width="1.5" opacity="0.2"/>
+      <polygon points="213,210 220,214 213,218" fill="#C0BDB5" opacity="0.35"/>
 
-      <!-- JOB 2 -->
+      <!-- JOB 2: x=220, w=155, center=297 -->
       <g id="job2-box" style="cursor:pointer" onclick="toggleJobDetail(2)">
         <g filter="url(#pipe-shadow)">
-          <rect x="247" y="158" width="195" height="62" rx="8" fill="#B87333"/>
+          <rect x="220" y="175" width="155" height="78" rx="10" fill="#B87333"/>
         </g>
-        <text x="344" y="176" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">JOB 2</text>
-        <text x="344" y="194" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="white" font-weight="700">Validate</text>
-        <text x="344" y="211" text-anchor="middle" font-size="10" fill="white" opacity="0.75">fmt, validate, plan</text>
-        <text x="424" y="174" font-size="10" fill="white" opacity="0.5">&#9660;</text>
+        <text x="297" y="197" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="white" letter-spacing="2.5" font-weight="600" opacity="0.8">JOB 2</text>
+        <text x="297" y="218" text-anchor="middle" font-family="Playfair Display,serif" font-size="18" fill="white" font-weight="700">Validate</text>
+        <text x="297" y="240" text-anchor="middle" font-size="11" fill="white" opacity="0.75">fmt, validate, plan</text>
+        <text x="360" y="194" font-size="10" fill="white" opacity="0.5">&#9660;</text>
       </g>
 
-      <!-- Faint path: Job2 to Job3 -->
-      <line x1="442" y1="189" x2="474" y2="189" stroke="#C0BDB5" stroke-width="1" opacity="0.08"/>
+      <!-- Arrow: Job2 to Job3 -->
+      <line x1="375" y1="214" x2="390" y2="214" stroke="#C0BDB5" stroke-width="1.5" opacity="0.2"/>
+      <polygon points="388,210 395,214 388,218" fill="#C0BDB5" opacity="0.35"/>
 
-      <!-- JOB 3 -->
+      <!-- JOB 3: x=395, w=155, center=472 -->
       <g id="job3-box" style="cursor:pointer" onclick="toggleJobDetail(3)">
         <g filter="url(#pipe-shadow)">
-          <rect x="474" y="158" width="325" height="62" rx="8" fill="#6B3FA0"/>
+          <rect x="395" y="175" width="155" height="78" rx="10" fill="#6B3FA0"/>
         </g>
-        <text x="636" y="176" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">JOB 3</text>
-        <text x="636" y="194" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="white" font-weight="700">Risk Assessment</text>
-        <text x="636" y="211" text-anchor="middle" font-size="10" fill="white" opacity="0.75">deterministic matrix</text>
-        <text x="781" y="174" font-size="10" fill="white" opacity="0.5">&#9660;</text>
+        <text x="472" y="197" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="white" letter-spacing="2.5" font-weight="600" opacity="0.8">JOB 3</text>
+        <text x="472" y="218" text-anchor="middle" font-family="Playfair Display,serif" font-size="18" fill="white" font-weight="700">Risk Assess</text>
+        <text x="472" y="240" text-anchor="middle" font-size="11" fill="white" opacity="0.75">deterministic matrix</text>
+        <text x="535" y="194" font-size="10" fill="white" opacity="0.5">&#9660;</text>
       </g>
 
-      <!-- === ANIMATED FLOW: glowing dots between jobs === -->
+      <!-- Arrow: Job3 to Job4 -->
+      <line x1="550" y1="214" x2="565" y2="214" stroke="#C0BDB5" stroke-width="1.5" opacity="0.2"/>
+      <polygon points="563,210 570,214 563,218" fill="#C0BDB5" opacity="0.35"/>
 
-      <!-- Dot: Job 1 to Job 2 -->
-      <circle r="5" fill="#1A6B7A" filter="url(#glow-teal)" opacity="0">
-        <animateMotion dur="5s" repeatCount="indefinite" path="M117,220 L117,230 L344,230 L344,220" keyPoints="0;0.15;0.85;1" keyTimes="0;0.15;0.85;1" calcMode="linear"/>
-        <animate attributeName="opacity" values="0;0.95;0.95;0" dur="5s" repeatCount="indefinite" keyTimes="0;0.08;0.92;1"/>
-        <animate attributeName="fill" values="#1A6B7A;#1A6B7A;#B87333;#B87333" dur="5s" repeatCount="indefinite" keyTimes="0;0.4;0.6;1"/>
-        <animate attributeName="r" values="5;4;4;5" dur="5s" repeatCount="indefinite" keyTimes="0;0.3;0.7;1"/>
-      </circle>
-      <!-- Trail for Job1 to Job2 -->
-      <circle r="3" fill="#1A6B7A" opacity="0">
-        <animateMotion dur="5s" repeatCount="indefinite" path="M117,220 L117,230 L344,230 L344,220" keyPoints="0;0.15;0.85;1" keyTimes="0;0.15;0.85;1" calcMode="linear" begin="0.15s"/>
-        <animate attributeName="opacity" values="0;0.3;0.3;0" dur="5s" repeatCount="indefinite" begin="0.15s" keyTimes="0;0.08;0.92;1"/>
-      </circle>
+      <!-- JOB 4: x=570, w=135, center=637 -->
+      <g id="job4-box" style="cursor:pointer" onclick="toggleJobDetail(4)">
+        <g filter="url(#pipe-shadow)">
+          <rect x="570" y="175" width="135" height="78" rx="10" fill="#C4283A"/>
+        </g>
+        <text x="637" y="197" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="white" letter-spacing="2.5" font-weight="600" opacity="0.8">JOB 4</text>
+        <text x="637" y="218" text-anchor="middle" font-family="Playfair Display,serif" font-size="18" fill="white" font-weight="700">Decision</text>
+        <text x="637" y="240" text-anchor="middle" font-size="11" fill="white" opacity="0.75">fromJSON() &#8594; action</text>
+        <text x="690" y="194" font-size="10" fill="white" opacity="0.5">&#9660;</text>
+      </g>
 
-      <!-- Dot: Job 2 to Job 3 -->
-      <circle r="5" fill="#B87333" filter="url(#glow-orange)" opacity="0">
-        <animateMotion dur="5s" repeatCount="indefinite" begin="1.6s" path="M344,220 L344,230 L636,230 L636,220" keyPoints="0;0.1;0.9;1" keyTimes="0;0.1;0.9;1" calcMode="linear"/>
-        <animate attributeName="opacity" values="0;0.95;0.95;0" dur="5s" repeatCount="indefinite" begin="1.6s" keyTimes="0;0.08;0.92;1"/>
-        <animate attributeName="fill" values="#B87333;#B87333;#6B3FA0;#6B3FA0" dur="5s" repeatCount="indefinite" begin="1.6s" keyTimes="0;0.4;0.6;1"/>
-        <animate attributeName="r" values="5;4;4;5" dur="5s" repeatCount="indefinite" begin="1.6s" keyTimes="0;0.3;0.7;1"/>
-      </circle>
-      <!-- Trail for Job2 to Job3 -->
-      <circle r="3" fill="#B87333" opacity="0">
-        <animateMotion dur="5s" repeatCount="indefinite" begin="1.75s" path="M344,220 L344,230 L636,230 L636,220" keyPoints="0;0.1;0.9;1" keyTimes="0;0.1;0.9;1" calcMode="linear"/>
-        <animate attributeName="opacity" values="0;0.25;0.25;0" dur="5s" repeatCount="indefinite" begin="1.75s" keyTimes="0;0.08;0.92;1"/>
-      </circle>
+      <!-- @claude label at bottom of workflow box -->
+      <text x="375" y="375" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#8A8A8A" opacity="0.5">Jobs 1-4 re-run when @claude pushes fixes (synchronize event)</text>
 
       <!-- ============================================ -->
-      <!-- === DETAIL PANELS ========================== -->
+      <!-- === DETAIL PANELS =========================== -->
       <!-- ============================================ -->
 
       <!-- JOB 1 DETAIL -->
       <g id="job1-detail" visibility="hidden">
         <g filter="url(#pipe-shadow)">
-          <rect x="20" y="228" width="780" height="65" rx="8" fill="white" stroke="#1A6B7A" stroke-width="1.5"/>
+          <rect x="25" y="265" width="700" height="100" rx="8" fill="white" stroke="#1A6B7A" stroke-width="1.5"/>
         </g>
-        <rect x="20" y="228" width="780" height="4" rx="2" fill="#1A6B7A"/>
-        <text x="40" y="251" font-family="JetBrains Mono,monospace" font-size="10" fill="#1A6B7A" letter-spacing="1.5" font-weight="700">JOB 1: SEMVER CLASSIFICATION</text>
-        <rect x="36" y="261" width="64" height="18" rx="4" fill="#1A6B7A" opacity="0.08"/>
-        <text x="68" y="273" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1A6B7A" font-weight="600">git diff</text>
-        <text x="108" y="273" font-size="12" fill="#8A8A8A">&#8594;</text>
-        <rect x="118" y="261" width="100" height="18" rx="4" fill="#1A6B7A" opacity="0.08"/>
-        <text x="168" y="273" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1A6B7A" font-weight="600">parse modules</text>
-        <text x="226" y="273" font-size="12" fill="#8A8A8A">&#8594;</text>
-        <rect x="236" y="261" width="92" height="18" rx="4" fill="#1A6B7A" opacity="0.08"/>
-        <text x="282" y="273" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1A6B7A" font-weight="600">detect bump</text>
-        <text x="336" y="273" font-size="12" fill="#8A8A8A">&#8594;</text>
-        <rect x="346" y="261" width="100" height="18" rx="4" fill="#1A6B7A" opacity="0.1"/>
-        <text x="396" y="273" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1A6B7A" font-weight="700">label PR</text>
-        <rect x="480" y="261" width="58" height="18" rx="4" fill="#2D7A4F" opacity="0.12"/>
-        <text x="509" y="273" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#2D7A4F" font-weight="700">patch</text>
-        <rect x="544" y="261" width="58" height="18" rx="4" fill="#9A7B2D" opacity="0.12"/>
-        <text x="573" y="273" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#9A7B2D" font-weight="700">minor</text>
-        <rect x="608" y="261" width="58" height="18" rx="4" fill="#C4283A" opacity="0.12"/>
-        <text x="637" y="273" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#C4283A" font-weight="700">major</text>
-        <g style="cursor:pointer" onclick="toggleJobDetail(1)"><text x="782" y="251" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="14" fill="#8A8A8A">&#10005;</text></g>
+        <rect x="25" y="265" width="700" height="4" rx="2" fill="#1A6B7A"/>
+        <text x="45" y="290" font-family="JetBrains Mono,monospace" font-size="11" fill="#1A6B7A" letter-spacing="1.5" font-weight="700">JOB 1: SEMVER CLASSIFICATION</text>
+        <text x="45" y="310" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Parses git diff to find module source URL changes. Extracts old/new versions, classifies as patch, minor, or major.</text>
+        <text x="45" y="326" font-family="JetBrains Mono,monospace" font-size="10" fill="#8A8A8A">Script: classify-version-bump.sh</text>
+        <rect x="45" y="336" width="72" height="18" rx="4" fill="#1A6B7A" opacity="0.08"/>
+        <text x="81" y="349" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1A6B7A" font-weight="600">git diff</text>
+        <text x="124" y="349" font-size="11" fill="#8A8A8A">&#8594;</text>
+        <rect x="136" y="336" width="110" height="18" rx="4" fill="#1A6B7A" opacity="0.08"/>
+        <text x="191" y="349" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1A6B7A" font-weight="600">parse modules</text>
+        <text x="253" y="349" font-size="11" fill="#8A8A8A">&#8594;</text>
+        <rect x="265" y="336" width="120" height="18" rx="4" fill="#1A6B7A" opacity="0.08"/>
+        <text x="325" y="349" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1A6B7A" font-weight="600">compare versions</text>
+        <text x="392" y="349" font-size="11" fill="#8A8A8A">&#8594;</text>
+        <rect x="404" y="336" width="155" height="18" rx="4" fill="#1A6B7A" opacity="0.1"/>
+        <text x="481" y="349" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#1A6B7A" font-weight="700">label PR: patch|minor|major</text>
+        <g style="cursor:pointer" onclick="toggleJobDetail(1)"><text x="707" y="290" text-anchor="middle" font-size="14" fill="#8A8A8A">&#10005;</text></g>
       </g>
 
       <!-- JOB 2 DETAIL -->
       <g id="job2-detail" visibility="hidden">
-        <g filter="url(#pipe-shadow)"><rect x="20" y="228" width="780" height="90" rx="8" fill="white" stroke="#B87333" stroke-width="1.5"/></g>
-        <rect x="20" y="228" width="780" height="4" rx="2" fill="#B87333"/>
-        <text x="40" y="251" font-family="JetBrains Mono,monospace" font-size="10" fill="#B87333" letter-spacing="1.5" font-weight="700">JOB 2: DETERMINISTIC VALIDATION</text>
-        <rect x="36" y="261" width="44" height="20" rx="4" fill="#B87333" opacity="0.08"/>
-        <text x="58" y="275" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">fmt</text>
-        <text x="88" y="275" font-size="12" fill="#8A8A8A">&#8594;</text>
-        <rect x="98" y="261" width="44" height="20" rx="4" fill="#B87333" opacity="0.08"/>
-        <text x="120" y="275" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">init</text>
-        <text x="150" y="275" font-size="12" fill="#8A8A8A">&#8594;</text>
-        <rect x="160" y="261" width="64" height="20" rx="4" fill="#B87333" opacity="0.08"/>
-        <text x="192" y="275" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">validate</text>
-        <text x="232" y="275" font-size="12" fill="#8A8A8A">&#8594;</text>
-        <rect x="242" y="261" width="50" height="20" rx="4" fill="#B87333" opacity="0.08"/>
-        <text x="267" y="275" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">tflint</text>
-        <text x="300" y="275" font-size="12" fill="#8A8A8A">&#8594;</text>
-        <rect x="310" y="261" width="90" height="20" rx="4" fill="#B87333" opacity="0.1"/>
-        <text x="355" y="275" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="700">plan -detailed</text>
-        <text x="36" y="299" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A">exit 0: no changes (safe)</text>
-        <text x="220" y="299" font-family="JetBrains Mono,monospace" font-size="9" fill="#C4283A">exit 1: plan failed</text>
-        <text x="410" y="299" font-family="JetBrains Mono,monospace" font-size="9" fill="#2D7A4F">exit 2: changes detected &#8594; Job 3</text>
-        <g style="cursor:pointer" onclick="toggleJobDetail(2)"><text x="782" y="251" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="14" fill="#8A8A8A">&#10005;</text></g>
+        <g filter="url(#pipe-shadow)"><rect x="25" y="265" width="700" height="110" rx="8" fill="white" stroke="#B87333" stroke-width="1.5"/></g>
+        <rect x="25" y="265" width="700" height="4" rx="2" fill="#B87333"/>
+        <text x="45" y="290" font-family="JetBrains Mono,monospace" font-size="11" fill="#B87333" letter-spacing="1.5" font-weight="700">JOB 2: TERRAFORM VALIDATION</text>
+        <text x="45" y="310" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Runs: fmt &#8594; init &#8594; validate &#8594; tflint &#8594; plan -detailed-exitcode</text>
+        <rect x="45" y="322" width="50" height="18" rx="4" fill="#B87333" opacity="0.08"/>
+        <text x="70" y="335" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">fmt</text>
+        <text x="101" y="335" font-size="11" fill="#8A8A8A">&#8594;</text>
+        <rect x="113" y="322" width="50" height="18" rx="4" fill="#B87333" opacity="0.08"/>
+        <text x="138" y="335" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">init</text>
+        <text x="169" y="335" font-size="11" fill="#8A8A8A">&#8594;</text>
+        <rect x="181" y="322" width="70" height="18" rx="4" fill="#B87333" opacity="0.08"/>
+        <text x="216" y="335" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">validate</text>
+        <text x="257" y="335" font-size="11" fill="#8A8A8A">&#8594;</text>
+        <rect x="269" y="322" width="54" height="18" rx="4" fill="#B87333" opacity="0.08"/>
+        <text x="296" y="335" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="600">tflint</text>
+        <text x="329" y="335" font-size="11" fill="#8A8A8A">&#8594;</text>
+        <rect x="341" y="322" width="105" height="18" rx="4" fill="#B87333" opacity="0.1"/>
+        <text x="393" y="335" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#B87333" font-weight="700">plan -detailed</text>
+        <text x="45" y="362" font-family="JetBrains Mono,monospace" font-size="10" fill="#8A8A8A">Exit 0: No changes -- plan clean</text>
+        <text x="280" y="362" font-family="JetBrains Mono,monospace" font-size="10" fill="#C4283A">Exit 1: Plan failed -- breaking (skip Job 3)</text>
+        <text x="560" y="362" font-family="JetBrains Mono,monospace" font-size="10" fill="#2D7A4F">Exit 2: Changes &#8594; Job 3</text>
+        <g style="cursor:pointer" onclick="toggleJobDetail(2)"><text x="707" y="290" text-anchor="middle" font-size="14" fill="#8A8A8A">&#10005;</text></g>
       </g>
 
       <!-- JOB 3 DETAIL -->
       <g id="job3-detail" visibility="hidden">
-        <g filter="url(#pipe-shadow)"><rect x="20" y="228" width="780" height="130" rx="8" fill="white" stroke="#6B3FA0" stroke-width="1.5"/></g>
-        <rect x="20" y="228" width="780" height="4" rx="2" fill="#6B3FA0"/>
-        <text x="40" y="251" font-family="JetBrains Mono,monospace" font-size="10" fill="#6B3FA0" letter-spacing="1.5" font-weight="700">JOB 3: DETERMINISTIC RISK ASSESSMENT</text>
-        <text x="680" y="251" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A">no AI</text>
-        <g filter="url(#pipe-shadow)"><rect x="30" y="263" width="200" height="52" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/></g>
-        <text x="130" y="281" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">INPUTS</text>
-        <text x="130" y="297" text-anchor="middle" font-size="10" fill="#6B6B6B">version_type (patch/minor/major)</text>
-        <text x="130" y="309" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#9A7B2D">plan_summary (from Jobs 1-2)</text>
-        <g filter="url(#pipe-shadow)"><rect x="260" y="263" width="250" height="52" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/></g>
-        <text x="385" y="281" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">MATRIX LOOKUP</text>
-        <text x="385" y="297" text-anchor="middle" font-size="10" fill="#6B6B6B">4 rules checked in priority order</text>
-        <text x="385" y="309" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#B87333">exit code + changes + destroy/replace</text>
-        <g filter="url(#pipe-shadow)"><rect x="540" y="263" width="250" height="52" rx="6" fill="#6B3FA0" opacity="0.06" stroke="#6B3FA0" stroke-width="1.5"/></g>
-        <text x="665" y="281" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">OUTPUT</text>
-        <text x="665" y="297" text-anchor="middle" font-size="10" fill="#3D3D3D">decision + risk_level JSON</text>
-        <text x="665" y="309" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#C4283A">structured_output</text>
-        <!-- Glowing particles: Inputs to Matrix to Output -->
-        <circle r="4" fill="#6B3FA0" filter="url(#glow-purple)" opacity="0">
-          <animateMotion dur="2.5s" repeatCount="indefinite" begin="0s" path="M130,315 L130,327 L385,327 L385,315"/>
-          <animate attributeName="opacity" values="0;0.8;0.8;0" dur="2.5s" repeatCount="indefinite" begin="0s" keyTimes="0;0.1;0.85;1"/>
-        </circle>
-        <circle r="4" fill="#6B3FA0" filter="url(#glow-purple)" opacity="0">
-          <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.8s" path="M385,315 L385,327 L665,327 L665,315"/>
-          <animate attributeName="opacity" values="0;0.8;0.8;0" dur="2.5s" repeatCount="indefinite" begin="0.8s" keyTimes="0;0.1;0.85;1"/>
-        </circle>
-        <text x="36" y="340" font-family="JetBrains Mono,monospace" font-size="9" fill="#6B3FA0" opacity="0.7">Inputs &#8594; Matrix Lookup &#8594; Structured JSON &#8594; Job 4 Decision</text>
-        <g style="cursor:pointer" onclick="toggleJobDetail(3)"><text x="782" y="251" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="14" fill="#8A8A8A">&#10005;</text></g>
+        <g filter="url(#pipe-shadow)"><rect x="25" y="265" width="700" height="115" rx="8" fill="white" stroke="#6B3FA0" stroke-width="1.5"/></g>
+        <rect x="25" y="265" width="700" height="4" rx="2" fill="#6B3FA0"/>
+        <text x="45" y="290" font-family="JetBrains Mono,monospace" font-size="11" fill="#6B3FA0" letter-spacing="1.5" font-weight="700">JOB 3: DETERMINISTIC RISK ASSESSMENT (no AI)</text>
+        <text x="45" y="310" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Reads plan summary from Job 2 and applies the conservative decision matrix:</text>
+        <text x="45" y="326" font-family="Source Sans 3,sans-serif" font-size="11" fill="#6B6B6B">&#8226; DESTROY/REPLACE detected &#8594; always breaking-change (merge blocked)</text>
+        <text x="45" y="340" font-family="Source Sans 3,sans-serif" font-size="11" fill="#6B6B6B">&#8226; No adds, no changes &#8594; auto-merge (only auto-merge path)</text>
+        <text x="45" y="354" font-family="Source Sans 3,sans-serif" font-size="11" fill="#6B6B6B">&#8226; Adds only (no changes to existing) &#8594; needs-review (low/medium)</text>
+        <text x="45" y="368" font-family="Source Sans 3,sans-serif" font-size="11" fill="#6B6B6B">&#8226; Changes to existing &#8594; needs-review (medium/high)</text>
+        <rect x="480" y="330" width="220" height="26" rx="5" fill="#6B3FA0" opacity="0.06" stroke="#6B3FA0" stroke-width="0.5"/>
+        <text x="490" y="347" font-family="JetBrains Mono,monospace" font-size="10" fill="#6B3FA0">{ decision, risk_level, rationale }</text>
+        <g style="cursor:pointer" onclick="toggleJobDetail(3)"><text x="707" y="290" text-anchor="middle" font-size="14" fill="#8A8A8A">&#10005;</text></g>
+      </g>
+
+      <!-- JOB 4 DETAIL -->
+      <g id="job4-detail" visibility="hidden">
+        <g filter="url(#pipe-shadow)"><rect x="25" y="265" width="700" height="115" rx="8" fill="white" stroke="#C4283A" stroke-width="1.5"/></g>
+        <rect x="25" y="265" width="700" height="4" rx="2" fill="#C4283A"/>
+        <text x="45" y="290" font-family="JetBrains Mono,monospace" font-size="11" fill="#C4283A" letter-spacing="1.5" font-weight="700">JOB 4: DECISION ENGINE</text>
+        <text x="45" y="310" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Reads structured JSON from Job 3 &#8594; applies labels &#8594; posts PR comment &#8594; triggers outcome</text>
+        <rect x="45" y="322" width="280" height="20" rx="5" fill="#2D7A4F" opacity="0.08" stroke="#2D7A4F" stroke-width="0.5"/>
+        <text x="55" y="336" font-family="JetBrains Mono,monospace" font-size="10" fill="#2D7A4F" font-weight="600">auto-merge &#8594; gh pr merge --squash</text>
+        <rect x="45" y="346" width="380" height="20" rx="5" fill="#9A7B2D" opacity="0.08" stroke="#9A7B2D" stroke-width="0.5"/>
+        <text x="55" y="360" font-family="JetBrains Mono,monospace" font-size="10" fill="#9A7B2D" font-weight="600">needs-review &#8594; label + request reviewers + suggest @claude</text>
+        <rect x="45" y="370" width="320" height="20" rx="5" fill="#C4283A" opacity="0.08" stroke="#C4283A" stroke-width="0.5"/>
+        <text x="55" y="384" font-family="JetBrains Mono,monospace" font-size="10" fill="#C4283A" font-weight="600">breaking-change &#8594; block merge + detailed analysis</text>
+        <g style="cursor:pointer" onclick="toggleJobDetail(4)"><text x="707" y="290" text-anchor="middle" font-size="14" fill="#8A8A8A">&#10005;</text></g>
       </g>
 
       <!-- ============================================ -->
-      <!-- === BELOW-JOBS GROUP ======================= -->
+      <!-- === BELOW-JOBS GROUP ======================== -->
       <!-- ============================================ -->
       <g id="below-jobs">
 
-        <!-- Faint path: Job 3 to Job 4 -->
-        <line x1="636" y1="220" x2="410" y2="265" stroke="#6B3FA0" stroke-width="1" opacity="0.08"/>
+        <!-- === OUTCOMES COLUMN (right of workflow box) === -->
 
-        <!-- Glowing dot: Job 3 to Job 4 -->
-        <circle r="5" fill="#6B3FA0" filter="url(#glow-purple)" opacity="0">
-          <animateMotion dur="5s" repeatCount="indefinite" begin="3.2s" path="M636,220 L410,265"/>
-          <animate attributeName="opacity" values="0;0.95;0.95;0" dur="5s" repeatCount="indefinite" begin="3.2s" keyTimes="0;0.1;0.8;1"/>
-          <animate attributeName="fill" values="#6B3FA0;#6B3FA0;#C4283A;#C4283A" dur="5s" repeatCount="indefinite" begin="3.2s" keyTimes="0;0.4;0.6;1"/>
-        </circle>
-        <!-- Trail -->
-        <circle r="3" fill="#6B3FA0" opacity="0">
-          <animateMotion dur="5s" repeatCount="indefinite" begin="3.35s" path="M636,220 L410,265"/>
-          <animate attributeName="opacity" values="0;0.2;0.2;0" dur="5s" repeatCount="indefinite" begin="3.35s" keyTimes="0;0.1;0.8;1"/>
-        </circle>
+        <!-- Faint paths: Job 4 exit to outcomes -->
+        <line x1="705" y1="195" x2="770" y2="175" stroke="#2D7A4F" stroke-width="1.5" opacity="0.12"/>
+        <line x1="705" y1="214" x2="770" y2="220" stroke="#9A7B2D" stroke-width="1.5" opacity="0.12"/>
+        <line x1="705" y1="233" x2="770" y2="265" stroke="#C4283A" stroke-width="1.5" opacity="0.12"/>
 
-        <!-- JOB 4: DECISION -->
-        <g filter="url(#pipe-shadow)">
-          <rect x="335" y="268" width="149" height="52" rx="8" fill="#C4283A"/>
+
+        <!-- AUTO-MERGE outcome -->
+        <g id="outcome-auto-box" style="cursor:pointer" onclick="toggleJobDetail(5)">
+          <g filter="url(#pipe-shadow)">
+            <rect x="770" y="150" width="190" height="60" rx="10" fill="white" stroke="#2D7A4F" stroke-width="1.5"/>
+          </g>
+          <rect x="770" y="150" width="190" height="4" rx="2" fill="#2D7A4F"/>
+          <circle cx="795" cy="183" r="9" fill="#2D7A4F" opacity="0.15"/>
+          <text x="795" y="187" text-anchor="middle" font-size="12" fill="#2D7A4F" font-weight="700">&#10003;</text>
+          <text x="815" y="179" font-family="JetBrains Mono,monospace" font-size="11" fill="#2D7A4F" font-weight="700" letter-spacing="1">AUTO-MERGE</text>
+          <text x="815" y="197" font-size="11" fill="#6B6B6B">Squash merge, risk:low</text>
+          <text x="945" y="168" font-size="9" fill="#2D7A4F" opacity="0.5">&#9660;</text>
         </g>
-        <text x="410" y="285" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">JOB 4</text>
-        <text x="410" y="303" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="white" font-weight="700">Decision</text>
-        <text x="410" y="315" text-anchor="middle" font-size="9" fill="white" opacity="0.75">fromJSON()</text>
 
-        <!-- Faint paths: Job 4 to outcomes -->
-        <line x1="360" y1="320" x2="140" y2="365" stroke="#2D7A4F" stroke-width="1" opacity="0.06"/>
-        <line x1="410" y1="320" x2="395" y2="365" stroke="#9A7B2D" stroke-width="1" opacity="0.06"/>
-        <line x1="460" y1="320" x2="665" y2="365" stroke="#C4283A" stroke-width="1" opacity="0.06"/>
-
-        <!-- Glowing decision dots -->
-        <circle r="5" fill="#2D7A4F" filter="url(#glow-green)" opacity="0">
-          <animateMotion dur="7s" repeatCount="indefinite" begin="0s" path="M360,320 L140,365"/>
-          <animate attributeName="opacity" values="0;0.9;0.9;0" dur="3s" repeatCount="indefinite" begin="0s" keyTimes="0;0.15;0.7;1"/>
-        </circle>
-        <circle r="3" fill="#2D7A4F" opacity="0">
-          <animateMotion dur="7s" repeatCount="indefinite" begin="0.2s" path="M360,320 L140,365"/>
-          <animate attributeName="opacity" values="0;0.25;0.25;0" dur="3s" repeatCount="indefinite" begin="0.2s" keyTimes="0;0.15;0.7;1"/>
-        </circle>
-
-        <circle r="5" fill="#9A7B2D" filter="url(#glow-yellow)" opacity="0">
-          <animateMotion dur="7s" repeatCount="indefinite" begin="2.3s" path="M410,320 L395,365"/>
-          <animate attributeName="opacity" values="0;0.9;0.9;0" dur="3s" repeatCount="indefinite" begin="2.3s" keyTimes="0;0.15;0.7;1"/>
-        </circle>
-        <circle r="3" fill="#9A7B2D" opacity="0">
-          <animateMotion dur="7s" repeatCount="indefinite" begin="2.5s" path="M410,320 L395,365"/>
-          <animate attributeName="opacity" values="0;0.25;0.25;0" dur="3s" repeatCount="indefinite" begin="2.5s" keyTimes="0;0.15;0.7;1"/>
-        </circle>
-
-        <circle r="5" fill="#C4283A" filter="url(#glow-red)" opacity="0">
-          <animateMotion dur="7s" repeatCount="indefinite" begin="4.6s" path="M460,320 L665,365"/>
-          <animate attributeName="opacity" values="0;0.9;0.9;0" dur="3s" repeatCount="indefinite" begin="4.6s" keyTimes="0;0.15;0.7;1"/>
-        </circle>
-        <circle r="3" fill="#C4283A" opacity="0">
-          <animateMotion dur="7s" repeatCount="indefinite" begin="4.8s" path="M460,320 L665,365"/>
-          <animate attributeName="opacity" values="0;0.25;0.25;0" dur="3s" repeatCount="indefinite" begin="4.8s" keyTimes="0;0.15;0.7;1"/>
-        </circle>
-
-        <!-- Decision outcomes -->
-        <g filter="url(#pipe-shadow)">
-          <rect x="20" y="370" width="240" height="52" rx="8" fill="white" stroke="#2D7A4F" stroke-width="1.5"/>
+        <!-- NEEDS-REVIEW outcome -->
+        <g id="outcome-review-box" style="cursor:pointer" onclick="toggleJobDetail(6)">
+          <g filter="url(#pipe-shadow)">
+            <rect x="770" y="220" width="190" height="60" rx="10" fill="white" stroke="#9A7B2D" stroke-width="1.5"/>
+          </g>
+          <rect x="770" y="220" width="190" height="4" rx="2" fill="#9A7B2D"/>
+          <circle cx="795" cy="253" r="9" fill="#9A7B2D" opacity="0.15"/>
+          <text x="795" y="258" text-anchor="middle" font-size="12" fill="#9A7B2D" font-weight="700">!</text>
+          <text x="815" y="249" font-family="JetBrains Mono,monospace" font-size="11" fill="#9A7B2D" font-weight="700" letter-spacing="1">NEEDS-REVIEW</text>
+          <text x="815" y="267" font-size="11" fill="#6B6B6B">@claude + reviewers</text>
+          <text x="945" y="238" font-size="9" fill="#9A7B2D" opacity="0.5">&#9660;</text>
         </g>
-        <rect x="20" y="370" width="240" height="4" rx="2" fill="#2D7A4F"/>
-        <circle cx="44" cy="398" r="8" fill="#2D7A4F" opacity="0.15"/>
-        <text x="44" y="402" text-anchor="middle" font-size="11" fill="#2D7A4F" font-weight="700">&#10003;</text>
-        <text x="62" y="394" font-family="JetBrains Mono,monospace" font-size="10" fill="#2D7A4F" font-weight="700" letter-spacing="1">AUTO-MERGE</text>
-        <text x="62" y="410" font-size="11" fill="#6B6B6B">Squash merge, risk:low</text>
 
-        <g filter="url(#pipe-shadow)">
-          <rect x="275" y="370" width="240" height="52" rx="8" fill="white" stroke="#9A7B2D" stroke-width="1.5"/>
+        <!-- BREAKING-CHANGE outcome -->
+        <g id="outcome-break-box" style="cursor:pointer" onclick="toggleJobDetail(7)">
+          <g filter="url(#pipe-shadow)">
+            <rect x="770" y="290" width="190" height="60" rx="10" fill="white" stroke="#C4283A" stroke-width="1.5"/>
+          </g>
+          <rect x="770" y="290" width="190" height="4" rx="2" fill="#C4283A"/>
+          <circle cx="795" cy="323" r="9" fill="#C4283A" opacity="0.15"/>
+          <text x="795" y="328" text-anchor="middle" font-size="12" fill="#C4283A" font-weight="700">&#10007;</text>
+          <text x="815" y="318" font-family="JetBrains Mono,monospace" font-size="10" fill="#C4283A" font-weight="700" letter-spacing="0.5">BREAKING-CHANGE</text>
+          <text x="815" y="337" font-size="11" fill="#6B6B6B">Block + analysis</text>
+          <text x="945" y="308" font-size="9" fill="#C4283A" opacity="0.5">&#9660;</text>
         </g>
-        <rect x="275" y="370" width="240" height="4" rx="2" fill="#9A7B2D"/>
-        <circle cx="299" cy="398" r="8" fill="#9A7B2D" opacity="0.15"/>
-        <text x="299" y="402" text-anchor="middle" font-size="11" fill="#9A7B2D" font-weight="700">!</text>
-        <text x="317" y="394" font-family="JetBrains Mono,monospace" font-size="10" fill="#9A7B2D" font-weight="700" letter-spacing="1">NEEDS-REVIEW</text>
-        <text x="317" y="410" font-size="11" fill="#6B6B6B">Label + "@claude for help"</text>
 
-        <g filter="url(#pipe-shadow)">
-          <rect x="530" y="370" width="270" height="52" rx="8" fill="white" stroke="#C4283A" stroke-width="1.5"/>
-        </g>
-        <rect x="530" y="370" width="270" height="4" rx="2" fill="#C4283A"/>
-        <circle cx="554" cy="398" r="8" fill="#C4283A" opacity="0.15"/>
-        <text x="554" y="402" text-anchor="middle" font-size="11" fill="#C4283A" font-weight="700">&#10007;</text>
-        <text x="572" y="394" font-family="JetBrains Mono,monospace" font-size="10" fill="#C4283A" font-weight="700" letter-spacing="1">BREAKING-CHANGE</text>
-        <text x="572" y="410" font-size="11" fill="#6B6B6B">Block merge + detailed analysis</text>
+        <!-- OUTCOME DETAIL PANELS -->
 
-        <!-- Post-merge apply -->
-        <g filter="url(#pipe-shadow)">
-          <rect x="20" y="445" width="780" height="70" rx="8" fill="white" stroke="#2D7A4F" stroke-width="1.5"/>
+        <!-- Auto-Merge Detail -->
+        <g id="job5-detail" visibility="hidden">
+          <g filter="url(#pipe-shadow)"><rect x="770" y="365" width="400" height="95" rx="8" fill="white" stroke="#2D7A4F" stroke-width="1.5"/></g>
+          <rect x="770" y="365" width="400" height="4" rx="2" fill="#2D7A4F"/>
+          <text x="790" y="390" font-family="JetBrains Mono,monospace" font-size="11" fill="#2D7A4F" letter-spacing="1.5" font-weight="700">AUTO-MERGE (risk:low)</text>
+          <text x="790" y="410" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Only triggered when plan shows zero changes.</text>
+          <text x="790" y="428" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Squash-merges automatically. No human needed.</text>
+          <text x="790" y="448" font-family="JetBrains Mono,monospace" font-size="10" fill="#8A8A8A">exit 0 &#8594; gh pr merge --squash &#8594; apply.yml</text>
+          <g style="cursor:pointer" onclick="toggleJobDetail(5)"><text x="1152" y="390" text-anchor="middle" font-size="14" fill="#8A8A8A">&#10005;</text></g>
         </g>
-        <rect x="20" y="445" width="780" height="4" rx="2" fill="#2D7A4F"/>
-        <text x="40" y="467" font-family="JetBrains Mono,monospace" font-size="10" fill="#2D7A4F" letter-spacing="1.5" font-weight="700">ON MERGE: terraform apply</text>
-        <rect x="35" y="479" width="340" height="20" rx="4" fill="#2D7A4F" opacity="0.06" stroke="#2D7A4F" stroke-width="0.5"/>
-        <text x="45" y="493" font-family="JetBrains Mono,monospace" font-size="9" fill="#2D7A4F" font-weight="600">SUCCESS: upload config &#8594; create run &#8594; apply &#8594; comment</text>
-        <rect x="395" y="479" width="390" height="20" rx="4" fill="#C4283A" opacity="0.06" stroke="#C4283A" stroke-width="0.5"/>
-        <text x="405" y="493" font-family="JetBrains Mono,monospace" font-size="9" fill="#C4283A" font-weight="600">FAILURE: incident issue + draft rollback PR + notify CODEOWNERS</text>
-        <text x="40" y="510" font-family="Source Sans 3,sans-serif" font-size="11" fill="#8A8A8A">Rollback PR goes through the normal pipeline for safe revert (see Decision D6)</text>
+
+        <!-- Needs-Review Detail -->
+        <g id="job6-detail" visibility="hidden">
+          <g filter="url(#pipe-shadow)"><rect x="770" y="365" width="400" height="110" rx="8" fill="white" stroke="#9A7B2D" stroke-width="1.5"/></g>
+          <rect x="770" y="365" width="400" height="4" rx="2" fill="#9A7B2D"/>
+          <text x="790" y="390" font-family="JetBrains Mono,monospace" font-size="11" fill="#9A7B2D" letter-spacing="1.5" font-weight="700">NEEDS-REVIEW (risk:low to high)</text>
+          <text x="790" y="410" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Adds only = low risk (medium for major).</text>
+          <text x="790" y="428" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Changes to existing = medium (high for major).</text>
+          <text x="790" y="446" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Comment @claude to fix code. Pipeline re-runs.</text>
+          <text x="790" y="464" font-family="JetBrains Mono,monospace" font-size="10" fill="#8A8A8A">exit 2 &#8594; needs-review &#8594; @claude available</text>
+          <g style="cursor:pointer" onclick="toggleJobDetail(6)"><text x="1152" y="390" text-anchor="middle" font-size="14" fill="#8A8A8A">&#10005;</text></g>
+        </g>
+
+        <!-- Breaking-Change Detail -->
+        <g id="job7-detail" visibility="hidden">
+          <g filter="url(#pipe-shadow)"><rect x="770" y="365" width="400" height="110" rx="8" fill="white" stroke="#C4283A" stroke-width="1.5"/></g>
+          <rect x="770" y="365" width="400" height="4" rx="2" fill="#C4283A"/>
+          <text x="790" y="390" font-family="JetBrains Mono,monospace" font-size="11" fill="#C4283A" letter-spacing="1.5" font-weight="700">BREAKING-CHANGE (risk:high/critical)</text>
+          <text x="790" y="410" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">DESTROY/REPLACE in plan, or plan failed (exit 1).</text>
+          <text x="790" y="428" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Merge blocked. Analysis posted as PR comment.</text>
+          <text x="790" y="446" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Comment @claude to diagnose and push fixes.</text>
+          <text x="790" y="464" font-family="JetBrains Mono,monospace" font-size="10" fill="#8A8A8A">destroy/replace or exit 1 &#8594; merge blocked</text>
+          <g style="cursor:pointer" onclick="toggleJobDetail(7)"><text x="1152" y="390" text-anchor="middle" font-size="14" fill="#8A8A8A">&#10005;</text></g>
+        </g>
+
+        <!-- === ON MERGE COLUMN === -->
+
+        <!-- Arrow: auto-merge to On Merge -->
+        <line x1="960" y1="180" x2="995" y2="225" stroke="#2D7A4F" stroke-width="1.5" opacity="0.12"/>
+        <polygon points="993,222 998,227 992,228" fill="#2D7A4F" opacity="0.25"/>
+
+        <!-- ON MERGE box -->
+        <g id="onmerge-box" style="cursor:pointer" onclick="toggleJobDetail(8)">
+          <g filter="url(#pipe-shadow)">
+            <rect x="995" y="150" width="180" height="210" rx="10" fill="white" stroke="#2D7A4F" stroke-width="1.5"/>
+          </g>
+          <rect x="995" y="150" width="180" height="4" rx="2" fill="#2D7A4F"/>
+          <text x="1085" y="178" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#2D7A4F" letter-spacing="2.5" font-weight="700">ON MERGE</text>
+          <text x="1085" y="200" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="#1A1A1A" font-weight="700">terraform</text>
+          <text x="1085" y="218" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="#1A1A1A" font-weight="700">-apply.yml</text>
+
+          <!-- Success path -->
+          <rect x="1008" y="232" width="154" height="26" rx="5" fill="#2D7A4F" opacity="0.06" stroke="#2D7A4F" stroke-width="0.5"/>
+          <text x="1018" y="249" font-family="JetBrains Mono,monospace" font-size="9" fill="#2D7A4F" font-weight="600">SUCCESS</text>
+          <text x="1018" y="254" font-family="JetBrains Mono,monospace" font-size="7" fill="#2D7A4F">config &#8594; run &#8594; apply</text>
+
+          <!-- Failure path -->
+          <rect x="1008" y="264" width="154" height="26" rx="5" fill="#C4283A" opacity="0.06" stroke="#C4283A" stroke-width="0.5"/>
+          <text x="1018" y="281" font-family="JetBrains Mono,monospace" font-size="9" fill="#C4283A" font-weight="600">FAILURE</text>
+          <text x="1018" y="286" font-family="JetBrains Mono,monospace" font-size="7" fill="#C4283A">incident + rollback PR</text>
+
+          <!-- Rollback note -->
+          <text x="1085" y="312" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="10" fill="#8A8A8A">Rollback PR goes through</text>
+          <text x="1085" y="326" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="10" fill="#8A8A8A">the normal pipeline for</text>
+          <text x="1085" y="340" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="10" fill="#8A8A8A">safe revert (D6)</text>
+          <text x="1160" y="168" font-size="9" fill="#2D7A4F" opacity="0.5">&#9660;</text>
+        </g>
+
+        <!-- On Merge Detail -->
+        <g id="job8-detail" visibility="hidden">
+          <g filter="url(#pipe-shadow)"><rect x="770" y="365" width="400" height="115" rx="8" fill="white" stroke="#2D7A4F" stroke-width="1.5"/></g>
+          <rect x="770" y="365" width="400" height="4" rx="2" fill="#2D7A4F"/>
+          <text x="790" y="390" font-family="JetBrains Mono,monospace" font-size="11" fill="#2D7A4F" letter-spacing="1.5" font-weight="700">ON MERGE: terraform-apply.yml</text>
+          <text x="790" y="410" font-family="Source Sans 3,sans-serif" font-size="12" fill="#3D3D3D">Separate workflow triggered when PR merges to main.</text>
+          <rect x="790" y="420" width="355" height="20" rx="5" fill="#2D7A4F" opacity="0.06" stroke="#2D7A4F" stroke-width="0.5"/>
+          <text x="800" y="434" font-family="JetBrains Mono,monospace" font-size="10" fill="#2D7A4F" font-weight="600">SUCCESS: upload &#8594; create run &#8594; apply &#8594; comment</text>
+          <rect x="790" y="444" width="360" height="20" rx="5" fill="#C4283A" opacity="0.06" stroke="#C4283A" stroke-width="0.5"/>
+          <text x="800" y="458" font-family="JetBrains Mono,monospace" font-size="10" fill="#C4283A" font-weight="600">FAILURE: incident issue &#8594; rollback PR &#8594; CODEOWNERS</text>
+          <text x="790" y="475" font-family="Source Sans 3,sans-serif" font-size="10" fill="#8A8A8A">Rollback PR goes through the normal pipeline for safe revert.</text>
+          <g style="cursor:pointer" onclick="toggleJobDetail(8)"><text x="1152" y="390" text-anchor="middle" font-size="14" fill="#8A8A8A">&#10005;</text></g>
+        </g>
+
       </g>
+
+      <!-- Single animated flow ball (JS-driven) -->
+      <circle id="flow-ball" r="5" fill="#4A6B8A" filter="url(#glow-ice)" opacity="0"/>
+      <circle id="flow-trail" r="3" fill="#4A6B8A" opacity="0"/>
 
     </svg>
 
@@ -780,9 +801,10 @@ details.ed-card[open]::details-content { height: auto; }
     <div class="legend-item"><div class="legend-dot" style="background:#B87333"></div> Validate</div>
     <div class="legend-item"><div class="legend-dot" style="background:#6B3FA0"></div> Risk Assessment</div>
     <div class="legend-item"><div class="legend-dot" style="background:#C4283A"></div> Decision</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#9A7B2D"></div> Outcomes</div>
     <div class="legend-item"><div class="legend-dot" style="background:#2D7A4F"></div> Apply</div>
   </div>
-  <p style="font-size:12px; color:#8A8A8A; text-align:center; margin-top:8px; font-style:italic">Click on Jobs 1, 2, or 3 to expand details</p>
+  <p style="font-size:12px; color:#8A8A8A; text-align:center; margin-top:8px; font-style:italic">Click any box to expand details</p>
 </div>
 
 <!-- ===== ESCALATION FLOW ===== -->
@@ -797,14 +819,14 @@ details.ed-card[open]::details-content { height: auto; }
     <details class="ed-card" style="border-top: 3px solid var(--green)">
       <summary>
         <h3>Low Risk: Auto-Merge</h3>
-        <p>No plan changes detected. Plan exits with code 0 (no changes). Pipeline auto-merges with squash. No human intervention needed.</p>
+        <p>No adds, no changes. Plan shows zero infrastructure changes (exit 0). Pipeline auto-merges with squash. No human intervention needed.</p>
         <div class="node-row" style="margin-top:8px">
           <span class="node node-script">risk:low</span>
           <span class="node node-script">auto-merge</span>
         </div>
       </summary>
       <div class="card-expand">
-        <p>This is the only auto-merge path. The module version bump was applied but resulted in zero infrastructure changes -- the plan is clean. This applies equally to patch, minor, and major bumps.</p>
+        <p>This is the only auto-merge path. The module version bump was applied but resulted in zero infrastructure changes -- no new resources added and no existing resources modified. This applies equally to patch, minor, and major bumps.</p>
         <ul>
           <li>Plan exit code: <code>0</code> (success, no changes)</li>
           <li>Action: squash merge + <code>risk:low</code> label</li>
@@ -812,28 +834,46 @@ details.ed-card[open]::details-content { height: auto; }
         </ul>
       </div>
     </details>
+    <details class="ed-card" style="border-top: 3px solid var(--green)">
+      <summary>
+        <h3>Low Risk: Adds Only (Needs Review)</h3>
+        <p>New resources added but no existing resources modified. Low risk since nothing existing is touched, but requires review to confirm new resources are expected.</p>
+        <div class="node-row" style="margin-top:8px">
+          <span class="node node-script">risk:low</span>
+          <span class="node node-template">needs-review</span>
+        </div>
+      </summary>
+      <div class="card-expand">
+        <p>New resources will be created but no existing resources are changed, destroyed, or replaced. This is low risk for patch/minor bumps. For major bumps, risk escalates to <code>risk:medium</code> because major version changes are more likely to introduce unexpected behavior.</p>
+        <ul>
+          <li>Plan exit code: <code>2</code> (changes detected, adds only)</li>
+          <li>Action: <code>needs-review</code> label + request reviewer</li>
+          <li>Optional: comment <code>@claude</code> to investigate</li>
+        </ul>
+      </div>
+    </details>
     <details class="ed-card" style="border-top: 3px solid var(--yellow)">
       <summary>
-        <h3>Medium Risk: @claude Available</h3>
-        <p>Plan has changes. Any plan with resource additions, modifications, or updates requires human review. Comment <code>@claude</code> to investigate and reduce blast radius if possible.</p>
+        <h3>Medium Risk: Changes to Existing</h3>
+        <p>Existing resources will be modified (with or without adds). Higher risk because changes affect running workloads. Comment <code>@claude</code> to investigate and reduce blast radius.</p>
         <div class="node-row" style="margin-top:8px">
           <span class="node node-mcp">risk:medium</span>
           <span class="node node-template">needs-review</span>
         </div>
       </summary>
       <div class="card-expand">
-        <p>Any plan that succeeds with changes (exit code 2) but has no DESTROY/REPLACE actions lands here. The number of changes is irrelevant -- even a single resource change requires human review.</p>
+        <p>Plan modifies existing resources -- this affects running workloads and carries higher risk than adds-only. For patch/minor bumps this is <code>risk:medium</code>; for major bumps it escalates to <code>risk:high</code>.</p>
         <ul>
-          <li>Plan exit code: <code>2</code> (changes detected, no destroy/replace)</li>
+          <li>Plan exit code: <code>2</code> (changes to existing resources)</li>
           <li>Action: <code>needs-review</code> label + request reviewer</li>
-          <li>Optional: comment <code>@claude</code> to investigate</li>
+          <li>Recommended: comment <code>@claude</code> to investigate</li>
         </ul>
       </div>
     </details>
     <details class="ed-card" style="border-top: 3px solid var(--orange)">
       <summary>
-        <h3>High Risk: @claude Recommended</h3>
-        <p>DESTROY/REPLACE in plan. Any resource destruction or replacement always results in breaking-change classification. Comment <code>@claude</code> to fix consumer code.</p>
+        <h3>High Risk: DESTROY/REPLACE</h3>
+        <p>Plan contains resource destruction or replacement. Always classified as breaking-change regardless of semver type. Merge blocked. Comment <code>@claude</code> to fix consumer code.</p>
         <div class="node-row" style="margin-top:8px">
           <span class="node node-artifact">risk:high</span>
           <span class="node node-agent">@claude fix</span>
@@ -850,7 +890,7 @@ details.ed-card[open]::details-content { height: auto; }
     </details>
     <details class="ed-card" style="border-top: 3px solid var(--red)">
       <summary>
-        <h3>Critical: Blocked</h3>
+        <h3>Critical: Plan Failed</h3>
         <p>Plan failed (exit 1). The module version bump introduces changes that prevent Terraform from planning. Merge blocked. Comment <code>@claude</code> to diagnose and fix.</p>
         <div class="node-row" style="margin-top:8px">
           <span class="node node-cmd">risk:critical</span>
@@ -902,31 +942,31 @@ details.ed-card[open]::details-content { height: auto; }
   <table class="matrix-table">
     <tr>
       <th>Condition</th>
-      <th>Patch</th>
-      <th>Minor</th>
+      <th>Patch / Minor</th>
       <th>Major</th>
     </tr>
     <tr>
-      <td><span title="Plan succeeds with no changes (exit 0). The module version was updated but no infrastructure changes are needed. This is the only auto-merge path.">Plan succeeds, no changes (exit 0)</span></td>
-      <td class="risk-low">AUTO-MERGE<br/>risk:low</td>
+      <td><span title="Plan exit code 0: no infrastructure changes. The version constraint was updated but the plan is clean — no resources to add, change, or destroy.">Plan has no changes (exit 0)</span></td>
       <td class="risk-low">AUTO-MERGE<br/>risk:low</td>
       <td class="risk-low">AUTO-MERGE<br/>risk:low</td>
     </tr>
     <tr>
-      <td><span title="Plan succeeds with changes (exit 2). Any resource additions, modifications, or updates detected. Number of changes is irrelevant -- all require review.">Plan succeeds with changes</span></td>
+      <td><span title="Plan creates new resources only. No in-place updates, replacements, or deletions to existing managed resources. Review confirms new resources are intentional.">Resources to add, none to change</span></td>
+      <td class="risk-low">NEEDS-REVIEW<br/>risk:low</td>
       <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
+    </tr>
+    <tr>
+      <td><span title="Plan modifies existing managed resources, with or without new resource creation. Changes to live infrastructure carry elevated risk.">Changes to existing (with or without adds)</span></td>
       <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
       <td class="risk-high">NEEDS-REVIEW<br/>risk:high</td>
     </tr>
     <tr>
-      <td><span title="Plan contains destroy or replace actions. Resource deletion/replacement is irreversible and always classified as breaking-change regardless of semver type.">Any DESTROY/REPLACE in plan</span></td>
-      <td class="risk-high">BREAKING-CHANGE<br/>risk:high</td>
+      <td><span title="Plan includes destroy or replace (delete + recreate) actions. These are irreversible operations on managed infrastructure and always block the merge.">Plan includes destroy or replace</span></td>
       <td class="risk-high">BREAKING-CHANGE<br/>risk:high</td>
       <td class="risk-crit">BREAKING-CHANGE<br/>risk:critical</td>
     </tr>
     <tr>
-      <td><span title="Plan failed (exit 1). The module version bump introduces changes that prevent Terraform from planning. Comment @claude to diagnose and fix.">Plan fails (exit 1)</span></td>
-      <td class="risk-high">BREAKING-CHANGE<br/>risk:high</td>
+      <td><span title="Terraform plan exited with code 1 — configuration error. Typically caused by removed variables, changed types, or missing required inputs after a module interface change.">Plan error (exit 1)</span></td>
       <td class="risk-high">BREAKING-CHANGE<br/>risk:high</td>
       <td class="risk-crit">BREAKING-CHANGE<br/>risk:critical</td>
     </tr>
@@ -935,38 +975,38 @@ details.ed-card[open]::details-content { height: auto; }
   <div class="card-grid">
     <details class="ed-card">
       <summary>
-        <h3>Only Auto-Merge Zero-Change Plans</h3>
-        <p>The only path to auto-merge is a clean plan with zero changes. Even a single resource addition requires human review.</p>
+        <h3>Adds vs Changes</h3>
+        <p>The matrix distinguishes between <strong>new resources</strong> (adds) and <strong>modifications to existing resources</strong> (changes). Adds-only is lower risk than changes.</p>
       </summary>
       <div class="card-expand">
-        <p>This applies equally to patch, minor, and major bumps. If the module version was updated but no infrastructure changes are needed (exit 0), it is safe to merge automatically. This is the most conservative approach -- any change at all requires human eyes.</p>
+        <p>Adding new resources doesn't touch existing infrastructure, so it's classified as low risk with needs-review. Modifying existing resources carries higher risk (medium) because it can affect running workloads. Both always require review -- only zero-change plans auto-merge.</p>
       </div>
     </details>
     <details class="ed-card">
       <summary>
         <h3>DESTROY/REPLACE Always Blocks</h3>
-        <p>Any resource destruction or replacement in the plan always results in a <code>breaking-change</code> classification and merge block.</p>
+        <p>Any resource destruction or replacement always results in a <code>breaking-change</code> classification and merge block.</p>
       </summary>
       <div class="card-expand">
-        <p>Resource deletion and replacement are irreversible operations. Unlike the previous matrix, DESTROY/REPLACE is never classified as merely "needs-review" -- it always blocks the merge as a breaking change. For major bumps, it escalates to <code>risk:critical</code>.</p>
+        <p>Resource deletion and replacement are irreversible operations. DESTROY/REPLACE is never classified as merely "needs-review" -- it always blocks the merge as a breaking change. For major bumps, it escalates to <code>risk:critical</code>.</p>
       </div>
     </details>
     <details class="ed-card">
       <summary>
-        <h3>Conservative Bias</h3>
-        <p>When uncertain, the system recommends <code>needs-review</code> over <code>auto-merge</code>.</p>
+        <h3>Major Bumps Escalate</h3>
+        <p>Major version bumps escalate the risk level by one tier compared to patch/minor for the same plan outcome.</p>
       </summary>
       <div class="card-expand">
-        <p>The matrix is deliberately skewed toward caution. The resource change count is not considered -- any change requires review. This prevents edge cases where a "small" change (e.g., modifying an IAM policy) could have outsized impact.</p>
+        <p>A major version signals potential breaking API changes. Adds-only goes from low to medium, changes go from medium to high, and DESTROY/REPLACE goes from high to critical. Zero-change plans remain low risk even on major bumps.</p>
       </div>
     </details>
     <details class="ed-card">
       <summary>
         <h3>Fully Deterministic</h3>
-        <p>No AI involved in the risk assessment. The matrix is applied purely from plan exit code, destroy/replace presence, and semver type.</p>
+        <p>No AI involved in the risk assessment. The matrix is applied from plan add/change/destroy counts and semver type.</p>
       </summary>
       <div class="card-expand">
-        <p>AI is reserved for <code>@claude</code> interactive follow-up only. The risk assessment uses a simple lookup table with four conditions checked in priority order. This ensures consistent, auditable decisions across all module upgrades.</p>
+        <p>AI is reserved for <code>@claude</code> interactive follow-up only. The risk assessment uses a simple lookup table with five conditions checked in priority order. This ensures consistent, auditable decisions across all module upgrades.</p>
       </div>
     </details>
   </div>
@@ -1142,32 +1182,44 @@ details.ed-card[open]::details-content { height: auto; }
 // ============================================================
 // TOGGLE JOB DETAIL PANELS - pushes content below down
 // ============================================================
-var detailHeights = { 1: 75, 2: 100, 3: 165 };
+// Detail panels for jobs 1-4 appear below the job row inside the workflow box
+// Detail panels for outcomes 5-8 appear below the outcomes column
+// Job details push below-jobs group down; outcome details extend the SVG height
+var jobDetailHeights = { 1: 110, 2: 120, 3: 125, 4: 125 };
+var outcomeDetailHeights = { 5: 105, 6: 120, 7: 120, 8: 125 };
 function toggleJobDetail(n) {
   var svg = document.getElementById('pipeline-svg');
   var belowGroup = document.getElementById('below-jobs');
   var bgFill = document.getElementById('bg-fill');
   var bgGrid = document.getElementById('bg-grid');
   var bgBorder = document.getElementById('bg-border');
-  var baseHeight = 530;
-  var openHeight = 0;
+  var baseHeight = 520;
+  var jobOffset = 0;
+  var outcomeOffset = 0;
 
-  for (var i = 1; i <= 3; i++) {
+  // Close all panels, then toggle the clicked one
+  for (var i = 1; i <= 8; i++) {
     var el = document.getElementById('job' + i + '-detail');
     if (!el) continue;
     if (i === n) {
       var wasHidden = el.getAttribute('visibility') === 'hidden';
       el.setAttribute('visibility', wasHidden ? 'visible' : 'hidden');
-      if (wasHidden) openHeight = detailHeights[i];
+      if (wasHidden) {
+        // Move to end of SVG so it renders on top of everything
+        svg.appendChild(el);
+        if (i <= 4) jobOffset = jobDetailHeights[i];
+        else outcomeOffset = outcomeDetailHeights[i];
+      }
     } else {
       el.setAttribute('visibility', 'hidden');
     }
   }
 
-  var newHeight = baseHeight + openHeight;
-  svg.setAttribute('viewBox', '0 0 820 ' + newHeight);
+  var totalExtra = Math.max(jobOffset, outcomeOffset);
+  var newHeight = baseHeight + totalExtra;
+  svg.setAttribute('viewBox', '0 0 1200 ' + newHeight);
   [bgFill, bgGrid, bgBorder].forEach(function(r) { r.setAttribute('height', newHeight); });
-  belowGroup.style.transform = openHeight ? 'translate(0,' + openHeight + 'px)' : '';
+  belowGroup.style.transform = jobOffset ? 'translate(0,' + jobOffset + 'px)' : '';
 }
 
 // ============================================================
@@ -1237,7 +1289,7 @@ var searchItems = [
   { id: 'escalation-section', type: 'section', name: 'Escalation', desc: 'The @claude fix loop for needs-review and breaking-change PRs' },
   { id: 'escalation-risk-levels', type: 'component', name: 'Risk Levels', desc: 'Low, medium, high, and critical risk classification cards' },
   { id: 'decision-section', type: 'section', name: 'Decision Matrix', desc: 'Deterministic risk classification from plan exit code and semver type' },
-  { id: 'decision-matrix', type: 'component', name: 'Matrix Table', desc: '4-row decision matrix: no changes, changes, destroy/replace, plan fails' },
+  { id: 'decision-matrix', type: 'component', name: 'Matrix Table', desc: '5-row decision matrix: no changes, adds only, changes, destroy/replace, plan fails' },
   { id: 'apply-section', type: 'section', name: 'Apply & Rollback', desc: 'Post-merge apply workflow with structured rollback on failure' },
   { id: 'apply-paths', type: 'component', name: 'Apply Paths', desc: 'Success path (apply + comment) and failure path (incident + rollback PR)' },
   { id: 'artifacts-section', type: 'section', name: 'Artifacts', desc: 'Implementation files: workflows, scripts, configs, agent prompts' },
@@ -1341,6 +1393,200 @@ var tocObserver = new IntersectionObserver(function(entries) {
   });
 }, { threshold: 0.2, rootMargin: '-50px 0px -50% 0px' });
 document.querySelectorAll('.subsection, .chapter-divider[data-section], #landing').forEach(function(s) { tocObserver.observe(s); });
+
+// ============================================================
+// ANIMATED FLOW BALL — single ball, randomised path per cycle
+// ============================================================
+(function() {
+  var ball = document.getElementById('flow-ball');
+  var trail = document.getElementById('flow-trail');
+  var svgEl = document.getElementById('pipeline-svg');
+  if (!ball || !trail || !svgEl) return;
+
+  // Filters keyed by color for glow switching
+  var filters = {
+    '#4A6B8A': 'url(#glow-ice)',
+    '#1A6B7A': 'url(#glow-teal)',
+    '#B87333': 'url(#glow-orange)',
+    '#6B3FA0': 'url(#glow-purple)',
+    '#C4283A': 'url(#glow-red)',
+    '#2D7A4F': 'url(#glow-green)',
+    '#9A7B2D': 'url(#glow-yellow)'
+  };
+
+  // Waypoints: [x, y, color, pauseMs]
+  // The ball traverses these in order, pausing at job centres
+  var baseWaypoints = [
+    [375, 80,  '#4A6B8A', 0],      // Dependabot bottom
+    [375, 140, '#4A6B8A', 0],      // Workflow entry
+    [122, 214, '#1A6B7A', 180],    // Job 1 centre
+    [200, 214, '#1A6B7A', 0],      // Job 1 exit
+    [297, 214, '#B87333', 180],    // Job 2 centre
+    [375, 214, '#B87333', 0],      // Job 2 exit
+    [472, 214, '#6B3FA0', 180],    // Job 3 centre
+    [550, 214, '#6B3FA0', 0],      // Job 3 exit
+    [637, 214, '#C4283A', 180],    // Job 4 centre
+    [705, 214, '#C4283A', 0]       // Job 4 exit
+  ];
+
+  // Outcome forks — randomly selected each cycle
+  var outcomePaths = [
+    // Auto-Merge → On Merge
+    [
+      [770, 175, '#2D7A4F', 120],
+      [865, 175, '#2D7A4F', 100],
+      [960, 180, '#2D7A4F', 0],
+      [1085, 225, '#2D7A4F', 250]
+    ],
+    // Needs-Review
+    [
+      [770, 250, '#9A7B2D', 120],
+      [865, 250, '#9A7B2D', 250]
+    ],
+    // Breaking-Change
+    [
+      [770, 320, '#C4283A', 120],
+      [865, 320, '#C4283A', 250]
+    ]
+  ];
+
+  var speed = 0.38; // px per ms — slightly brisk
+  var path = [];
+  var segIdx = 0;
+  var segT = 0;
+  var pauseUntil = 0;
+  var fadeState = 'in'; // 'in' | 'visible' | 'out' | 'wait'
+  var fadeT = 0;
+  var waitUntil = 0;
+  var lastTs = 0;
+  // Trail follows main ball with a buffer
+  var trailX = 0, trailY = 0;
+
+  function buildPath() {
+    var p = baseWaypoints.slice();
+    var fork = outcomePaths[Math.floor(Math.random() * outcomePaths.length)];
+    p = p.concat(fork);
+    return p;
+  }
+
+  function segDist(a, b) {
+    var dx = b[0] - a[0], dy = b[1] - a[1];
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function easeInOut(t) {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  }
+
+  function lerpColor(a, b, t) {
+    // Simple: snap to target color at midpoint
+    return t < 0.5 ? a : b;
+  }
+
+  function startCycle() {
+    path = buildPath();
+    segIdx = 0;
+    segT = 0;
+    fadeState = 'in';
+    fadeT = 0;
+    pauseUntil = 0;
+    var wp = path[0];
+    ball.setAttribute('cx', wp[0]);
+    ball.setAttribute('cy', wp[1]);
+    ball.setAttribute('fill', wp[2]);
+    ball.setAttribute('filter', filters[wp[2]] || 'url(#glow-teal)');
+    trailX = wp[0]; trailY = wp[1];
+    trail.setAttribute('cx', wp[0]);
+    trail.setAttribute('cy', wp[1]);
+    trail.setAttribute('fill', wp[2]);
+  }
+
+  function tick(ts) {
+    if (!lastTs) { lastTs = ts; startCycle(); }
+    var dt = Math.min(ts - lastTs, 50); // cap for tab-switch
+    lastTs = ts;
+
+    // Fade in/out handling
+    if (fadeState === 'in') {
+      fadeT = Math.min(fadeT + dt / 250, 1);
+      ball.setAttribute('opacity', String(fadeT * 0.92));
+      trail.setAttribute('opacity', String(fadeT * 0.28));
+      if (fadeT >= 1) fadeState = 'visible';
+    } else if (fadeState === 'out') {
+      fadeT = Math.max(fadeT - dt / 300, 0);
+      ball.setAttribute('opacity', String(fadeT * 0.92));
+      trail.setAttribute('opacity', String(fadeT * 0.28));
+      if (fadeT <= 0) {
+        fadeState = 'wait';
+        waitUntil = ts + 600 + Math.random() * 400; // random gap before next cycle
+      }
+    } else if (fadeState === 'wait') {
+      if (ts >= waitUntil) startCycle();
+      requestAnimationFrame(tick);
+      return;
+    }
+
+    // Pausing at a waypoint
+    if (pauseUntil > 0) {
+      if (ts < pauseUntil) { requestAnimationFrame(tick); return; }
+      pauseUntil = 0;
+    }
+
+    // Move along current segment
+    if (segIdx < path.length - 1) {
+      var from = path[segIdx];
+      var to = path[segIdx + 1];
+      var dist = segDist(from, to);
+      var dur = dist / speed; // ms for this segment
+      if (dur < 1) dur = 1;
+      segT += dt / dur;
+      if (segT > 1) segT = 1;
+
+      var eased = easeInOut(segT);
+      var x = from[0] + (to[0] - from[0]) * eased;
+      var y = from[1] + (to[1] - from[1]) * eased;
+
+      // Color transitions mid-segment
+      var col = segT < 0.5 ? from[2] : to[2];
+      ball.setAttribute('cx', x);
+      ball.setAttribute('cy', y);
+      ball.setAttribute('fill', col);
+      ball.setAttribute('filter', filters[col] || 'url(#glow-teal)');
+
+      // Trail follows with damped lerp
+      var tLerp = 0.12;
+      trailX += (x - trailX) * tLerp;
+      trailY += (y - trailY) * tLerp;
+      trail.setAttribute('cx', trailX);
+      trail.setAttribute('cy', trailY);
+      trail.setAttribute('fill', col);
+
+      // Ensure ball renders on top
+      if (segIdx === 0 && segT < 0.1) {
+        svgEl.appendChild(trail);
+        svgEl.appendChild(ball);
+      }
+
+      if (segT >= 1) {
+        segIdx++;
+        segT = 0;
+        // Pause at this waypoint if specified
+        if (segIdx < path.length && path[segIdx][3] > 0) {
+          pauseUntil = ts + path[segIdx][3];
+        }
+        // Last waypoint — start fade out
+        if (segIdx >= path.length - 1) {
+          fadeState = 'out';
+          fadeT = 1;
+        }
+      }
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+})();
 
 // ============================================================
 // INIT
