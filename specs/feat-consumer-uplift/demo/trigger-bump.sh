@@ -212,6 +212,7 @@ resource "aws_kms_key" "bucket_encryption" {
 
   tags = {
     Environment = var.environment
+    Application = "consumer-uplift-demo"
     Project     = var.project
     ManagedBy   = "terraform"
     Purpose     = "s3-encryption"
@@ -257,6 +258,7 @@ module "logging_bucket" {
 
   tags = {
     Environment = var.environment
+    Application = "consumer-uplift-demo"
     Project     = var.project
     ManagedBy   = "terraform"
     Purpose     = "access-logging"

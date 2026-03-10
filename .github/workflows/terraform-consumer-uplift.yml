@@ -170,10 +170,10 @@ jobs:
               {
                 awk '/will be/ || /must be/ {print "| " $5 " | " $2 " |"; next}' plan_readable.txt \
                   | sed \
-                    -e 's/created/:white_check_mark: create/' \
+                    -e 's/created/:white_check_mark: add/' \
                     -e 's/destroyed/:bangbang: destroy/' \
                     -e 's/replaced/:recycle: replace/' \
-                    -e 's/updated/:pencil2: update/' \
+                    -e 's/updated/:pencil2: change/' \
                     -e 's/read/:mag: read/'
               } > plan_resources_table.txt
 
@@ -306,7 +306,7 @@ jobs:
 
       - name: Run Claude Analysis
         id: claude
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@v1.0.70
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model claude-sonnet-4-6 --max-turns 15"
@@ -568,12 +568,20 @@ jobs:
             body += `| | |\n|---|---|\n`;
             body += `| **Decision** | \`${decision}\` |\n`;
             body += `| **Risk Level** | \`${risk}\` |\n`;
-            body += `| **Version Type** | \`${result.version_type}\` |\n`;
+            body += `| **Version Type** | \`${result.version_type}\` |\n\n`;
 
+            // ── Plan changes table (separate for visibility) ──
             const plan = result.plan_summary || {};
             const planTotal = (plan.add || 0) + (plan.change || 0) + (plan.destroy || 0) + (plan.replace || 0);
-            body += `| **Plan Changes** | \`${planTotal}\` total — `;
-            body += `+${plan.add || 0} create, ~${plan.change || 0} update, -${plan.destroy || 0} destroy, ♻${plan.replace || 0} replace |\n\n`;
+
+            body += `### Plan Changes\n\n`;
+            body += `| Action | Count |\n`;
+            body += `|--------|-------|\n`;
+            body += `| :white_check_mark: **Add** | ${plan.add || 0} |\n`;
+            body += `| :pencil2: **Change** | ${plan.change || 0} |\n`;
+            body += `| :bangbang: **Destroy** | ${plan.destroy || 0} |\n`;
+            body += `| :recycle: **Replace** | ${plan.replace || 0} |\n`;
+            body += `| **Total** | **${planTotal}** |\n\n`;
 
             // ── Plan resource table ──
             const planResources = process.env.PLAN_RESOURCES || '';
