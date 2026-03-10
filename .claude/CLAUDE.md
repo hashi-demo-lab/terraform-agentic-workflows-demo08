@@ -51,3 +51,9 @@ When you discover new information that would be helpful for future development w
 - **Update existing AGENTS.md files** when you learn implementation details, debugging insights, or architectural patterns specific to that component
 - **Create new AGENTS.md files** in relevant directories when working with areas that don't yet have documentation
 - **Add valuable insights** such as common pitfalls, debugging techniques, dependency relationships, or implementation patterns
+
+## Consumer Module Uplift (@claude on PRs)
+
+When invoked via `@claude` on a module upgrade PR, read these files first:
+- `.claude-pipeline-context.md` — pipeline state + plan output (written by CI)
+- `.github/agents/module-upgrade-remediation.md` — step-by-step fix playbook
