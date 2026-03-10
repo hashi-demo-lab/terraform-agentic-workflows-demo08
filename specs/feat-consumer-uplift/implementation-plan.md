@@ -20,7 +20,7 @@ The automation gap: no tool today reads the module interface diff, maps breaking
 **In scope (Use Case 1 only)**:
 - Consumer-side module version upgrades (workspace code that calls private registry modules)
 - Detection via Dependabot + fallback scanner
-- AI-powered analysis and code adaptation via `claude-code-action`
+- Deterministic risk assessment from plan output
 - Risk-based decision framework (auto-merge / needs-review / breaking-change)
 - Interactive `@claude` follow-up on PRs for complex upgrades
 - Optional Copilot code review as complementary passive reviewer
@@ -58,14 +58,10 @@ Dependabot PR / Fallback Scanner PR
 │    Exit 1 → label breaking, block                │
 │    Exit 2 → upload plan artifact, continue       │
 │                                                  │
-│  Job 3: AI ANALYSIS (claude-code-action)         │
-│    ├── MCP: get_private_module_details (old/new) │
-│    ├── 5A: Interface diff                        │
-│    ├── 5B: Config adaptation (push fixes)        │
-│    ├── 5C: Security review                       │
-│    ├── 5D: Plan analysis                         │
-│    ├── 5E: Recommendation engine                 │
-│    └── --json-schema → structured output         │
+│  Job 3: RISK ASSESSMENT (deterministic)          │
+│    ├── Input: version_type + plan_summary        │
+│    ├── Matrix lookup (4 rules)                   │
+│    └── Output: decision + risk_level JSON        │
 │                                                  │
 │  Job 4: DECISION                                 │
 │    ├── risk:low → auto-merge (squash)            │
@@ -116,37 +112,31 @@ Copilot runs independently via repository rulesets (Settings > Rulesets), not a 
 
 ## 4. Decision Matrix
 
-Risk classification drives the automated decision. The matrix is embedded in the agent prompt and enforced by structured JSON output.
+Risk classification drives the automated decision. The matrix is applied deterministically by a bash script in Job 3.
 
 ```
                       PATCH           MINOR           MAJOR
                       -----           -----           -----
-No breaking +         AUTO-MERGE      AUTO-MERGE      NEEDS-REVIEW
-plan changes <= 5     risk:low        risk:low        risk:medium
+Plan succeeds +       AUTO-MERGE      AUTO-MERGE      NEEDS-REVIEW
+changes <= 5          risk:low        risk:low        risk:medium
 
-No breaking +         NEEDS-REVIEW    NEEDS-REVIEW    NEEDS-REVIEW
-plan changes > 5      risk:medium     risk:medium     risk:high
+Plan succeeds +       NEEDS-REVIEW    NEEDS-REVIEW    NEEDS-REVIEW
+changes > 5           risk:medium     risk:medium     risk:high
 
-Breaking (adapted)    NEEDS-REVIEW    NEEDS-REVIEW    BREAKING-CHANGE
-                      risk:medium     risk:medium     risk:high
-
-Breaking (cannot      BREAKING-       BREAKING-       BREAKING-
-  adapt)              CHANGE          CHANGE          CHANGE
+Plan fails (exit 1)   BREAKING-       BREAKING-       BREAKING-
+                      CHANGE          CHANGE          CHANGE
                       risk:high       risk:high       risk:critical
 
-Any DESTROY           NEEDS-REVIEW    NEEDS-REVIEW    BREAKING-CHANGE
+Any DESTROY/REPLACE   NEEDS-REVIEW    NEEDS-REVIEW    BREAKING-CHANGE
 in plan               risk:high       risk:high       risk:critical
-
-Security finding      NEEDS-REVIEW    NEEDS-REVIEW    BREAKING-CHANGE
->= HIGH severity      risk:high       risk:high       risk:critical
 ```
 
 **Key principles:**
-1. Patch and minor bumps with no breaking changes and small plan diff are safe to auto-merge
-2. Any DESTROY action in the plan escalates to at minimum NEEDS-REVIEW
-3. Breaking changes that cannot be automatically adapted always block merge
-4. Security findings of HIGH or above always escalate regardless of semver type
-5. Major version bumps are never auto-merged, even with zero breaking changes
+1. Patch and minor bumps with small plan diff (<=5 resources) are safe to auto-merge
+2. Any DESTROY or REPLACE action in the plan escalates to at minimum NEEDS-REVIEW
+3. Plan failures (exit 1) always classify as BREAKING-CHANGE
+4. Major version bumps are never auto-merged, even with zero breaking changes
+5. The matrix is fully deterministic — no AI involved in risk assessment
 
 ---
 
@@ -164,7 +154,7 @@ Security finding      NEEDS-REVIEW    NEEDS-REVIEW    BREAKING-CHANGE
 - Single file combines `pull_request` (automation) and `issue_comment` (interactive) triggers
 - Jobs 1-4 use `if: github.event_name == 'pull_request'`
 - Interactive job uses `if: contains(github.event.comment.body, '@claude')`
-- Structured output (`--json-schema`) bridges AI analysis to deterministic decision steps
+- Job 3 applies the decision matrix deterministically. AI is reserved for `@claude` interactive follow-up.
 - claude-code-action can push code changes directly to the PR branch (`contents: write`)
 - Concurrency groups per-branch prevent race conditions
 
@@ -174,9 +164,8 @@ Security finding      NEEDS-REVIEW    NEEDS-REVIEW    BREAKING-CHANGE
 |------|---------|
 | `.github/agents/module-upgrade-analyst.md` | Claude Code Action agent prompt for automated analysis |
 
-The agent prompt defines the 5 sub-analyses and decision matrix. It's loaded by the workflow via `claude_args`. Key features:
+The agent prompt defines the analysis capabilities for interactive `@claude` follow-up on PRs. It is NOT used in the automated pipeline (Job 3 is deterministic). Key features:
 - Uses Terraform MCP tools (`get_private_module_details`, `search_private_modules`)
-- Structured JSON output via `--json-schema` for programmatic decision-making
 - Can make code changes (add variables, fix output references, update version constraints)
 - Conservative bias: `needs-review` over `auto-merge` when uncertain
 - Maximum 15 turns to control cost
@@ -266,38 +255,23 @@ Runs deterministic Terraform validation. This is the gate that determines whethe
 
 **Outputs**: `plan_exitcode`, `resource_changes` (summary)
 
-### Job 3: AI Analysis (claude-code-action)
+### Job 3: Risk Assessment
 
-Only runs if plan exit code is 2 (changes detected). Uses `anthropics/claude-code-action@v1` with:
-- `prompt`: Structured analysis instructions with PR context
-- `--model claude-sonnet-4-6`: Cost-efficient for CI
-- `--mcp-config .mcp-ci.json`: Terraform MCP tools
-- `--json-schema`: Forces structured JSON output for downstream decision
-- `--max-turns 15`: Cost control
+Only runs if plan exit code is 2 (changes detected). A deterministic bash script applies the decision matrix using inputs from Jobs 1-2:
 
-**5 Sub-Analyses:**
+**Inputs:**
+- `version_type` (patch/minor/major) from Job 1
+- `plan_summary` (add/change/destroy/replace/total) from Job 2
 
-| Step | What | MCP Tools |
-|------|------|-----------|
-| **5A: Interface Diff** | Compare old vs new module inputs/outputs | `get_private_module_details` |
-| **5B: Config Adaptation** | Add new required inputs, fix removed outputs, push changes | File tools |
-| **5C: Security Review** | IAM, encryption, network exposure changes | `get_private_module_details` |
-| **5D: Plan Analysis** | Parse plan artifact: add/change/destroy/replace counts | File tools |
-| **5E: Recommendation** | Apply decision matrix, produce structured JSON | -- |
+**Matrix Rules (checked in priority order):**
+1. If destroy > 0 or replace > 0 → DESTROY/REPLACE row
+2. If total changes > 5 → high-change row
+3. If total changes <= 5 → low-change row
+4. Apply semver column (patch/minor/major)
 
-**Structured Output Schema:**
-```json
-{
-  "decision": "auto-merge | needs-review | needs-revalidation | breaking-change",
-  "risk_level": "low | medium | high | critical",
-  "version_type": "patch | minor | major",
-  "breaking_changes": [],
-  "security_findings": [],
-  "plan_summary": { "add": 0, "change": 0, "destroy": 0, "replace": 0 },
-  "adaptations_applied": [],
-  "rationale": "Brief explanation"
-}
-```
+**Output:** Same structured JSON format as before, but with empty `breaking_changes`, `security_findings`, `adaptations_applied`, and `interface_diff` fields. These fields are preserved for compatibility with Job 4 but are only populated when `@claude` interactive analysis runs.
+
+No claude-code-action, no MCP tools, no AI. The risk assessment is fully scripted.
 
 ### Job 4: Decision
 
@@ -314,7 +288,7 @@ PR title is prefixed with emoji + semver tag for visual distinction:
 - `[patch]` Low-risk patch
 - `[minor]` Minor version bump
 - `[MAJOR]` Major version bump (always needs review)
-- `[BREAKING]` Plan failed or cannot adapt
+- `[BREAKING]` Plan failed (exit 1)
 
 ### Interactive Follow-Up (@claude)
 

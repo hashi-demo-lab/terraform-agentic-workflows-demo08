@@ -254,7 +254,7 @@ body {
 <section id="landing">
   <div class="landing-eyebrow">USE CASE 1 -- CONSUMER MODULE UPLIFT</div>
   <h1 class="landing-headline">Automated Module Version Upgrades for HCP Terraform Consumers</h1>
-  <p class="landing-body">A connected GitHub Actions pipeline that detects module version bumps, runs AI-powered analysis with Terraform MCP tools, adapts consumer code, and auto-merges safe changes -- with <code>@claude</code> interactive escalation for complex upgrades.</p>
+  <p class="landing-body">A connected GitHub Actions pipeline that detects module version bumps, validates with Terraform, applies a deterministic risk matrix, and auto-merges safe changes -- with <code>@claude</code> interactive escalation for complex upgrades.</p>
 </section>
 
 <!-- PILLAR CARDS -->
@@ -264,8 +264,8 @@ body {
     <p>Dependabot scans the private registry monthly. A fallback cron scanner catches submodule paths Dependabot misses. Both create PRs in the same format.</p>
   </div>
   <div class="pillar-card">
-    <div class="pillar-label" style="color:var(--purple)">ANALYZE</div>
-    <p><code>claude-code-action</code> with Terraform MCP diffs module interfaces, adapts config, reviews security, and produces a structured risk assessment.</p>
+    <div class="pillar-label" style="color:var(--purple)">ASSESS</div>
+    <p>A deterministic risk matrix classifies changes by semver type, plan resource count, and destroy/replace presence. No AI needed -- purely scripted.</p>
   </div>
   <div class="pillar-card">
     <div class="pillar-label" style="color:var(--green)">DECIDE</div>
@@ -402,8 +402,8 @@ body {
           <rect x="474" y="158" width="325" height="62" rx="8" fill="#6B3FA0"/>
         </g>
         <text x="636" y="176" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="white" letter-spacing="2" font-weight="600" opacity="0.8">JOB 3</text>
-        <text x="636" y="194" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="white" font-weight="700">AI Analysis</text>
-        <text x="636" y="211" text-anchor="middle" font-size="10" fill="white" opacity="0.75">claude-code-action + MCP</text>
+        <text x="636" y="194" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="white" font-weight="700">Risk Assessment</text>
+        <text x="636" y="211" text-anchor="middle" font-size="10" fill="white" opacity="0.75">deterministic matrix</text>
         <text x="781" y="174" font-size="10" fill="white" opacity="0.5">&#9660;</text>
       </g>
 
@@ -493,50 +493,32 @@ body {
 
       <!-- JOB 3 DETAIL -->
       <g id="job3-detail" visibility="hidden">
-        <g filter="url(#pipe-shadow)"><rect x="20" y="228" width="780" height="155" rx="8" fill="white" stroke="#6B3FA0" stroke-width="1.5"/></g>
+        <g filter="url(#pipe-shadow)"><rect x="20" y="228" width="780" height="130" rx="8" fill="white" stroke="#6B3FA0" stroke-width="1.5"/></g>
         <rect x="20" y="228" width="780" height="4" rx="2" fill="#6B3FA0"/>
-        <text x="40" y="251" font-family="JetBrains Mono,monospace" font-size="10" fill="#6B3FA0" letter-spacing="1.5" font-weight="700">JOB 3: claude-code-action + TERRAFORM MCP SERVER</text>
-        <text x="680" y="251" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A">--json-schema</text>
-        <g filter="url(#pipe-shadow)"><rect x="30" y="263" width="130" height="52" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/></g>
-        <text x="95" y="281" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">5A: INTERFACE DIFF</text>
-        <text x="95" y="297" text-anchor="middle" font-size="10" fill="#6B6B6B">old vs new inputs/outputs</text>
-        <text x="95" y="309" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#9A7B2D">MCP: module_details</text>
-        <g filter="url(#pipe-shadow)"><rect x="170" y="263" width="130" height="52" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/></g>
-        <text x="235" y="281" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">5B: ADAPT CONFIG</text>
-        <text x="235" y="297" text-anchor="middle" font-size="10" fill="#6B6B6B">fix code, push to PR</text>
-        <text x="235" y="309" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#1A6B7A">contents: write</text>
-        <g filter="url(#pipe-shadow)"><rect x="310" y="263" width="130" height="52" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/></g>
-        <text x="375" y="281" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">5C: SECURITY</text>
-        <text x="375" y="297" text-anchor="middle" font-size="10" fill="#6B6B6B">IAM, encryption, exposure</text>
-        <text x="375" y="309" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#C4283A">severity rating</text>
-        <g filter="url(#pipe-shadow)"><rect x="450" y="263" width="130" height="52" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/></g>
-        <text x="515" y="281" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">5D: PLAN ANALYSIS</text>
-        <text x="515" y="297" text-anchor="middle" font-size="10" fill="#6B6B6B">add/change/destroy</text>
-        <text x="515" y="309" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#B87333">blast radius</text>
-        <g filter="url(#pipe-shadow)"><rect x="590" y="263" width="200" height="52" rx="6" fill="#6B3FA0" opacity="0.06" stroke="#6B3FA0" stroke-width="1.5"/></g>
-        <text x="690" y="281" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">5E: RECOMMENDATION</text>
-        <text x="690" y="297" text-anchor="middle" font-size="10" fill="#3D3D3D">Decision Matrix &#8594; JSON</text>
-        <text x="690" y="309" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#C4283A">structured_output</text>
-        <!-- Glowing particles 5A-5D to 5E -->
+        <text x="40" y="251" font-family="JetBrains Mono,monospace" font-size="10" fill="#6B3FA0" letter-spacing="1.5" font-weight="700">JOB 3: DETERMINISTIC RISK ASSESSMENT</text>
+        <text x="680" y="251" font-family="JetBrains Mono,monospace" font-size="9" fill="#8A8A8A">no AI</text>
+        <g filter="url(#pipe-shadow)"><rect x="30" y="263" width="200" height="52" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/></g>
+        <text x="130" y="281" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">INPUTS</text>
+        <text x="130" y="297" text-anchor="middle" font-size="10" fill="#6B6B6B">version_type (patch/minor/major)</text>
+        <text x="130" y="309" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#9A7B2D">plan_summary (from Jobs 1-2)</text>
+        <g filter="url(#pipe-shadow)"><rect x="260" y="263" width="250" height="52" rx="6" fill="white" stroke="rgba(107,63,160,0.3)" stroke-width="1"/></g>
+        <text x="385" y="281" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">MATRIX LOOKUP</text>
+        <text x="385" y="297" text-anchor="middle" font-size="10" fill="#6B6B6B">4 rules checked in priority order</text>
+        <text x="385" y="309" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#B87333">exit code + changes + destroy/replace</text>
+        <g filter="url(#pipe-shadow)"><rect x="540" y="263" width="250" height="52" rx="6" fill="#6B3FA0" opacity="0.06" stroke="#6B3FA0" stroke-width="1.5"/></g>
+        <text x="665" y="281" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" letter-spacing="1" font-weight="700">OUTPUT</text>
+        <text x="665" y="297" text-anchor="middle" font-size="10" fill="#3D3D3D">decision + risk_level JSON</text>
+        <text x="665" y="309" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#C4283A">structured_output</text>
+        <!-- Glowing particles: Inputs to Matrix to Output -->
         <circle r="4" fill="#6B3FA0" filter="url(#glow-purple)" opacity="0">
-          <animateMotion dur="2.5s" repeatCount="indefinite" begin="0s" path="M95,315 L95,327 L690,327 L690,315"/>
+          <animateMotion dur="2.5s" repeatCount="indefinite" begin="0s" path="M130,315 L130,327 L385,327 L385,315"/>
           <animate attributeName="opacity" values="0;0.8;0.8;0" dur="2.5s" repeatCount="indefinite" begin="0s" keyTimes="0;0.1;0.85;1"/>
         </circle>
         <circle r="4" fill="#6B3FA0" filter="url(#glow-purple)" opacity="0">
-          <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.6s" path="M235,315 L235,327 L690,327 L690,315"/>
-          <animate attributeName="opacity" values="0;0.8;0.8;0" dur="2.5s" repeatCount="indefinite" begin="0.6s" keyTimes="0;0.1;0.85;1"/>
+          <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.8s" path="M385,315 L385,327 L665,327 L665,315"/>
+          <animate attributeName="opacity" values="0;0.8;0.8;0" dur="2.5s" repeatCount="indefinite" begin="0.8s" keyTimes="0;0.1;0.85;1"/>
         </circle>
-        <circle r="4" fill="#6B3FA0" filter="url(#glow-purple)" opacity="0">
-          <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.2s" path="M375,315 L375,327 L690,327 L690,315"/>
-          <animate attributeName="opacity" values="0;0.8;0.8;0" dur="2.5s" repeatCount="indefinite" begin="1.2s" keyTimes="0;0.1;0.85;1"/>
-        </circle>
-        <circle r="4" fill="#6B3FA0" filter="url(#glow-purple)" opacity="0">
-          <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.8s" path="M515,315 L515,327 L690,327 L690,315"/>
-          <animate attributeName="opacity" values="0;0.8;0.8;0" dur="2.5s" repeatCount="indefinite" begin="1.8s" keyTimes="0;0.1;0.85;1"/>
-        </circle>
-        <text x="36" y="340" font-family="JetBrains Mono,monospace" font-size="9" fill="#6B3FA0" opacity="0.7">5A-5D feed into 5E &#8594; structured JSON recommendation &#8594; Job 4 Decision</text>
-        <rect x="30" y="350" width="760" height="24" rx="4" fill="#6B3FA0" opacity="0.04" stroke="#6B3FA0" stroke-width="0.5" stroke-dasharray="4 3"/>
-        <text x="410" y="366" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6B3FA0" opacity="0.8">IF 5B PUSHES ADAPTATIONS &#8594; NEEDS-REVALIDATION &#8594; git synchronize RE-TRIGGERS JOBS 1-4 (two-pass safety)</text>
+        <text x="36" y="340" font-family="JetBrains Mono,monospace" font-size="9" fill="#6B3FA0" opacity="0.7">Inputs &#8594; Matrix Lookup &#8594; Structured JSON &#8594; Job 4 Decision</text>
         <g style="cursor:pointer" onclick="toggleJobDetail(3)"><text x="782" y="251" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="14" fill="#8A8A8A">&#10005;</text></g>
       </g>
 
@@ -650,7 +632,7 @@ body {
     <div class="legend-item"><div class="legend-dot" style="background:#4A6B8A"></div> Dependabot</div>
     <div class="legend-item"><div class="legend-dot" style="background:#1A6B7A"></div> Classify</div>
     <div class="legend-item"><div class="legend-dot" style="background:#B87333"></div> Validate</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#6B3FA0"></div> AI Analysis</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6B3FA0"></div> Risk Assessment</div>
     <div class="legend-item"><div class="legend-dot" style="background:#C4283A"></div> Decision</div>
     <div class="legend-item"><div class="legend-dot" style="background:#2D7A4F"></div> Apply</div>
   </div>
@@ -716,7 +698,7 @@ body {
 <div class="chapter-divider" id="decision-section">
   <div class="chapter-number">Risk Assessment</div>
   <h2 class="chapter-title">Decision Matrix</h2>
-  <p class="chapter-subtitle">Embedded in the agent prompt and enforced via <code>--json-schema</code> structured output</p>
+  <p class="chapter-subtitle">Deterministic risk classification from plan exit code, resource counts, and semver type</p>
 </div>
 
 <div class="subsection revealed">
@@ -728,37 +710,25 @@ body {
       <th>Major</th>
     </tr>
     <tr>
-      <td>No breaking, plan changes &lt;= 5</td>
+      <td><span title="Plan exit code 2 (changes detected), total resource changes <= 5, no destroy/replace actions. Safe for automatic merging on patch/minor.">Plan succeeds, changes &lt;= 5</span></td>
       <td class="risk-low">AUTO-MERGE<br/>risk:low</td>
       <td class="risk-low">AUTO-MERGE<br/>risk:low</td>
       <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
     </tr>
     <tr>
-      <td>No breaking, plan changes &gt; 5</td>
+      <td><span title="Plan exit code 2 (changes detected), total resource changes > 5. Large blast radius warrants human review.">Plan succeeds, changes &gt; 5</span></td>
       <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
       <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
       <td class="risk-high">NEEDS-REVIEW<br/>risk:high</td>
     </tr>
     <tr>
-      <td>Breaking (adapted)</td>
-      <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
-      <td class="risk-med">NEEDS-REVIEW<br/>risk:medium</td>
-      <td class="risk-high">BREAKING-CHANGE<br/>risk:high</td>
-    </tr>
-    <tr>
-      <td>Breaking (cannot adapt)</td>
+      <td><span title="Plan exit code 1 (error). The module version bump introduces changes that prevent Terraform from planning. Requires @claude interactive analysis or manual intervention.">Plan fails (exit 1)</span></td>
       <td class="risk-high">BREAKING-CHANGE<br/>risk:high</td>
       <td class="risk-high">BREAKING-CHANGE<br/>risk:high</td>
       <td class="risk-crit">BREAKING-CHANGE<br/>risk:critical</td>
     </tr>
     <tr>
-      <td>Any DESTROY in plan</td>
-      <td class="risk-high">NEEDS-REVIEW<br/>risk:high</td>
-      <td class="risk-high">NEEDS-REVIEW<br/>risk:high</td>
-      <td class="risk-crit">BREAKING-CHANGE<br/>risk:critical</td>
-    </tr>
-    <tr>
-      <td>Security finding >= HIGH</td>
+      <td><span title="Plan exit code 2 but contains destroy or replace actions. Resource deletion/replacement is irreversible and requires human review regardless of semver type.">Any DESTROY/REPLACE in plan</span></td>
       <td class="risk-high">NEEDS-REVIEW<br/>risk:high</td>
       <td class="risk-high">NEEDS-REVIEW<br/>risk:high</td>
       <td class="risk-crit">BREAKING-CHANGE<br/>risk:critical</td>
@@ -771,16 +741,16 @@ body {
       <p>Major version bumps always require human review, even with zero breaking changes detected.</p>
     </div>
     <div class="ed-card">
-      <h3>DESTROY Escalates</h3>
-      <p>Any resource destruction in the plan escalates to at minimum NEEDS-REVIEW.</p>
+      <h3>DESTROY/REPLACE Escalates</h3>
+      <p>Any resource destruction or replacement in the plan escalates to at minimum NEEDS-REVIEW with risk:high.</p>
     </div>
     <div class="ed-card">
       <h3>Conservative Bias</h3>
       <p>When uncertain, the system recommends <code>needs-review</code> over <code>auto-merge</code>.</p>
     </div>
     <div class="ed-card">
-      <h3>Security Trumps Semver</h3>
-      <p>Security findings of HIGH or above always escalate regardless of version type.</p>
+      <h3>Fully Deterministic</h3>
+      <p>No AI involved in the risk assessment. The matrix is applied purely from plan exit code, resource counts, and semver type. AI is reserved for <code>@claude</code> interactive follow-up.</p>
     </div>
   </div>
 </div>

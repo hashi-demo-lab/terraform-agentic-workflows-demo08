@@ -183,7 +183,7 @@ jobs:
               {
                 echo "## 2/4 — Validate Terraform"
                 echo ""
-                echo "> **Result**: Changes detected — proceeding to AI analysis."
+                echo "> **Result**: Changes detected — proceeding to risk assessment."
                 echo ""
                 echo "| Check | Status |"
                 echo "|-------|--------|"
@@ -286,181 +286,142 @@ jobs:
             });
 
   # ─────────────────────────────────────────────────
-  # Job 3: AI ANALYSIS — claude-code-action
+  # Job 3: RISK ASSESSMENT — Deterministic decision matrix
   # ─────────────────────────────────────────────────
-  ai-analysis:
-    name: "AI Analysis"
+  risk-assessment:
+    name: "Risk Assessment"
     needs: [classify, validate]
     if: needs.validate.outputs.plan_exitcode == '2'
     runs-on: ubuntu-latest
     outputs:
-      analysis_result: ${{ steps.parse-output.outputs.result }}
+      analysis_result: ${{ steps.assess.outputs.result }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download plan artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan
-
-      - name: Run Claude Analysis
-        id: claude
-        uses: anthropics/claude-code-action@v1.0.70
-        with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model claude-sonnet-4-6 --max-turns 15"
-          show_full_output: "true"
-          prompt: |
-            You are a Terraform module upgrade analyst. Analyze this PR and produce a structured JSON recommendation.
-
-            ## Context
-            - **Version type**: ${{ needs.classify.outputs.version_type }}
-            - **Modules changed**: ${{ needs.classify.outputs.modules_changed }}
-            - **Plan summary**: ${{ needs.validate.outputs.plan_summary }}
-            - **PR branch**: ${{ github.head_ref }}
-            - **Is Dependabot**: ${{ needs.classify.outputs.is_dependabot }}
-
-            ## Instructions
-            Read the agent definition at `.github/agents/module-upgrade-analyst.md` and follow its 5-step analysis process (5A through 5E).
-
-            The plan output is available at `plan_readable.txt` and `plan_output.txt`.
-
-            Your FINAL message must be ONLY a JSON object (no markdown fencing, no commentary) with these fields:
-            - decision: "auto-merge" | "needs-review" | "needs-revalidation" | "breaking-change"
-            - risk_level: "low" | "medium" | "high" | "critical"
-            - version_type: patch/minor/major
-            - breaking_changes: []
-            - security_findings: []
-            - plan_summary: {add, change, destroy, replace, total}
-            - adaptations_applied: []
-            - interface_diff: {inputs_added, inputs_removed, inputs_changed, outputs_added, outputs_removed, outputs_changed}
-            - rationale: string
-
-            Important:
-            - If you push code changes (step 5B), set decision to "needs-revalidation"
-            - Be conservative: prefer "needs-review" over "auto-merge" when uncertain
-            - Never auto-merge major version bumps
-
-      - name: Parse structured output
-        id: parse-output
+      - name: Assess risk from plan
+        id: assess
+        env:
+          VERSION_TYPE: ${{ needs.classify.outputs.version_type }}
+          PLAN_SUMMARY: ${{ needs.validate.outputs.plan_summary }}
         run: |
-          # Read Claude's execution output file (known path from claude-code-action)
-          EXEC_FILE="${RUNNER_TEMP}/claude-execution-output.json"
-          RESULT=""
+          # ── Parse plan summary ──
+          ADD=$(echo "$PLAN_SUMMARY" | jq -r '.add // 0')
+          CHANGE=$(echo "$PLAN_SUMMARY" | jq -r '.change // 0')
+          DESTROY=$(echo "$PLAN_SUMMARY" | jq -r '.destroy // 0')
+          REPLACE=$(echo "$PLAN_SUMMARY" | jq -r '.replace // 0')
+          TOTAL=$(echo "$PLAN_SUMMARY" | jq -r '.total // 0')
 
-          if [[ -f "$EXEC_FILE" ]]; then
-            # Extract the last assistant text message containing "decision"
-            RESPONSE=$(jq -r '
-              [.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text] | last // ""
-            ' "$EXEC_FILE" 2>/dev/null) || true
+          HAS_DESTRUCTIVE=false
+          if [[ "$DESTROY" -gt 0 ]] || [[ "$REPLACE" -gt 0 ]]; then
+            HAS_DESTRUCTIVE=true
+          fi
 
-            if [[ -n "$RESPONSE" ]]; then
-              # Try: response is already valid JSON with decision
-              RESULT=$(echo "$RESPONSE" | jq -c 'select(has("decision"))' 2>/dev/null) || true
+          # ── Apply decision matrix ──
+          #
+          #                   PATCH           MINOR           MAJOR
+          # Plan OK, <=5     auto-merge/low  auto-merge/low  needs-review/medium
+          # Plan OK, >5      needs-review/med needs-review/med needs-review/high
+          # DESTROY/REPLACE  needs-review/high needs-review/high breaking-change/critical
+          #
+          # (Plan exit 1 is handled in validate job; this job only runs on exit 2)
 
-              # Try: parse as JSON string (escaped JSON)
-              if [[ -z "$RESULT" ]]; then
-                RESULT=$(echo "$RESPONSE" | jq -rc '. | fromjson | select(has("decision"))' 2>/dev/null) || true
-              fi
-
-              # Try: extract JSON from markdown code block
-              if [[ -z "$RESULT" ]]; then
-                RESULT=$(echo "$RESPONSE" | sed -n '/```json/,/```/{/```/d;p}' | jq -c '.' 2>/dev/null) || true
-              fi
+          if [[ "$HAS_DESTRUCTIVE" == "true" ]]; then
+            # DESTROY or REPLACE in plan — escalate
+            if [[ "$VERSION_TYPE" == "major" ]]; then
+              DECISION="breaking-change"
+              RISK_LEVEL="critical"
+              RATIONALE="Plan contains destructive operations (destroy: ${DESTROY}, replace: ${REPLACE}) on a major version bump — requires manual intervention."
+            else
+              DECISION="needs-review"
+              RISK_LEVEL="high"
+              RATIONALE="Plan contains destructive operations (destroy: ${DESTROY}, replace: ${REPLACE}) — escalated to review regardless of change count."
+            fi
+          elif [[ "$TOTAL" -le 5 ]]; then
+            # Plan succeeds, changes <= 5
+            if [[ "$VERSION_TYPE" == "major" ]]; then
+              DECISION="needs-review"
+              RISK_LEVEL="medium"
+              RATIONALE="Major version bump with ${TOTAL} planned change(s) — major versions are never auto-merged."
+            else
+              DECISION="auto-merge"
+              RISK_LEVEL="low"
+              RATIONALE="${VERSION_TYPE^} version bump with ${TOTAL} planned change(s) and no destructive operations — safe to auto-merge."
             fi
           else
-            echo "Warning: Execution file not found at $EXEC_FILE" >&2
+            # Plan succeeds, changes > 5
+            if [[ "$VERSION_TYPE" == "major" ]]; then
+              DECISION="needs-review"
+              RISK_LEVEL="high"
+              RATIONALE="Major version bump with ${TOTAL} planned change(s) — high change count on a major bump requires careful review."
+            else
+              DECISION="needs-review"
+              RISK_LEVEL="medium"
+              RATIONALE="${VERSION_TYPE^} version bump with ${TOTAL} planned change(s) — elevated change count requires review."
+            fi
           fi
 
-          if [[ -z "$RESULT" ]] || ! echo "$RESULT" | jq empty 2>/dev/null; then
-            echo "Warning: Could not parse structured JSON from AI response. Defaulting to needs-review." >&2
-            RESULT=$(jq -n \
-              --arg vtype "${{ needs.classify.outputs.version_type }}" \
-              --argjson plan '${{ needs.validate.outputs.plan_summary }}' \
-              '{
-                decision: "needs-review",
-                risk_level: "medium",
-                version_type: $vtype,
-                breaking_changes: [],
-                security_findings: [],
-                plan_summary: $plan,
-                adaptations_applied: [],
-                interface_diff: {inputs_added:[],inputs_removed:[],inputs_changed:[],outputs_added:[],outputs_removed:[],outputs_changed:[]},
-                rationale: "JSON parse failure - defaulting to needs-review for safety"
-              }')
-          fi
+          # ── Build structured JSON result (same schema Job 4 expects) ──
+          RESULT=$(jq -n \
+            --arg decision "$DECISION" \
+            --arg risk_level "$RISK_LEVEL" \
+            --arg version_type "$VERSION_TYPE" \
+            --argjson plan_summary "$PLAN_SUMMARY" \
+            --arg rationale "$RATIONALE" \
+            '{
+              decision: $decision,
+              risk_level: $risk_level,
+              version_type: $version_type,
+              breaking_changes: [],
+              security_findings: [],
+              plan_summary: $plan_summary,
+              adaptations_applied: [],
+              interface_diff: {},
+              rationale: $rationale
+            }')
 
           echo "result=$(echo "$RESULT" | jq -c '.')" >> "$GITHUB_OUTPUT"
 
           # ── Step summary ──
-          DECISION=$(echo "$RESULT" | jq -r '.decision')
-          RISK=$(echo "$RESULT" | jq -r '.risk_level')
-          BREAKING_COUNT=$(echo "$RESULT" | jq '.breaking_changes | length')
-          SECURITY_COUNT=$(echo "$RESULT" | jq '.security_findings | length')
-          ADAPTATION_COUNT=$(echo "$RESULT" | jq '.adaptations_applied | length')
-
           {
-            echo "## 3/4 — AI Analysis"
+            echo "## 3/4 — Risk Assessment"
             echo ""
             echo "| Field | Value |"
             echo "|-------|-------|"
             echo "| Decision | \`${DECISION}\` |"
-            echo "| Risk Level | \`${RISK}\` |"
-            echo "| Breaking Changes | ${BREAKING_COUNT} |"
-            echo "| Security Findings | ${SECURITY_COUNT} |"
-            echo "| Adaptations Applied | ${ADAPTATION_COUNT} |"
+            echo "| Risk Level | \`${RISK_LEVEL}\` |"
+            echo "| Version Type | \`${VERSION_TYPE}\` |"
             echo ""
-
-            # Interface diff summary
-            DIFF=$(echo "$RESULT" | jq '.interface_diff // {}')
-            IN_ADD=$(echo "$DIFF" | jq '.inputs_added | length')
-            IN_REM=$(echo "$DIFF" | jq '.inputs_removed | length')
-            IN_CHG=$(echo "$DIFF" | jq '.inputs_changed | length')
-            OUT_ADD=$(echo "$DIFF" | jq '.outputs_added | length')
-            OUT_REM=$(echo "$DIFF" | jq '.outputs_removed | length')
-            OUT_CHG=$(echo "$DIFF" | jq '.outputs_changed | length')
-            TOTAL_DIFF=$((IN_ADD + IN_REM + IN_CHG + OUT_ADD + OUT_REM + OUT_CHG))
-
-            if [[ "$TOTAL_DIFF" -gt 0 ]]; then
-              echo "### Interface Diff"
-              echo ""
-              echo "| Change | Inputs | Outputs |"
-              echo "|--------|--------|---------|"
-              echo "| Added | ${IN_ADD} | ${OUT_ADD} |"
-              echo "| Removed | ${IN_REM} | ${OUT_REM} |"
-              echo "| Changed | ${IN_CHG} | ${OUT_CHG} |"
-            else
-              echo "> Interface: No changes detected between old and new module versions."
-            fi
+            echo "### Plan Summary"
             echo ""
-
-            RATIONALE=$(echo "$RESULT" | jq -r '.rationale // "No rationale provided"')
+            echo "| Action | Count |"
+            echo "|--------|-------|"
+            echo "| Add | ${ADD} |"
+            echo "| Change | ${CHANGE} |"
+            echo "| Destroy | ${DESTROY} |"
+            echo "| Replace | ${REPLACE} |"
+            echo "| **Total** | **${TOTAL}** |"
+            echo ""
             echo "### Rationale"
             echo ""
             echo "${RATIONALE}"
           } >> "$GITHUB_STEP_SUMMARY"
 
   # ─────────────────────────────────────────────────
-  # Job 4: DECISION — Act on AI recommendation
+  # Job 4: DECISION — Act on risk assessment
   # ─────────────────────────────────────────────────
   decision:
     name: "Decision"
-    needs: [classify, validate, ai-analysis]
+    needs: [classify, validate, risk-assessment]
     if: needs.validate.outputs.plan_exitcode == '2'
     runs-on: ubuntu-latest
     steps:
       - name: Parse analysis result
         id: parse
         env:
-          ANALYSIS_RESULT: ${{ needs.ai-analysis.outputs.analysis_result }}
+          ANALYSIS_RESULT: ${{ needs.risk-assessment.outputs.analysis_result }}
           VERSION_TYPE: ${{ needs.classify.outputs.version_type }}
         run: |
           echo "decision=$(echo "$ANALYSIS_RESULT" | jq -r '.decision')" >> "$GITHUB_OUTPUT"
           echo "risk_level=$(echo "$ANALYSIS_RESULT" | jq -r '.risk_level')" >> "$GITHUB_OUTPUT"
           echo "rationale=$(echo "$ANALYSIS_RESULT" | jq -r '.rationale')" >> "$GITHUB_OUTPUT"
-          echo "has_adaptations=$(echo "$ANALYSIS_RESULT" | jq '.adaptations_applied | length > 0')" >> "$GITHUB_OUTPUT"
-          echo "has_security=$(echo "$ANALYSIS_RESULT" | jq '[.security_findings[] | select(.severity == "high" or .severity == "critical")] | length > 0')" >> "$GITHUB_OUTPUT"
 
           # ── Step summary ──
           DECISION=$(echo "$ANALYSIS_RESULT" | jq -r '.decision')
@@ -469,7 +430,6 @@ jobs:
           case "$DECISION" in
             auto-merge)       ICON="white_check_mark"; ACTION="Auto-merging PR" ;;
             needs-review)     ICON="eyes";             ACTION="Requesting human review" ;;
-            needs-revalidation) ICON="arrows_counterclockwise"; ACTION="Re-validating after adaptations" ;;
             breaking-change)  ICON="rotating_light";   ACTION="Blocking merge — manual intervention required" ;;
             *)                ICON="question";         ACTION="Unknown decision" ;;
           esac
@@ -494,7 +454,6 @@ jobs:
 
             if (decision === 'auto-merge') labels.push('auto-merge');
             else if (decision === 'needs-review') labels.push('needs-review');
-            else if (decision === 'needs-revalidation') labels.push('needs-revalidation');
             else if (decision === 'breaking-change') labels.push('breaking-change');
 
             labels.push(`version:${versionType}`);
@@ -532,7 +491,7 @@ jobs:
       - name: Post analysis comment
         uses: actions/github-script@v7
         env:
-          ANALYSIS_RESULT: ${{ needs.ai-analysis.outputs.analysis_result }}
+          ANALYSIS_RESULT: ${{ needs.risk-assessment.outputs.analysis_result }}
           MODULES_CHANGED: ${{ needs.classify.outputs.modules_changed }}
           PLAN_RESOURCES: ${{ needs.validate.outputs.plan_resources }}
         with:
@@ -545,14 +504,13 @@ jobs:
 
             // Decision banner
             const banners = {
-              'auto-merge':        { emoji: '✅', label: 'Auto-Merge Approved',   color: '' },
-              'needs-review':      { emoji: '👀', label: 'Review Required',       color: '' },
-              'needs-revalidation':{ emoji: '🔄', label: 'Re-validation Pending', color: '' },
-              'breaking-change':   { emoji: '🚨', label: 'Breaking Change',       color: '' },
+              'auto-merge':        { emoji: '✅', label: 'Auto-Merge Approved' },
+              'needs-review':      { emoji: '👀', label: 'Review Required' },
+              'breaking-change':   { emoji: '🚨', label: 'Breaking Change' },
             };
             const banner = banners[decision] || { emoji: '❓', label: decision };
 
-            let body = `## ${banner.emoji} Module Upgrade Analysis — ${banner.label}\n\n`;
+            let body = `## ${banner.emoji} Module Upgrade Risk Assessment — ${banner.label}\n\n`;
 
             // ── Module version table ──
             body += `### Module Versions\n\n`;
@@ -570,7 +528,7 @@ jobs:
             body += `| **Risk Level** | \`${risk}\` |\n`;
             body += `| **Version Type** | \`${result.version_type}\` |\n\n`;
 
-            // ── Plan changes table (separate for visibility) ──
+            // ── Plan changes table ──
             const plan = result.plan_summary || {};
             const planTotal = (plan.add || 0) + (plan.change || 0) + (plan.destroy || 0) + (plan.replace || 0);
 
@@ -592,72 +550,6 @@ jobs:
               body += planResources.trim() + `\n\n`;
             }
 
-            // ── Interface diff ──
-            const diff = result.interface_diff || {};
-            const inAdd  = (diff.inputs_added   || []).length;
-            const inRem  = (diff.inputs_removed  || []).length;
-            const inChg  = (diff.inputs_changed  || []).length;
-            const outAdd = (diff.outputs_added   || []).length;
-            const outRem = (diff.outputs_removed || []).length;
-            const outChg = (diff.outputs_changed || []).length;
-            const totalDiff = inAdd + inRem + inChg + outAdd + outRem + outChg;
-
-            body += `<details><summary><strong>Interface Diff</strong>`;
-            if (totalDiff === 0) {
-              body += ` — No changes detected</summary>\n\n`;
-              body += `The module interface (inputs/outputs) is identical between the old and new versions.\n`;
-            } else {
-              body += ` — ${totalDiff} change(s)</summary>\n\n`;
-              body += `| Change | Inputs | Outputs |\n`;
-              body += `|--------|--------|---------|\n`;
-              body += `| Added | ${inAdd} | ${outAdd} |\n`;
-              body += `| Removed | ${inRem} | ${outRem} |\n`;
-              body += `| Changed | ${inChg} | ${outChg} |\n\n`;
-              if (inAdd > 0) {
-                body += `**New inputs**: ${(diff.inputs_added || []).map(i => `\`${typeof i === 'string' ? i : i.name || JSON.stringify(i)}\``).join(', ')}\n`;
-              }
-              if (inRem > 0) {
-                body += `**Removed inputs**: ${(diff.inputs_removed || []).map(i => `\`${typeof i === 'string' ? i : i.name || JSON.stringify(i)}\``).join(', ')}\n`;
-              }
-              if (outRem > 0) {
-                body += `**Removed outputs**: ${(diff.outputs_removed || []).map(o => `\`${typeof o === 'string' ? o : o.name || JSON.stringify(o)}\``).join(', ')}\n`;
-              }
-            }
-            body += `\n</details>\n\n`;
-
-            // ── Breaking changes ──
-            if (result.breaking_changes?.length > 0) {
-              body += `### ⚠️ Breaking Changes\n\n`;
-              for (const bc of result.breaking_changes) {
-                const icon = bc.adapted ? '✅' : '❌';
-                const status = bc.adapted ? 'Adapted' : 'Not adapted';
-                body += `- ${icon} **${bc.type}**: ${bc.description} — *${status}*`;
-                if (bc.adaptation_details) body += `\n  > ${bc.adaptation_details}`;
-                body += `\n`;
-              }
-              body += '\n';
-            }
-
-            // ── Security findings ──
-            if (result.security_findings?.length > 0) {
-              body += `### 🔒 Security Findings\n\n`;
-              const severityIcon = { critical: '🔴', high: '🟠', medium: '🟡', low: '🟢' };
-              for (const sf of result.security_findings) {
-                const sIcon = severityIcon[sf.severity] || '⚪';
-                body += `- ${sIcon} **[${sf.severity.toUpperCase()}]** ${sf.category}: ${sf.description}\n`;
-              }
-              body += '\n';
-            }
-
-            // ── Adaptations applied ──
-            if (result.adaptations_applied?.length > 0) {
-              body += `### 🔧 Adaptations Applied\n\n`;
-              for (const a of result.adaptations_applied) {
-                body += `- \`${a.file}\`: ${a.change}\n`;
-              }
-              body += '\n> ⚠️ Code was modified. The pipeline will re-run to validate adaptations.\n\n';
-            }
-
             // ── Rationale ──
             body += `### Rationale\n\n${result.rationale}\n\n`;
 
@@ -669,8 +561,6 @@ jobs:
               body += ` · ✅ This PR was auto-merged.\n`;
             } else if (decision === 'needs-review' || decision === 'breaking-change') {
               body += `\n\n💬 **Need deeper analysis?** Comment \`@claude\` on this PR for interactive follow-up with full MCP tool access.\n`;
-            } else if (decision === 'needs-revalidation') {
-              body += ` · 🔄 Waiting for re-validation after code adaptations.\n`;
             }
 
             await github.rest.issues.createComment({
