@@ -16,11 +16,13 @@ Automated pipeline for private registry module version upgrades. Runs entirely i
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| Main pipeline | `.github/workflows/terraform-consumer-uplift.yml` | Classify, validate, AI analysis, decision + @claude interactive |
+| Main pipeline | `.github/workflows/terraform-consumer-uplift.yml` | Classify, validate, risk assessment, decision |
+| Claude review | `.github/workflows/terraform-claude-review.yml` | @claude interactive review, triggered by issue_comment |
 | Post-merge apply | `.github/workflows/terraform-apply.yml` | Apply to HCP Terraform + rollback on failure |
-| CI agent prompt | `.github/agents/module-upgrade-analyst.md` | 5-step analysis: interface diff, config adaptation, security review, plan analysis, recommendation |
+| CI agent prompt | `.claude/agents/module-upgrade-remediation.md` | @claude fix playbook: diagnose, investigate interface, fix consumer code, validate, push |
 | Version classifier | `.foundations/scripts/bash/classify-version-bump.sh` | Parse git diff for semver classification |
 | Fallback scanner | `.foundations/scripts/bash/scan-module-versions.sh` | TFC API scanner for modules Dependabot misses |
+| Token validator | `.foundations/scripts/bash/validate-token-separation.sh` | Prove separation of duties between TFC tokens |
 | CI MCP config | `.mcp-ci.json` | Terraform MCP server config for CI (npx, no Docker) |
 | Dependabot | `.github/dependabot.yml` | Private registry module version detection |
 | Visual diagram | `.foundations/design/consumer-uplift-workflow.html` | Interactive architecture diagram |
