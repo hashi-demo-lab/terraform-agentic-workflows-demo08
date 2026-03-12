@@ -8,8 +8,7 @@
 #   4. Templates consumer Terraform code with org/workspace/module values
 #   5. Creates GitHub labels for the pipeline
 #   6. Commits consumer code to the demo repo's base branch
-#   7. Creates GitHub secrets as placeholders (TFE_TOKEN, TFE_TOKEN_DEPENDABOT,
-#      CLAUDE_CODE_OAUTH_TOKEN) — add values via repo settings after setup
+#   7. Verifies GitHub secrets exist (managed at org level)
 #   8. Prints next steps (publish + trigger)
 #
 # Prerequisites:
@@ -317,40 +316,47 @@ else
   fi
 fi
 
-# ─── Create GitHub secrets (placeholder — add values via repo settings) ────
+# ─── GitHub Secrets ──────────────────────────────────────────────────────────
 header "GitHub Secrets"
 
-# Create all three secrets as repo-level. Values default to "REPLACE_ME" —
-# update them in the repo settings UI or via gh secret set after setup.
-PLACEHOLDER="REPLACE_ME"
+# Secrets are managed at the org level — the setup script does not have
+# permission to read or create them. Verify they exist in org settings:
+#   - Actions secrets:    TFE_TOKEN, CLAUDE_CODE_OAUTH_TOKEN, GH_PAT
+#   - Dependabot secrets: TFE_TOKEN, TFE_TOKEN_DEPENDABOT
+#
+# If you need to create repo-level secrets instead, uncomment the block below.
 
-for SECRET in TFE_TOKEN CLAUDE_CODE_OAUTH_TOKEN GH_PAT; do
-  if gh api "repos/${GITHUB_REPO}/actions/secrets/${SECRET}" --silent 2>/dev/null; then
-    success "${SECRET} already set"
-  else
-    echo "$PLACEHOLDER" | gh secret set "$SECRET" --repo "$GITHUB_REPO" 2>/dev/null \
-      && success "${SECRET} created (needs value)" \
-      || warn "Failed to create ${SECRET}"
-  fi
-done
+# # Create all three secrets as repo-level. Values default to "REPLACE_ME" —
+# # update them in the repo settings UI or via gh secret set after setup.
+# PLACEHOLDER="REPLACE_ME"
+#
+# for SECRET in TFE_TOKEN CLAUDE_CODE_OAUTH_TOKEN GH_PAT; do
+#   if gh api "repos/${GITHUB_REPO}/actions/secrets/${SECRET}" --silent 2>/dev/null; then
+#     success "${SECRET} already set"
+#   else
+#     echo "$PLACEHOLDER" | gh secret set "$SECRET" --repo "$GITHUB_REPO" 2>/dev/null \
+#       && success "${SECRET} created (needs value)" \
+#       || warn "Failed to create ${SECRET}"
+#   fi
+# done
+#
+# # Dependabot secrets (separate store from Actions secrets).
+# # TFE_TOKEN_DEPENDABOT — PMR read-only, used by dependabot.yml for registry scanning.
+# # TFE_TOKEN            — full workspace access, used by workflow terraform init/plan/apply.
+# #                        Same name as the Actions secret; GitHub resolves the correct store
+# #                        automatically based on whether the run was triggered by Dependabot.
+# for DEP_SECRET in TFE_TOKEN_DEPENDABOT TFE_TOKEN; do
+#   if gh api "repos/${GITHUB_REPO}/dependabot/secrets/${DEP_SECRET}" --silent 2>/dev/null; then
+#     success "${DEP_SECRET} (dependabot) already set"
+#   else
+#     echo "$PLACEHOLDER" | gh secret set "$DEP_SECRET" --repo "$GITHUB_REPO" --app dependabot 2>/dev/null \
+#       && success "${DEP_SECRET} (dependabot) created (needs value)" \
+#       || warn "Failed to create ${DEP_SECRET} (dependabot)"
+#   fi
+# done
 
-# Dependabot secrets (separate store from Actions secrets).
-# TFE_TOKEN_DEPENDABOT — PMR read-only, used by dependabot.yml for registry scanning.
-# TFE_TOKEN            — full workspace access, used by workflow terraform init/plan/apply.
-#                        Same name as the Actions secret; GitHub resolves the correct store
-#                        automatically based on whether the run was triggered by Dependabot.
-for DEP_SECRET in TFE_TOKEN_DEPENDABOT TFE_TOKEN; do
-  if gh api "repos/${GITHUB_REPO}/dependabot/secrets/${DEP_SECRET}" --silent 2>/dev/null; then
-    success "${DEP_SECRET} (dependabot) already set"
-  else
-    echo "$PLACEHOLDER" | gh secret set "$DEP_SECRET" --repo "$GITHUB_REPO" --app dependabot 2>/dev/null \
-      && success "${DEP_SECRET} (dependabot) created (needs value)" \
-      || warn "Failed to create ${DEP_SECRET} (dependabot)"
-  fi
-done
-
-info "Set secret values at: https://github.com/${GITHUB_REPO}/settings/secrets/actions"
-info "Set Dependabot values at: https://github.com/${GITHUB_REPO}/settings/secrets/dependabot"
+info "Secrets are managed at the org level"
+info "Verify at: https://github.com/organizations/$(echo "$GITHUB_REPO" | cut -d/ -f1)/settings/secrets/actions"
 
 # ─── Print next steps ───────────────────────────────────────────────────────
 header "Setup Complete"
