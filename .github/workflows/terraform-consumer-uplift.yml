@@ -67,13 +67,15 @@ jobs:
           echo "version_type=$(echo "$RESULT" | jq -r '.version_type')" >> "$GITHUB_OUTPUT"
           echo "modules_changed=$(echo "$RESULT" | jq -c '.modules_changed')" >> "$GITHUB_OUTPUT"
           echo "module_count=$(echo "$RESULT" | jq -r '.module_count')" >> "$GITHUB_OUTPUT"
-          echo "is_dependabot=$(echo "$RESULT" | jq -r '.is_dependabot')" >> "$GITHUB_OUTPUT"
+          # Override is_dependabot from workflow context — git detached HEAD
+          # in CI means the classify script can't detect branch name.
+          IS_DEPENDABOT=$([[ "${{ github.head_ref }}" == dependabot/* ]] && echo true || echo false)
+          echo "is_dependabot=${IS_DEPENDABOT}" >> "$GITHUB_OUTPUT"
           echo "should_continue=true" >> "$GITHUB_OUTPUT"
 
           # ── Step summary ──
           VERSION_TYPE=$(echo "$RESULT" | jq -r '.version_type')
           MODULE_COUNT=$(echo "$RESULT" | jq -r '.module_count')
-          IS_DEPENDABOT=$(echo "$RESULT" | jq -r '.is_dependabot')
 
           {
             echo "## 1/4 — Classify Version Bump"
