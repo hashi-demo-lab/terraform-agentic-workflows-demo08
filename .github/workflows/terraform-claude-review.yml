@@ -24,7 +24,9 @@ jobs:
     name: "Claude Review"
     if: >-
       github.event.issue.pull_request &&
-      contains(github.event.comment.body, '@claude')
+      contains(github.event.comment.body, '@claude') &&
+      github.event.comment.user.login != 'claude[bot]' &&
+      github.event.comment.user.login != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout PR branch
