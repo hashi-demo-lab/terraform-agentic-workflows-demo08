@@ -114,15 +114,12 @@ success "GitHub authenticated"
 cd "$REPO_ROOT"
 CURRENT_BRANCH=$(git branch --show-current)
 if [[ "$CURRENT_BRANCH" != "$BASE_BRANCH" ]]; then
-  warn "Not on base branch (currently on ${CURRENT_BRANCH})"
-  info "Switching to ${BASE_BRANCH}..."
-  git checkout "$BASE_BRANCH"
-  git pull origin "$BASE_BRANCH"
-  success "On ${BASE_BRANCH}"
-else
-  git pull origin "$BASE_BRANCH"
-  success "Already on ${BASE_BRANCH}"
+  error "Not on base branch (currently on '${CURRENT_BRANCH}', expected '${BASE_BRANCH}')"
+  info "Run: git checkout ${BASE_BRANCH}"
+  exit 1
 fi
+git pull origin "$BASE_BRANCH"
+success "On ${BASE_BRANCH} (up to date)"
 
 # ─── Set default branch (early — required for claude-code-action & PRs) ────
 header "Default Branch"
@@ -276,9 +273,7 @@ else
   git commit -m "feat: add consumer code for module uplift demo
 
 Configures S3 bucket consumer using ${MODULE_SOURCE}@${MODULE_CURRENT_VERSION}
-with HCP Terraform backend (workspace: ${TFE_WORKSPACE}).
-
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+with HCP Terraform backend (workspace: ${TFE_WORKSPACE})."
 
   info "Pushing to origin/${BASE_BRANCH}..."
   git push origin "$BASE_BRANCH"
