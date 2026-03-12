@@ -422,13 +422,13 @@ details.ed-card[open]::details-content { height: auto; }
 <!-- ===== CONNECTED PIPELINE ===== -->
 <div class="chapter-divider" id="pipeline-section" data-section="pipeline-section">
   <div class="chapter-number">Connected Pipeline</div>
-  <h2 class="chapter-title">Single Workflow, Two Entry Points</h2>
-  <p class="chapter-subtitle">One <code>.yml</code> file handles both automated PR analysis and interactive <code>@claude</code> follow-up -- separate trigger paths, shared infrastructure</p>
+  <h2 class="chapter-title">Two Workflows, One Pipeline</h2>
+  <p class="chapter-subtitle">Two <code>.yml</code> files work in concert: the uplift workflow runs deterministic Jobs 1-4 on PRs, and a separate Claude Review workflow handles interactive <code>@claude</code> follow-up -- connected by PR comments and <code>synchronize</code> events</p>
 </div>
 
 <div class="subsection" id="pipeline-diagram" data-sub="Pipeline Diagram">
   <div class="svg-diagram" style="max-width:100%">
-    <svg id="pipeline-svg" viewBox="0 0 1200 520" xmlns="http://www.w3.org/2000/svg">
+    <svg id="pipeline-svg" viewBox="0 0 1200 680" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="pipe-grid" width="20" height="20" patternUnits="userSpaceOnUse">
           <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#E0DCD4" stroke-width="0.3" opacity="0.4"/>
@@ -474,9 +474,9 @@ details.ed-card[open]::details-content { height: auto; }
       </defs>
 
       <!-- Background -->
-      <rect id="bg-fill" x="0" y="0" width="1200" height="520" rx="12" fill="#FAFAF8"/>
-      <rect id="bg-grid" x="0" y="0" width="1200" height="520" rx="12" fill="url(#pipe-grid)"/>
-      <rect id="bg-border" x="0" y="0" width="1200" height="520" rx="12" fill="none" stroke="none"/>
+      <rect id="bg-fill" x="0" y="0" width="1200" height="680" rx="12" fill="#FAFAF8"/>
+      <rect id="bg-grid" x="0" y="0" width="1200" height="680" rx="12" fill="url(#pipe-grid)"/>
+      <rect id="bg-border" x="0" y="0" width="1200" height="680" rx="12" fill="none" stroke="none"/>
 
       <!-- ============================================ -->
       <!-- === DEPENDABOT (centered above workflow) === -->
@@ -495,13 +495,12 @@ details.ed-card[open]::details-content { height: auto; }
       <!-- === WORKFLOW BOX ============================ -->
       <!-- ============================================ -->
       <rect x="25" y="110" width="700" height="280" rx="10" fill="none" stroke="#E0DCD4" stroke-width="1.5" stroke-dasharray="6 3"/>
-      <text x="375" y="132" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#8A8A8A" letter-spacing="3">terraform-consumer-uplift.yml</text>
+      <text x="375" y="128" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#8A8A8A" letter-spacing="1.5" opacity="0.7">WORKFLOW 1</text>
+      <text x="375" y="143" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#8A8A8A" letter-spacing="3">terraform-consumer-uplift.yml</text>
 
       <!-- Trigger labels -->
-      <text x="50" y="155" font-family="JetBrains Mono,monospace" font-size="10" fill="#1A6B7A" font-weight="700" letter-spacing="1.5">on: pull_request</text>
-      <text x="220" y="155" font-family="Source Sans 3,sans-serif" font-size="12" fill="#6B6B6B">Jobs 1 &#8594; 2 &#8594; 3 &#8594; 4</text>
-      <text x="410" y="155" font-family="JetBrains Mono,monospace" font-size="10" fill="#9A7B2D" font-weight="700" letter-spacing="1.5">on: issue_comment</text>
-      <text x="580" y="155" font-family="Source Sans 3,sans-serif" font-size="12" fill="#6B6B6B">@claude interactive</text>
+      <text x="50" y="162" font-family="JetBrains Mono,monospace" font-size="10" fill="#1A6B7A" font-weight="700" letter-spacing="1.5">on: pull_request</text>
+      <text x="220" y="162" font-family="Source Sans 3,sans-serif" font-size="12" fill="#6B6B6B">opened, synchronize &#8594; Jobs 1 &#8594; 2 &#8594; 3 &#8594; 4</text>
 
       <!-- ============================================ -->
       <!-- === JOBS 1-4 ROW ============================ -->
@@ -565,6 +564,50 @@ details.ed-card[open]::details-content { height: auto; }
 
       <!-- @claude label at bottom of workflow box -->
       <text x="375" y="375" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#8A8A8A" opacity="0.5">Jobs 1-4 re-run when @claude pushes fixes (synchronize event)</text>
+
+      <!-- ============================================ -->
+      <!-- === CLAUDE REVIEW WORKFLOW BOX ============= -->
+      <!-- ============================================ -->
+
+      <!-- Dashed lines from NEEDS-REVIEW and BREAKING-CHANGE outcomes down to Claude Review -->
+      <line x1="865" y1="280" x2="520" y2="440" stroke="#9A7B2D" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.2"/>
+      <text x="680" y="355" font-family="JetBrains Mono,monospace" font-size="8" fill="#9A7B2D" opacity="0.5" transform="rotate(-18 680 355)">@claude review comment</text>
+      <line x1="865" y1="350" x2="520" y2="450" stroke="#C4283A" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.2"/>
+
+      <!-- Claude Review workflow box -->
+      <rect x="100" y="430" width="550" height="110" rx="10" fill="none" stroke="#9A7B2D" stroke-width="1.5" stroke-dasharray="6 3"/>
+      <text x="375" y="448" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#9A7B2D" letter-spacing="1.5" opacity="0.7">WORKFLOW 2</text>
+      <text x="375" y="463" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#9A7B2D" letter-spacing="3">terraform-claude-review.yml</text>
+
+      <!-- Trigger label -->
+      <text x="120" y="483" font-family="JetBrains Mono,monospace" font-size="10" fill="#9A7B2D" font-weight="700" letter-spacing="1.5">on: issue_comment</text>
+      <text x="290" y="483" font-family="Source Sans 3,sans-serif" font-size="12" fill="#6B6B6B">@claude mentioned in PR comment</text>
+
+      <!-- Gate job -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="135" y="497" width="120" height="32" rx="8" fill="#9A7B2D"/>
+      </g>
+      <text x="195" y="518" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="white" font-weight="600">Gate</text>
+      <text x="195" y="527" text-anchor="middle" font-size="8" fill="white" opacity="0.75">skip if bot</text>
+
+      <!-- Arrow: Gate to Claude Review -->
+      <line x1="255" y1="513" x2="285" y2="513" stroke="#C0BDB5" stroke-width="1.5" opacity="0.2"/>
+      <polygon points="283,509 290,513 283,517" fill="#C0BDB5" opacity="0.35"/>
+
+      <!-- Claude Review job -->
+      <g filter="url(#pipe-shadow)">
+        <rect x="290" y="497" width="185" height="32" rx="8" fill="#9A7B2D"/>
+      </g>
+      <text x="382" y="518" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="white" font-weight="600">Claude Review</text>
+      <text x="382" y="527" text-anchor="middle" font-size="8" fill="white" opacity="0.75">diagnose + fix + push</text>
+
+      <!-- Dashed arrow: Claude Review back up to Workflow 1 (synchronize re-trigger) -->
+      <path d="M 475 513 C 560 513, 570 470, 570 430 C 570 400, 560 395, 540 395 L 375 395 L 375 390" fill="none" stroke="#1A6B7A" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.25"/>
+      <polygon points="372,393 375,386 378,393" fill="#1A6B7A" opacity="0.35"/>
+      <text x="560" y="408" font-family="JetBrains Mono,monospace" font-size="8" fill="#1A6B7A" opacity="0.5">synchronize</text>
+
+      <!-- Feedback loop label -->
+      <text x="375" y="560" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="11" fill="#8A8A8A" opacity="0.6" font-style="italic">Decision posts @claude review comment &#8594; Claude Review workflow fixes + pushes &#8594; synchronize re-triggers uplift pipeline</text>
 
       <!-- ============================================ -->
       <!-- === DETAIL PANELS =========================== -->
@@ -801,7 +844,7 @@ details.ed-card[open]::details-content { height: auto; }
     <div class="legend-item"><div class="legend-dot" style="background:#B87333"></div> Validate</div>
     <div class="legend-item"><div class="legend-dot" style="background:#6B3FA0"></div> Risk Assessment</div>
     <div class="legend-item"><div class="legend-dot" style="background:#C4283A"></div> Decision</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#9A7B2D"></div> Outcomes</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#9A7B2D"></div> Outcomes / Claude Review</div>
     <div class="legend-item"><div class="legend-dot" style="background:#2D7A4F"></div> Apply</div>
   </div>
   <p style="font-size:12px; color:#8A8A8A; text-align:center; margin-top:8px; font-style:italic">Click any box to expand details</p>
@@ -910,23 +953,27 @@ details.ed-card[open]::details-content { height: auto; }
   </div>
 
   <div class="subsection-title" style="margin-top:16px">How @claude Interactive Works</div>
-  <div class="subsection-desc">The same workflow file handles both automated and interactive triggers</div>
+  <div class="subsection-desc">Two workflow files coordinate: the uplift pipeline posts a review comment, and the Claude Review workflow handles the interactive fix loop</div>
 
   <details class="ed-card">
     <summary>
-      <h3>Single Workflow, Two Entry Points</h3>
-      <p>The <code>terraform-consumer-uplift.yml</code> workflow has two trigger sections. Jobs 1-4 run on <code>pull_request</code> events (automated, deterministic). The interactive job runs on <code>issue_comment</code> when <code>@claude</code> is mentioned.</p>
+      <h3>Two Workflows, One Pipeline</h3>
+      <p>The pipeline uses two separate workflow files. <code>terraform-consumer-uplift.yml</code> handles the deterministic pipeline (Jobs 1-4) on <code>pull_request</code> events. <code>terraform-claude-review.yml</code> handles interactive <code>@claude</code> review on <code>issue_comment</code> events.</p>
     </summary>
     <div class="card-expand">
-      <p>Claude checks out the PR branch, runs <code>terraform plan</code> to capture the current state, then uses MCP tools to investigate module interface changes and fix consumer code.</p>
-      <p>When <code>@claude</code> pushes code fixes to the PR branch, it re-triggers Jobs 1-4 automatically (via <code>synchronize</code> event). This creates a fix loop:</p>
+      <p><strong>Workflow 1: <code>terraform-consumer-uplift.yml</code></strong> runs the four deterministic jobs (Classify, Validate, Risk Assess, Decision) on PR <code>opened</code> and <code>synchronize</code> events. The Decision job (Job 4) auto-posts an <code>@claude review</code> comment on the PR when the outcome is <code>needs-review</code> or <code>breaking-change</code>.</p>
+      <p><strong>Workflow 2: <code>terraform-claude-review.yml</code></strong> triggers on <code>issue_comment</code> events when <code>@claude</code> is mentioned. It includes a gate job that prevents bot comments (including its own) from cancelling in-progress reviews. Claude checks out the PR branch, uses MCP tools to investigate module interface changes, fixes consumer code, and pushes.</p>
+      <p>When <code>@claude</code> pushes code fixes, the <code>synchronize</code> event re-triggers the uplift pipeline (Workflow 1) automatically. This creates a feedback loop:</p>
       <ul>
-        <li>Human comments <code>@claude</code></li>
-        <li>Claude fixes code + pushes</li>
-        <li>Pipeline re-validates</li>
-        <li>Risk re-assessed</li>
+        <li>Decision job (Workflow 1) posts <code>@claude review</code> comment on the PR</li>
+        <li>Claude Review workflow (Workflow 2) triggers on the comment</li>
+        <li>Gate job filters out bot comments to prevent cancellation loops</li>
+        <li>Claude diagnoses, fixes consumer code, and pushes</li>
+        <li>Push triggers <code>synchronize</code> event on the PR</li>
+        <li>Uplift pipeline (Workflow 1) re-runs Jobs 1-4 with the fixed code</li>
+        <li>Risk re-assessed -- may now auto-merge if plan is clean</li>
       </ul>
-      <p class="card-detail">Claude never approves or merges -- the pipeline handles that.</p>
+      <p class="card-detail">Claude never approves or merges -- the pipeline handles that. The two-file architecture ensures <code>issue_comment</code> events only trigger the lightweight Claude review, not the full 4-job pipeline.</p>
     </div>
   </details>
 </div>
@@ -1087,7 +1134,12 @@ details.ed-card[open]::details-content { height: auto; }
     <tr>
       <td>.github/workflows/terraform-consumer-uplift.yml</td>
       <td><span class="node node-script">workflow</span></td>
-      <td>The main pipeline. Runs 4 jobs on PR open/sync (classify semver &rarr; validate terraform &rarr; risk assess &rarr; decision) plus an interactive job triggered by <code>@claude</code> comments. Orchestrates the entire uplift process.</td>
+      <td>The deterministic pipeline. Runs 4 jobs on PR open/sync (classify semver &rarr; validate terraform &rarr; risk assess &rarr; decision). The Decision job auto-posts an <code>@claude review</code> comment on needs-review and breaking-change outcomes, triggering the Claude Review workflow.</td>
+    </tr>
+    <tr>
+      <td>.github/workflows/terraform-claude-review.yml</td>
+      <td><span class="node node-script">workflow</span></td>
+      <td>Interactive <code>@claude</code> review workflow. Triggers on <code>issue_comment</code> when <code>@claude</code> is mentioned. Includes a gate job to prevent bot comments from cancelling in-progress reviews. Claude diagnoses issues, fixes consumer code, and pushes -- the push re-triggers the uplift pipeline.</td>
     </tr>
     <tr>
       <td>.github/workflows/terraform-apply.yml</td>
@@ -1193,7 +1245,7 @@ function toggleJobDetail(n) {
   var bgFill = document.getElementById('bg-fill');
   var bgGrid = document.getElementById('bg-grid');
   var bgBorder = document.getElementById('bg-border');
-  var baseHeight = 520;
+  var baseHeight = 680;
   var jobOffset = 0;
   var outcomeOffset = 0;
 
@@ -1284,7 +1336,7 @@ var searchIdx = -1;
 // Searchable items: sections and components
 var searchItems = [
   { id: 'landing', type: 'section', name: 'Overview', desc: 'Automated module version upgrades for HCP Terraform consumers' },
-  { id: 'pipeline-section', type: 'section', name: 'Connected Pipeline', desc: 'Single workflow with two entry points: automated PR analysis and @claude follow-up' },
+  { id: 'pipeline-section', type: 'section', name: 'Connected Pipeline', desc: 'Two workflows in one pipeline: uplift (Jobs 1-4) and Claude Review (@claude follow-up)' },
   { id: 'pipeline-diagram', type: 'component', name: 'Pipeline Diagram', desc: 'Animated SVG showing Jobs 1-4 flow with Dependabot trigger' },
   { id: 'escalation-section', type: 'section', name: 'Escalation', desc: 'The @claude fix loop for needs-review and breaking-change PRs' },
   { id: 'escalation-risk-levels', type: 'component', name: 'Risk Levels', desc: 'Low, medium, high, and critical risk classification cards' },
@@ -1303,7 +1355,7 @@ var searchItems = [
   // Scripts/files
   { id: 'artifacts-table', type: 'script', name: 'classify-version-bump.sh', desc: 'Parse git diff to detect semver bump type (patch/minor/major)' },
   { id: 'artifacts-table', type: 'script', name: 'scan-module-versions.sh', desc: 'TFC API fallback scanner for version detection' },
-  { id: 'artifacts-table', type: 'workflow', name: 'terraform-consumer-uplift.yml', desc: 'Main pipeline: 4 deterministic jobs + @claude interactive job' },
+  { id: 'artifacts-table', type: 'workflow', name: 'terraform-consumer-uplift.yml', desc: 'Main pipeline: 4 deterministic jobs on pull_request events' },
   { id: 'artifacts-table', type: 'workflow', name: 'terraform-apply.yml', desc: 'Post-merge apply + rollback on failure' },
   { id: 'artifacts-table', type: 'agent', name: 'module-upgrade-remediation.md', desc: '@claude remediation playbook for module upgrades' }
 ];
@@ -1431,7 +1483,7 @@ document.querySelectorAll('.subsection, .chapter-divider[data-section], #landing
 
   // Outcome forks — randomly selected each cycle
   var outcomePaths = [
-    // Auto-Merge → On Merge
+    // Auto-Merge -> On Merge
     [
       [770, 175, '#2D7A4F', 120],
       [865, 175, '#2D7A4F', 100],
@@ -1447,14 +1499,31 @@ document.querySelectorAll('.subsection, .chapter-divider[data-section], #landing
     [
       [770, 320, '#C4283A', 120],
       [865, 320, '#C4283A', 250]
+    ],
+    // Needs-Review -> Claude Review workflow -> back to Job 1 (feedback loop)
+    [
+      [770, 250, '#9A7B2D', 120],
+      [865, 250, '#9A7B2D', 140],
+      [520, 440, '#9A7B2D', 0],      // down to Claude Review box area
+      [195, 513, '#9A7B2D', 140],     // Gate job
+      [382, 513, '#9A7B2D', 200],     // Claude Review job
+      [475, 513, '#9A7B2D', 0],       // exit Claude Review
+      [570, 430, '#1A6B7A', 0],       // curve up
+      [375, 390, '#1A6B7A', 0],       // top of return path
+      [375, 140, '#1A6B7A', 0],       // back to workflow entry
+      [122, 214, '#1A6B7A', 180]      // Job 1 re-run
     ]
   ];
 
-  var speed = 0.38; // px per ms — slightly brisk
+  var speed = 0.30; // px per ms — slower, more elegant
   var path = [];
   var segIdx = 0;
   var segT = 0;
   var pauseUntil = 0;
+  var pauseStartR = 5;
+  var pauseTargetR = 7;
+  var pauseDuration = 0;
+  var pauseElapsed = 0;
   var fadeState = 'in'; // 'in' | 'visible' | 'out' | 'wait'
   var fadeT = 0;
   var waitUntil = 0;
@@ -1475,12 +1544,7 @@ document.querySelectorAll('.subsection, .chapter-divider[data-section], #landing
   }
 
   function easeInOut(t) {
-    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-  }
-
-  function lerpColor(a, b, t) {
-    // Simple: snap to target color at midpoint
-    return t < 0.5 ? a : b;
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
 
   function startCycle() {
@@ -1490,9 +1554,12 @@ document.querySelectorAll('.subsection, .chapter-divider[data-section], #landing
     fadeState = 'in';
     fadeT = 0;
     pauseUntil = 0;
+    pauseElapsed = 0;
+    pauseDuration = 0;
     var wp = path[0];
     ball.setAttribute('cx', wp[0]);
     ball.setAttribute('cy', wp[1]);
+    ball.setAttribute('r', '5');
     ball.setAttribute('fill', wp[2]);
     ball.setAttribute('filter', filters[wp[2]] || 'url(#glow-teal)');
     trailX = wp[0]; trailY = wp[1];
@@ -1508,12 +1575,12 @@ document.querySelectorAll('.subsection, .chapter-divider[data-section], #landing
 
     // Fade in/out handling
     if (fadeState === 'in') {
-      fadeT = Math.min(fadeT + dt / 250, 1);
+      fadeT = Math.min(fadeT + dt / 400, 1);
       ball.setAttribute('opacity', String(fadeT * 0.92));
       trail.setAttribute('opacity', String(fadeT * 0.28));
       if (fadeT >= 1) fadeState = 'visible';
     } else if (fadeState === 'out') {
-      fadeT = Math.max(fadeT - dt / 300, 0);
+      fadeT = Math.max(fadeT - dt / 500, 0);
       ball.setAttribute('opacity', String(fadeT * 0.92));
       trail.setAttribute('opacity', String(fadeT * 0.28));
       if (fadeT <= 0) {
@@ -1526,10 +1593,20 @@ document.querySelectorAll('.subsection, .chapter-divider[data-section], #landing
       return;
     }
 
-    // Pausing at a waypoint
+    // Pausing at a waypoint with radius pulse
     if (pauseUntil > 0) {
-      if (ts < pauseUntil) { requestAnimationFrame(tick); return; }
+      if (ts < pauseUntil) {
+        pauseElapsed += dt;
+        var pt = Math.min(pauseElapsed / pauseDuration, 1);
+        // Ease out then back: grow to 7 at midpoint, shrink to 5 by end
+        var pulseT = pt < 0.5 ? pt * 2 : 2 - pt * 2;
+        var r = pauseStartR + (pauseTargetR - pauseStartR) * pulseT;
+        ball.setAttribute('r', String(r));
+        requestAnimationFrame(tick);
+        return;
+      }
       pauseUntil = 0;
+      ball.setAttribute('r', '5');
     }
 
     // Move along current segment
@@ -1553,8 +1630,8 @@ document.querySelectorAll('.subsection, .chapter-divider[data-section], #landing
       ball.setAttribute('fill', col);
       ball.setAttribute('filter', filters[col] || 'url(#glow-teal)');
 
-      // Trail follows with damped lerp
-      var tLerp = 0.12;
+      // Trail follows with damped lerp (smoother, more trailing)
+      var tLerp = 0.08;
       trailX += (x - trailX) * tLerp;
       trailY += (y - trailY) * tLerp;
       trail.setAttribute('cx', trailX);
@@ -1572,7 +1649,9 @@ document.querySelectorAll('.subsection, .chapter-divider[data-section], #landing
         segT = 0;
         // Pause at this waypoint if specified
         if (segIdx < path.length && path[segIdx][3] > 0) {
-          pauseUntil = ts + path[segIdx][3];
+          pauseDuration = path[segIdx][3];
+          pauseElapsed = 0;
+          pauseUntil = ts + pauseDuration;
         }
         // Last waypoint — start fade out
         if (segIdx >= path.length - 1) {
