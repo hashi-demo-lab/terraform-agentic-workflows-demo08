@@ -287,41 +287,41 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 fi
 
 # ─── Terraform init & plan (optional) ─────────────────────────────────────
-header "Terraform Smoke Test"
+# header "Terraform Smoke Test"
 
-cd "$REPO_ROOT"
+# cd "$REPO_ROOT"
 
-if [[ "${SKIP_PLAN:-}" == "true" ]]; then
-  info "Skipping terraform init/plan (SKIP_PLAN=true)"
-  info "Ensure AWS credentials are configured in the TFC workspace/project before triggering"
-else
-  info "Running terraform init..."
-  if terraform init -input=false; then
-    success "Terraform initialized"
-  else
-    warn "terraform init failed — this is OK if AWS credentials aren't configured yet"
-    warn "Ensure the TFC workspace has AWS credentials (via project variable set) before triggering"
-    info "Skipping plan. Re-run setup.sh after configuring credentials, or proceed to trigger."
-  fi
+# if [[ "${SKIP_PLAN:-}" == "true" ]]; then
+#   info "Skipping terraform init/plan (SKIP_PLAN=true)"
+#   info "Ensure AWS credentials are configured in the TFC workspace/project before triggering"
+# else
+#   info "Running terraform init..."
+#   if terraform init -input=false; then
+#     success "Terraform initialized"
+#   else
+#     warn "terraform init failed — this is OK if AWS credentials aren't configured yet"
+#     warn "Ensure the TFC workspace has AWS credentials (via project variable set) before triggering"
+#     info "Skipping plan. Re-run setup.sh after configuring credentials, or proceed to trigger."
+#   fi
 
-  if [[ -d ".terraform" ]]; then
-    echo ""
-    info "Running terraform plan..."
-    if terraform plan -input=false; then
-      success "Terraform plan completed"
-    else
-      warn "terraform plan exited with changes or errors (review output above)"
-      warn "This is expected if AWS credentials aren't configured in the workspace yet"
-    fi
-  fi
-fi
+#   if [[ -d ".terraform" ]]; then
+#     echo ""
+#     info "Running terraform plan..."
+#     if terraform plan -input=false; then
+#       success "Terraform plan completed"
+#     else
+#       warn "terraform plan exited with changes or errors (review output above)"
+#       warn "This is expected if AWS credentials aren't configured in the workspace yet"
+#     fi
+#   fi
+# fi
 
 # ─── GitHub Secrets ──────────────────────────────────────────────────────────
 header "GitHub Secrets"
 
 # Secrets are managed at the org level — the setup script does not have
 # permission to read or create them. Verify they exist in org settings:
-#   - Actions secrets:    TFE_TOKEN, CLAUDE_CODE_OAUTH_TOKEN, GH_PAT
+#   - Actions secrets:    TFE_TOKEN, ANTHROPIC_API_KEY, GH_PAT
 #   - Dependabot secrets: TFE_TOKEN, TFE_TOKEN_DEPENDABOT
 #
 # If you need to create repo-level secrets instead, uncomment the block below.
@@ -330,7 +330,7 @@ header "GitHub Secrets"
 # # update them in the repo settings UI or via gh secret set after setup.
 # PLACEHOLDER="REPLACE_ME"
 #
-# for SECRET in TFE_TOKEN CLAUDE_CODE_OAUTH_TOKEN GH_PAT; do
+# for SECRET in TFE_TOKEN ANTHROPIC_API_KEY GH_PAT; do
 #   if gh api "repos/${GITHUB_REPO}/actions/secrets/${SECRET}" --silent 2>/dev/null; then
 #     success "${SECRET} already set"
 #   else
