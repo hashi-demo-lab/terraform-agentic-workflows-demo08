@@ -1,24 +1,7 @@
 ---
-name: tf-module-research
 description: Investigate cloud service provider resources via docs, Terraform provider docs, and registry patterns. Each instance answers ONE research question. Use during planning phase to resolve resource behavior and design decisions.
-tools:
-  - read
-  - write
-  - shell
-  - search
-  - mcp__terraform__search_modules
-  - mcp__terraform__get_module_details
-  - mcp__terraform__search_private_modules
-  - mcp__terraform__get_private_module_details
-  - mcp__terraform__search_private_providers
-  - mcp__terraform__get_private_provider_details
-  - mcp__terraform__search_providers
-  - mcp__terraform__get_provider_details
-  - mcp__terraform__search_policies
-  - mcp__aws-knowledge-mcp-server__aws___search_documentation
-  - mcp__aws-knowledge-mcp-server__aws___read_documentation
-  - mcp__aws-knowledge-mcp-server__aws___recommend
-  - mcp__aws-knowledge-mcp-server__aws___get_regional_availability
+name: tf-module-research
+tools: ['view', 'create', 'bash', 'grep', 'glob', 'mcp__terraform__search_modules', 'mcp__terraform__get_module_details', 'mcp__terraform__search_private_modules', 'mcp__terraform__get_private_module_details', 'mcp__terraform__search_private_providers', 'mcp__terraform__get_private_provider_details', 'mcp__terraform__search_providers', 'mcp__terraform__get_provider_details', 'mcp__terraform__search_policies', 'mcp__aws-documentation-mcp-server__search_documentation', 'mcp__aws-documentation-mcp-server__read_documentation', 'mcp__aws-documentation-mcp-server__recommend']
 skills:
   - tf-research
 ---

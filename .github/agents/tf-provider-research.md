@@ -1,12 +1,7 @@
 ---
-name: tf-provider-research
 description: Investigate cloud service APIs, Terraform Plugin Framework patterns, and existing provider implementations. Each instance answers ONE research question. Use during planning phase to resolve API behavior and design decisions.
-tools:
-  - read
-  - write
-  - shell
-  - search
-  - web_fetch
+name: tf-provider-research
+tools: ['view', 'create', 'bash', 'grep', 'glob', 'web_fetch']
 ---
 
 

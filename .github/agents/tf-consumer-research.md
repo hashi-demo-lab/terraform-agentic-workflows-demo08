@@ -1,6 +1,7 @@
 ---
-name: tf-consumer-research
 description: Investigate private registry modules, and module wiring patterns. Each instance answers ONE research question. Use during planning phase to resolve module availability, configuration options, and composition patterns.
+name: tf-consumer-research
+tools: ['view', 'create', 'bash', 'grep', 'glob', 'mcp__terraform__search_modules', 'mcp__terraform__get_module_details', 'mcp__terraform__search_private_modules', 'mcp__terraform__get_private_module_details', 'mcp__terraform__search_private_providers', 'mcp__terraform__get_private_provider_details', 'mcp__terraform__search_providers', 'mcp__terraform__get_provider_details', 'mcp__terraform__search_policies']
 ---
 
 
