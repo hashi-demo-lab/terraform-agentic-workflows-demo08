@@ -1,7 +1,7 @@
 ---
 description: Terraform module design. Produce a single design.md from clarified requirements and research findings. Merges specification, planning, and security baseline concerns into one artifact covering purpose, scope, and design decisions.
 name: tf-module-design
-tools: ['view', 'edit', 'bash', 'grep', 'glob', 'mcp__terraform__search_providers', 'mcp__terraform__get_provider_details', 'mcp__terraform__search_modules', 'mcp__terraform__get_module_details', 'mcp__aws-documentation-mcp-server__search_documentation', 'mcp__aws-documentation-mcp-server__read_documentation']
+tools: ['view', 'edit', 'bash', 'grep', 'glob', 'terraform/search_providers', 'terraform/get_provider_details', 'terraform/search_modules', 'terraform/get_module_details', 'aws-documentation-mcp-server/search_documentation', 'aws-documentation-mcp-server/read_documentation']
 skills:
   - tf-architecture-patterns
   - tf-security-baselines

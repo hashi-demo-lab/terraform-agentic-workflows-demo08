@@ -1,7 +1,7 @@
 ---
 description: Produce a single consumer-design.md from clarified requirements and research findings. Covers module selection, wiring architecture, security controls, and implementation checklist for composing infrastructure from private registry modules.
 name: tf-consumer-design
-tools: ['view', 'edit', 'bash', 'grep', 'glob', 'mcp__terraform__search_providers', 'mcp__terraform__get_provider_details', 'mcp__terraform__search_modules', 'mcp__terraform__get_module_details', 'mcp__terraform__search_private_modules', 'mcp__terraform__get_private_module_details', 'mcp__aws-documentation-mcp-server__search_documentation', 'mcp__aws-documentation-mcp-server__read_documentation']
+tools: ['view', 'edit', 'bash', 'grep', 'glob', 'terraform/search_providers', 'terraform/get_provider_details', 'terraform/search_modules', 'terraform/get_module_details', 'terraform/search_private_modules', 'terraform/get_private_module_details', 'aws-documentation-mcp-server/search_documentation', 'aws-documentation-mcp-server/read_documentation']
 ---
 
 

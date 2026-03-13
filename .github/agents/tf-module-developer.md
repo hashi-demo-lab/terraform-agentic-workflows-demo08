@@ -1,7 +1,7 @@
 ---
 description: Terraform module developer. Execute individual implementation checklist items from design.md with Terraform module code. Item context from specs/{FEATURE}/design.md.
 name: tf-module-developer
-tools: ['view', 'edit', 'bash', 'grep', 'glob', 'mcp__terraform__search_modules', 'mcp__terraform__search_private_modules', 'mcp__terraform__search_providers', 'mcp__terraform__get_provider_details', 'mcp__aws-documentation-mcp-server__search_documentation', 'mcp__aws-documentation-mcp-server__read_documentation']
+tools: ['view', 'edit', 'bash', 'grep', 'glob', 'terraform/search_modules', 'terraform/search_private_modules', 'terraform/search_providers', 'terraform/get_provider_details', 'aws-documentation-mcp-server/search_documentation', 'aws-documentation-mcp-server/read_documentation']
 skills:
   - terraform-style-guide
   - tf-implementation-patterns

@@ -1,7 +1,7 @@
 ---
 description: Investigate cloud service provider resources via docs, Terraform provider docs, and registry patterns. Each instance answers ONE research question. Use during planning phase to resolve resource behavior and design decisions.
 name: tf-module-research
-tools: ['view', 'create', 'bash', 'grep', 'glob', 'mcp__terraform__search_modules', 'mcp__terraform__get_module_details', 'mcp__terraform__search_private_modules', 'mcp__terraform__get_private_module_details', 'mcp__terraform__search_private_providers', 'mcp__terraform__get_private_provider_details', 'mcp__terraform__search_providers', 'mcp__terraform__get_provider_details', 'mcp__terraform__search_policies', 'mcp__aws-documentation-mcp-server__search_documentation', 'mcp__aws-documentation-mcp-server__read_documentation', 'mcp__aws-documentation-mcp-server__recommend']
+tools: ['view', 'create', 'bash', 'grep', 'glob', 'terraform/search_modules', 'terraform/get_module_details', 'terraform/get_latest_module_version', 'terraform/get_latest_provider_version', 'terraform/get_provider_capabilities', 'terraform/search_providers', 'terraform/get_provider_details', 'terraform/search_policies', 'terraform/get_policy_details', 'aws-documentation-mcp-server/search_documentation', 'aws-documentation-mcp-server/read_documentation', 'aws-documentation-mcp-server/recommend']
 skills:
   - tf-research
 ---
