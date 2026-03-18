@@ -1,0 +1,121 @@
+{
+  "run_id": "run-iURWDL3wVxzefsjo",
+  "tfe_hostname": "app.terraform.io",
+  "task_stages": [
+    {
+      "id": "ts-rEt6yNBSjhxDpKMU",
+      "stage": "post_plan",
+      "status": "passed",
+      "is_overridable": false,
+      "permissions": {
+        "can_override_policy": false,
+        "can_override_tasks": false,
+        "can_override": false
+      },
+      "status_timestamps": {
+        "passed-at": "2026-03-17T09:39:12+00:00",
+        "running-at": "2026-03-17T09:38:29+00:00"
+      },
+      "created_at": "2026-03-17T09:37:50.646Z",
+      "updated_at": "2026-03-17T09:39:12.059Z",
+      "task_results": [
+        {
+          "id": "taskrs-DD9wxDDeiVp8UTLs",
+          "task_name": "Apptio-Cloudability",
+          "status": "failed",
+          "message": "Total Cost before: 31.54, after: 31.64, diff: +0.10",
+          "url": null,
+          "task_url": "https://api.cloudability.com/governance/hcp/runtask/g_rwlFySlkI=",
+          "enforcement_level": "advisory",
+          "stage": "post_plan",
+          "is_speculative": false,
+          "task_id": "task-5GCUvqPpasfncjrc",
+          "workspace_task_id": "wstask-mkw4oy7nGMk4ayF2",
+          "outcomes_count": 3,
+          "status_timestamps": {
+            "failed-at": "2026-03-17T09:39:03+00:00",
+            "running-at": "2026-03-17T09:38:29+00:00"
+          },
+          "created_at": "2026-03-17T09:37:50.651Z",
+          "updated_at": "2026-03-17T09:39:04.116Z",
+          "outcomes": [
+            {
+              "id": "taskrso-k8c29PdEuNAACCMT",
+              "outcome_id": "Estimation",
+              "description": "Cost Estimation Result",
+              "tags": [
+                {
+                  "label": "Status",
+                  "value": [
+                    {
+                      "label": "Passed",
+                      "level": "info"
+                    }
+                  ]
+                }
+              ],
+              "url": null,
+              "body_html": "\n<h1>IBM Cloudability Governance</h1>\n<h2>\n    📈 Cost Estimation - Monthly Cost Impact: +0.10 USD\n\t\n</h2>\n\n\n<hr>\n\n<hr>\n<h3> 📊 Cost Summary & Resource Changes</h3>\n<table>\n<thead>\n  <tr>\n    <th>Resource</th>\n    <th>Current Cost</th>\n    <th>Updated Cost</th>\n    <th>Difference</th>\n  </tr>\n</thead>\n<tbody>\n    <tr>\n\t\t<td>TOTAL</td>\n\t\t<td>31.54</td>\n\t\t<td>31.64</td>\n\t\t<td>+0.10</td>\n\t</tr>\n\t<tr>\n\t\t<td>module.alb_5xx_alarm.aws_cloudwatch_metric_alarm.this[0]</td>\n\t\t<td>0.00</td>\n\t\t<td>0.10</td>\n\t\t<td>+0.10</td>\n\t</tr>\n\t<tr>\n\t\t<td>module.alb.aws_lb.this[0]</td>\n\t\t<td>31.54</td>\n\t\t<td>31.54</td>\n\t\t<td>0.00</td>\n\t</tr>\n</tbody>\n</table>\n\n<small>All prices are shown in USD currency.\n(‡) indicates this item or one of its components uses list price</small>\n\n<details>\n<summary><strong>📂 Cost Difference Breakdown</strong></summary>\n\n\n<details>\n<summary>module.alb_5xx_alarm.aws_cloudwatch_metric_alarm.this[0]</summary>\n\n```diff\nmodule.alb_5xx_alarm.aws_cloudwatch_metric_alarm.this[0]\n\n  Monthly cost for CloudWatch Alarm - uplift-demo-demo-alb-5xx of type Standard for metric HTTPCode_ELB_5XX_Count\n-   0.00\n+   0.10\n\n```\n\n</details>\n\n<details>\n<summary>module.alb.aws_lb.this[0]</summary>\n\n```diff\nmodule.alb.aws_lb.this[0]\n\n  Application Load Balancer hourly - 730 Hrs\n  ℹ️ No Cost change - 18.40\n\n  LCU Cost - 1642.50 LCU-Hrs (‡)\n\n    On-Demand LCU - 1642.50 LCU-Hrs\n    ℹ️ No Cost change - 13.14\n\n\n```\n\n</details>\n\n</details>\n\n\n  \n\n\n<details>\n<summary><strong>📂 No Cost Resources</strong></summary>\n<p>List of resources with no costs associated with them.</p>\n<table border=\"1\" style=\"border-collapse:collapse;\"><thead><tr><th>Vendor</th><th>Resource Type</th><th>Resource Name(s)</th></tr></thead><tbody><tr><td>aws</td><td>aws_lb_listener</td><td>module.alb.aws_lb_listener.this[\"http\"]</td></tr><tr><td>aws</td><td>aws_s3_bucket_policy</td><td>module.demo_bucket.aws_s3_bucket_policy.this[0]</td></tr></tbody></table>\n</details>\n\n\n",
+              "created_at": "2026-03-17T09:39:03.637Z"
+            },
+            {
+              "id": "taskrso-1ZoRhitVdYGEsqk5",
+              "outcome_id": "Policy",
+              "description": "Policy Evaluation Result",
+              "tags": [
+                {
+                  "label": "Status",
+                  "value": [
+                    {
+                      "label": "Failed",
+                      "level": "error"
+                    }
+                  ]
+                },
+                {
+                  "label": "Severity",
+                  "value": [
+                    {
+                      "label": "Gated",
+                      "level": "error"
+                    }
+                  ]
+                }
+              ],
+              "url": null,
+              "body_html": "\n<h1>IBM Cloudability Governance</h1>\n<h2>Policy Evaluation</h2>\n\n<hr>\n<div><h4>Failed Tag Policies:</h4>\n  <ul>\n    <li>ℹ️ 1 Advisory: Test Cost Center</li>\n  </ul><h4>Failed Resource Policies:</h4>\n  <ul>\n    <li>⚠️ 1 Gated: EC2 Instance Type</li>\n  </ul>\n</div>\n<hr>\n<h3>❌ 23 Failing Resources</h3>\n\n<div>\n  <details>\n    <summary>module.alb.aws_lb.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.alb.aws_lb_listener.this[\"http\"]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.alb.aws_lb_target_group.this[\"app\"]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.alb.aws_security_group.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.alb.aws_vpc_security_group_egress_rule.this[\"all\"]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.alb.aws_vpc_security_group_ingress_rule.this[\"all_http\"]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.alb_5xx_alarm.aws_cloudwatch_metric_alarm.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.app_server.aws_instance.this[0]</summary>\n    <h4>⚠️ Gated</h4>\n    <ul>\n    </ul>\n\t<ul>\n\t  <li>\"Instance Type\" with value <code>t3.small</code> was provided for resource EC2 - Compute Instance. This violates attribute rule:\n        <code>Instance Type == t2.small</code>\n      </li>\n    </ul>\n\t<h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.demo_alerts.aws_sns_topic.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.demo_bucket.aws_s3_bucket.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.demo_events.aws_sqs_queue.dlq[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.demo_events.aws_sqs_queue.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.demo_metadata.aws_dynamodb_table.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.ec2_sg.aws_security_group.this_name_prefix[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.sqs_depth_alarm.aws_cloudwatch_metric_alarm.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.vpc.aws_default_network_acl.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.vpc.aws_default_route_table.default[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.vpc.aws_default_security_group.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.vpc.aws_internet_gateway.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.vpc.aws_route_table.public[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.vpc.aws_subnet.public[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.vpc.aws_subnet.public[1]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n<div>\n  <details>\n    <summary>module.vpc.aws_vpc.this[0]</summary>\n    <h4>ℹ️ Advisory</h4>\n    <ul>\n\t  <li>The tag key \"cost-center\" was not provided. This violates tag rule: <code>Tag key: \"cost-center\" is required</code></li>\n    </ul>\n\t<ul>\n    </ul>\n  </details>\n</div>\n\n",
+              "created_at": "2026-03-17T09:39:03.650Z"
+            },
+            {
+              "id": "taskrso-7VDS66H1vPgqM27k",
+              "outcome_id": "Recommendation",
+              "description": "Recommendation Result",
+              "tags": [
+                {
+                  "label": "Status",
+                  "value": [
+                    {
+                      "label": "Passed",
+                      "level": "info"
+                    }
+                  ]
+                }
+              ],
+              "url": null,
+              "body_html": "\n<h1>IBM Cloudability Governance</h1>\n<h2>Recommendation</h2>\n\n<h4>All prices are shown in  currency.</h4>\n\n<hr>\n<div>\n  <details>\n    <summary>ComputeInstance(EC2) - module.app_server.aws_instance.this[0]</summary>\n\t<div>\n\t  <br />\n\t  <table>\n\t    <thead>\n\t\t  <tr>\n\t\t    <th>Property</th>\n\t\t\t<th>Current</th>\n\t\t\t<th>Recommended</th>\n\t\t  </tr>\n\t\t</thead>\n\t\t<tbody>\n\t\t  <tr>\n\t\t    <td>Memory GB</td>\n\t\t\t<td>2</td>\n\t\t\t<td>2</td>\n\t\t  </tr><tr>\n\t\t    <td>Instance Type</td>\n\t\t\t<td>t3.small</td>\n\t\t\t<td>t4g.small</td>\n\t\t  </tr><tr>\n\t\t    <td>Price Per Unit</td>\n\t\t\t<td>0.0264</td>\n\t\t\t<td>0.0212</td>\n\t\t  </tr><tr>\n\t\t    <td>vCPU</td>\n\t\t\t<td>2</td>\n\t\t\t<td>2</td>\n\t\t  </tr>\n\t\t</tbody>\n\t  </table>\n\t</div>\n  </details>\n</div>\n\n",
+              "created_at": "2026-03-17T09:39:03.658Z"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_tasks": 1,
+    "passed": 0,
+    "failed": 1,
+    "errored": 0,
+    "pending": 0,
+    "unreachable": 0
+  }
+}

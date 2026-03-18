@@ -1,5 +1,5 @@
 ---
-name: tf-runtask-skill
+name: tf-runtask
 description: Retrieve and display Terraform Cloud/Enterprise run task results for a given run. Use this skill whenever the user asks about run task results, run task checks, task stage statuses, or wants to inspect what run tasks reported for a Terraform Cloud/Enterprise run. Triggers on phrases like "check the run tasks", "what did the run tasks say", "show run task results", "get task results for run-xxx", or any reference to run task outcomes on a specific run.
 ---
 
@@ -12,6 +12,7 @@ The MCP terraform tools can fetch run details but lack endpoints for task stages
 ### Step 1: Identify the run
 
 The user may provide either:
+
 - A **run ID** like `run-iURWDL3wVxzefsjo`
 - A **URL** like `https://app.terraform.io/app/org/workspaces/ws-name/runs/run-abc123`
 
@@ -26,6 +27,7 @@ scripts/get-run-task-results.sh <run-id-or-url>
 ```
 
 The script requires:
+
 - `$TFE_TOKEN` — API token with read access to the workspace
 - `$TFE_HOSTNAME` — (optional) hostname, defaults to `app.terraform.io`; auto-detected from URL input
 - `$TFE_SKIP_VERIFY` — (optional) set to `true` to skip TLS verification (self-signed certs on TFE)
@@ -40,11 +42,13 @@ The script uses `include=task_results` sideloading for efficiency (one API call 
 Parse the JSON and present a markdown summary. The presentation has three tiers that mirror the data hierarchy:
 
 **Tier 1 — Summary line** with aggregate counts from `summary`. Always include these counts in the user-facing response (not just in the raw JSON), even when all counts are zero:
+
 ```
 **Total tasks**: 1 | Passed: 0 | Failed: 1 | Errored: 0
 ```
 
 **Tier 2 — Stage sections** grouped by execution phase, each showing its task results table:
+
 ```
 ### Post-Plan Tasks (stage status: passed)
 
@@ -54,6 +58,7 @@ Parse the JSON and present a markdown summary. The presentation has three tiers 
 ```
 
 **Tier 3 — Outcome sub-tables** under each task result that has outcomes:
+
 ```
 #### Apptio-Cloudability — Outcomes
 
@@ -65,6 +70,7 @@ Parse the JSON and present a markdown summary. The presentation has three tiers 
 ```
 
 If an outcome has `body_html` content, render it in a collapsible block:
+
 ```
 <details>
 <summary>Policy Evaluation Detail</summary>
@@ -77,6 +83,7 @@ If an outcome has `body_html` content, render it in a collapsible block:
 **Tier 4 — Actionable insights** after presenting the tables, synthesize the most important findings from the outcome bodies. The `body_html` content often contains the richest detail — specific failing resources, tag violations, cost savings recommendations, or compliance issues. Summarize these findings in plain language so the user doesn't have to parse raw HTML. For example:
 
 > **Key findings:**
+>
 > - **Policy**: 23 resources failing — 22 missing `cost-center` tag (advisory), 1 EC2 instance using `t3.small` instead of required `t2.small` (gated)
 > - **Cost**: Monthly impact +$0.10 USD, driven by a new CloudWatch metric alarm
 > - **Recommendation**: Switch EC2 from `t3.small` to `t4g.small` for ~20% cost savings
@@ -98,11 +105,13 @@ This distinction matters because users asking "are there run tasks?" need to kno
 ### Reading the JSON output
 
 **Task stage fields** (`task_stages[]`):
+
 - `stage` — `pre_plan`, `post_plan`, `pre_apply`, `post_apply`
 - `status` — stage-level status (can pass even when advisory tasks fail)
 - `is_overridable`, `permissions` — override capability
 
 **Task result fields** (`task_stages[].task_results[]`):
+
 - `task_name` — Name of the run task
 - `status` — `pending`, `running`, `passed`, `failed`, `errored`, `unreachable`
 - `enforcement_level` — `advisory` (warning only) or `mandatory` (blocks run)
@@ -111,6 +120,7 @@ This distinction matters because users asking "are there run tasks?" need to kno
 - `outcomes_count` — Number of outcome categories
 
 **Outcome fields** (`task_stages[].task_results[].outcomes[]`):
+
 - `outcome_id` — Category name. These vary by vendor — don't assume specific names like "Estimation" or "Policy". Present whatever categories the task returns.
 - `description` — Human-readable description
 - `tags` — Status/severity via `tags[].label == "Status"` → `tags[].value[0].label` and `tags[].label == "Severity"` → `tags[].value[0].label`
