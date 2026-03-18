@@ -92,6 +92,6 @@
   "disableAllHooks": true,
   "statusLine": {
     "type": "command",
-    "command": "bash /usr/local/bin/claude-statusline.sh"
+    "command": "bash /workspace/.claude/claude-statusline.sh"
   }
 }
