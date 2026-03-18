@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fetch run task stages and results from TFC/TFE API.
+# Fetch run task stages, results, and outcomes from TFC/TFE API.
 #
 # Usage:
 #   get-run-task-results.sh <run-id-or-url>
@@ -8,7 +8,7 @@
 #   TFE_TOKEN    - Required. API token with read access to the workspace.
 #   TFE_ADDRESS  - Optional. Defaults to https://app.terraform.io
 #
-# Output: JSON object with run task stages and their nested task results.
+# Output: JSON object with run task stages, results, outcomes, and outcome bodies.
 #
 # Example:
 #   get-run-task-results.sh run-iURWDL3wVxzefsjo
@@ -65,8 +65,7 @@ API_BASE="${TFE_BASE}/api/v2"
 
 api_get() {
   local endpoint="$1"
-  local response
-  local http_code
+  local response http_code body
 
   response=$(curl -s -w "\n%{http_code}" \
     -H "Authorization: Bearer ${TFE_TOKEN}" \
@@ -77,7 +76,7 @@ api_get() {
   body=$(echo "$response" | sed '$d')
 
   if [[ "$http_code" -ge 400 ]]; then
-    echo "Error: API returned HTTP ${http_code} for ${endpoint}" >&2
+    echo "Error: API returned HTTP ${http_code} for ${endpoint} (run: ${RUN_ID})" >&2
     echo "$body" >&2
     return 1
   fi
@@ -85,14 +84,26 @@ api_get() {
   echo "$body"
 }
 
-# --- Step 1: Fetch task stages for the run ---
+# Helper: fetch HTML body from outcome (follows redirects)
+api_get_body() {
+  local endpoint="$1"
+  local body
 
-stages_response=$(api_get "/runs/${RUN_ID}/task-stages")
+  body=$(curl -s -L \
+    -H "Authorization: Bearer ${TFE_TOKEN}" \
+    -H "Content-Type: application/vnd.api+json" \
+    "${API_BASE}${endpoint}")
+
+  echo "$body"
+}
+
+# --- Step 1: Fetch task stages with sideloaded task results ---
+
+stages_response=$(api_get "/runs/${RUN_ID}/task-stages?include=task_results")
 
 stage_count=$(echo "$stages_response" | jq '.data | length')
 
 if [[ "$stage_count" -eq 0 ]]; then
-  # Return empty result
   jq -n \
     --arg run_id "$RUN_ID" \
     --arg base "$TFE_BASE" \
@@ -100,39 +111,56 @@ if [[ "$stage_count" -eq 0 ]]; then
       run_id: $run_id,
       tfe_base: $base,
       task_stages: [],
-      summary: { total_tasks: 0, passed: 0, failed: 0, errored: 0, pending: 0 }
+      summary: { total_tasks: 0, passed: 0, failed: 0, errored: 0, pending: 0, unreachable: 0 }
     }'
   exit 0
 fi
 
-# --- Step 2: Extract task result IDs from each stage ---
+# --- Step 2: Extract task result IDs and fetch outcomes for each ---
 
-# Build a list of all task result IDs grouped by stage
 task_result_ids=$(echo "$stages_response" | jq -r '
-  .data[] |
-  .relationships["task-results"].data[]?.id // empty
+  .included[]? | select(.type == "task-results") | .id // empty
 ')
 
-# --- Step 3: Fetch each task result ---
-
-results_json="[]"
+outcomes_json="[]"
 
 for result_id in $task_result_ids; do
-  result=$(api_get "/task-results/${result_id}")
-  results_json=$(echo "$results_json" | jq --argjson r "$result" '. + [$r]')
+  # Fetch outcomes list for this task result
+  outcomes_response=$(api_get "/task-results/${result_id}/outcomes" 2>/dev/null || echo '{"data":[]}')
+
+  # For each outcome, fetch the HTML body
+  outcome_ids=$(echo "$outcomes_response" | jq -r '.data[]?.id // empty')
+
+  for outcome_id in $outcome_ids; do
+    body_html=$(api_get_body "/task-result-outcomes/${outcome_id}/body" 2>/dev/null || echo "")
+
+    # Merge HTML body into the outcome object
+    outcomes_response=$(echo "$outcomes_response" | jq \
+      --arg oid "$outcome_id" \
+      --arg html "$body_html" \
+      '(.data[] | select(.id == $oid)) += {"body_html": $html}')
+  done
+
+  # Add outcomes keyed by task result ID
+  outcomes_json=$(echo "$outcomes_json" | jq \
+    --arg rid "$result_id" \
+    --argjson outcomes "$outcomes_response" \
+    '. + [{ task_result_id: $rid, outcomes: $outcomes.data }]')
 done
 
-# --- Step 4: Assemble structured output ---
+# --- Step 3: Assemble structured output ---
 
-# Merge stages with their full task results
 output=$(jq -n \
   --arg run_id "$RUN_ID" \
   --arg base "$TFE_BASE" \
   --argjson stages "$stages_response" \
-  --argjson results "$results_json" \
+  --argjson outcomes "$outcomes_json" \
   '
-  # Index results by ID for lookup
-  ($results | map(.data) | INDEX(.id)) as $results_by_id |
+  # Index sideloaded task results by ID
+  ([$stages.included[]? | select(.type == "task-results")] | INDEX(.id)) as $results_by_id |
+
+  # Index outcomes by task result ID
+  ($outcomes | INDEX(.task_result_id)) as $outcomes_by_result |
 
   # Stage ordering
   ["pre_plan", "post_plan", "pre_apply", "post_apply"] as $stage_order |
@@ -142,11 +170,16 @@ output=$(jq -n \
     tfe_base: $base,
     task_stages: [
       $stages.data[]
-      | . as $stage
       | {
           id: .id,
           stage: .attributes.stage,
           status: .attributes.status,
+          is_overridable: (.attributes.actions["is-overridable"] // false),
+          permissions: {
+            can_override_policy: (.attributes.permissions["can-override-policy"] // false),
+            can_override_tasks: (.attributes.permissions["can-override-tasks"] // false),
+            can_override: (.attributes.permissions["can-override"] // false)
+          },
           status_timestamps: .attributes["status-timestamps"],
           created_at: .attributes["created-at"],
           updated_at: .attributes["updated-at"],
@@ -161,14 +194,28 @@ output=$(jq -n \
                 status: .attributes.status,
                 message: .attributes.message,
                 url: .attributes.url,
+                task_url: .attributes["task-url"],
                 enforcement_level: .attributes["workspace-task-enforcement-level"],
                 stage: .attributes.stage,
                 is_speculative: .attributes["is-speculative"],
                 task_id: .attributes["task-id"],
                 workspace_task_id: .attributes["workspace-task-id"],
+                outcomes_count: (.attributes["task-result-outcomes-count"] // 0),
                 status_timestamps: .attributes["status-timestamps"],
                 created_at: .attributes["created-at"],
-                updated_at: .attributes["updated-at"]
+                updated_at: .attributes["updated-at"],
+                outcomes: (
+                  ($outcomes_by_result[$rid].outcomes // [])
+                  | map({
+                      id: .id,
+                      outcome_id: .attributes["outcome-id"],
+                      description: .attributes.description,
+                      tags: .attributes.tags,
+                      url: .attributes.url,
+                      body_html: (.body_html // null),
+                      created_at: .attributes["created-at"]
+                    })
+                )
               }
           ]
         }
@@ -177,14 +224,12 @@ output=$(jq -n \
         .stage as $s | $stage_order | to_entries[] | select(.value == $s) | .key
       ),
     summary: {
-      total_tasks: ([
-        $stages.data[].relationships["task-results"].data[]?
-      ] | length),
-      passed: ([$results[].data | select(.attributes.status == "passed")] | length),
-      failed: ([$results[].data | select(.attributes.status == "failed")] | length),
-      errored: ([$results[].data | select(.attributes.status == "errored")] | length),
-      pending: ([$results[].data | select(.attributes.status == "pending")] | length),
-      unreachable: ([$results[].data | select(.attributes.status == "unreachable")] | length)
+      total_tasks: ([$stages.included[]? | select(.type == "task-results")] | length),
+      passed: ([$stages.included[]? | select(.type == "task-results") | select(.attributes.status == "passed")] | length),
+      failed: ([$stages.included[]? | select(.type == "task-results") | select(.attributes.status == "failed")] | length),
+      errored: ([$stages.included[]? | select(.type == "task-results") | select(.attributes.status == "errored")] | length),
+      pending: ([$stages.included[]? | select(.type == "task-results") | select(.attributes.status == "pending")] | length),
+      unreachable: ([$stages.included[]? | select(.type == "task-results") | select(.attributes.status == "unreachable")] | length)
     }
   }
 ')

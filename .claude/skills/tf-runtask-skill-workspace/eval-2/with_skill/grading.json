@@ -1,0 +1,85 @@
+{
+  "expectations": [
+    {
+      "text": "The script was executed with the invalid run ID",
+      "passed": true,
+      "evidence": "Transcript Step 3 shows: 'Bash `bash scripts/get-run-task-results.sh run-NONEXISTENT12345 2>&1`' — the script was executed with the exact invalid run ID from the eval prompt."
+    },
+    {
+      "text": "The output clearly communicates that the run was not found or an error occurred",
+      "passed": true,
+      "evidence": "The script output includes 'Error: API returned HTTP 404 for /runs/run-NONEXISTENT12345/task-stages' and the final result section states 'The Terraform Cloud/Enterprise API returned HTTP 404 (not found), which means the run ID does not exist or the API token does not have access to the workspace containing this run.'"
+    },
+    {
+      "text": "The error does not crash silently — it provides actionable feedback",
+      "passed": true,
+      "evidence": "The final result includes a 'Possible causes' section listing three actionable items: (1) the run ID does not exist, (2) the TFE_TOKEN lacks read access, (3) the TFE_ADDRESS points to the wrong instance. The script exited with code 1 (non-zero), confirming it did not silently succeed."
+    },
+    {
+      "text": "No fabricated task results are shown",
+      "passed": true,
+      "evidence": "The transcript states 'Output Files: None created (the script errored before producing JSON output)'. No task results, task names, statuses, or any other fabricated data appear anywhere in the transcript or outputs."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 3,
+      "Write": 3,
+      "Bash": 2,
+      "Edit": 0,
+      "Glob": 0,
+      "Grep": 0
+    },
+    "total_tool_calls": 8,
+    "total_steps": 3,
+    "errors_encountered": 1,
+    "output_chars": 2767,
+    "transcript_chars": 2507
+  },
+  "claims": [
+    {
+      "claim": "The API returned HTTP 404 for the nonexistent run ID",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Transcript Step 3 shows the script output containing 'Error: API returned HTTP 404 for /runs/run-NONEXISTENT12345/task-stages' with the JSON error body '{\"errors\":[{\"status\":\"404\",\"title\":\"not found\"}]}'"
+    },
+    {
+      "claim": "The script exited with code 1",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Transcript Step 3 states 'The script exited with code 1'"
+    },
+    {
+      "claim": "The script requires $TFE_TOKEN and uses curl and jq",
+      "type": "process",
+      "verified": false,
+      "evidence": "Claimed in Step 2 after reading the script, but not directly verifiable from the execution output alone. Plausible given the script ran and made an API call."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "The script was executed with the invalid run ID",
+        "reason": "This assertion is straightforward and appropriately verifiable. No issues."
+      },
+      {
+        "reason": "Consider adding an assertion that checks the script exit code is non-zero. The current assertions cover the human-readable error message but not the programmatic signal. A tool in a pipeline would rely on the exit code, not the message text."
+      },
+      {
+        "reason": "An assertion like 'The error message includes the invalid run ID' would verify the error is specific rather than generic — currently the actionable feedback assertion implicitly covers this, but making it explicit would be more discriminating."
+      }
+    ],
+    "overall": "The assertions are well-targeted for this error-handling scenario. They cover execution, error communication, actionability, and absence of hallucinated data. Minor improvements could add exit-code verification and run-ID specificity in the error output."
+  }
+}
