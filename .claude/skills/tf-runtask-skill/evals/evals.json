@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Check the run tasks for run-iURWDL3wVxzefsjo",
-      "expected_output": "A structured markdown table showing the post-plan task stage with Apptio-Cloudability task result, including its failed status, advisory enforcement, and cost diff message",
+      "expected_output": "A structured markdown showing the post-plan task stage with Apptio-Cloudability task result including outcomes (Estimation, Policy, Recommendation)",
       "files": [],
       "assertions": [
         "The output includes a markdown table with run task results",
@@ -14,7 +14,10 @@
         "The message about cost diff (Total Cost before/after) is shown",
         "The stage 'post_plan' or 'Post-Plan' is identified",
         "The overall stage status 'passed' is shown (stage passed despite advisory failure)",
-        "The script scripts/get-run-task-results.sh was executed to fetch the data"
+        "The script scripts/get-run-task-results.sh was executed to fetch the data",
+        "The table row count matches the actual number of task results (1 task)",
+        "Outcomes are shown: Estimation (Passed), Policy (Failed), and Recommendation (Passed)",
+        "The JSON artifact was saved to the outputs directory"
       ]
     },
     {
@@ -25,21 +28,37 @@
       "assertions": [
         "The run ID 'run-iURWDL3wVxzefsjo' was correctly extracted from the URL",
         "The script scripts/get-run-task-results.sh was called with either the URL or extracted run ID",
-        "The output shows task results in a structured format (table or clear listing)",
+        "The output shows task results in a structured format (table or clear listing) with non-empty data rows",
         "The Apptio-Cloudability task and its failed/advisory status are displayed",
-        "The cost information from the message field is presented"
+        "The cost information from the message field is presented",
+        "Outcomes for the task result are shown with their status tags"
       ]
     },
     {
       "id": 3,
       "prompt": "Show me the run task results for run-NONEXISTENT12345",
-      "expected_output": "An error message indicating the run was not found or the API returned a 404",
+      "expected_output": "An error message indicating the run was not found or the API returned a 404, including the run ID in the error",
       "files": [],
       "assertions": [
-        "The script was executed with the invalid run ID",
+        "The script was executed with the invalid run ID run-NONEXISTENT12345",
         "The output clearly communicates that the run was not found or an error occurred",
+        "The error message includes the specific run ID 'run-NONEXISTENT12345'",
         "The error does not crash silently — it provides actionable feedback",
-        "No fabricated task results are shown"
+        "No fabricated task results are shown",
+        "The script exits with a non-zero exit code (the error is propagated, not swallowed)"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Check the run task results for run-hGthAq8Kuv5wcKZq in the hashi-demos-apj org. If there are no run tasks, let me know.",
+      "expected_output": "Either structured run task results if the run has tasks, or a clear message that the run has no run tasks configured. The skill should handle both cases gracefully.",
+      "files": [],
+      "assertions": [
+        "The script scripts/get-run-task-results.sh was executed with the run ID",
+        "If task_stages is empty, the output clearly states no run tasks are configured",
+        "If task_stages is non-empty, the output shows structured results with task names and statuses",
+        "The summary counts (total_tasks, passed, failed) are displayed",
+        "No errors or crashes occurred during execution"
       ]
     }
   ]
