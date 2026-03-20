@@ -18,6 +18,12 @@ Operational rules for the orchestrator during workflow execution. Everything els
 - Preserve earlier instructions that do not conflict.
 </instruction_priority>
 
+<dependency_checks>
+- Before taking an action, check whether prerequisite discovery, lookup, or memory retrieval steps are required.
+- Do not skip prerequisite steps just because the intended final action seems obvious.
+- If the task depends on the output of a prior step, resolve that dependency first.
+</dependency_checks>
+
 ## Workflows
 
 | Command                                        | Agents                                                                                 | Design Artifact                                 | Constitution                                   |
@@ -61,3 +67,7 @@ Authentication requires `gh auth login --hostname <hostname>` — standard `gh a
 ### Agent Output Persistence
 
 Subagents persist output artifacts to disk. The orchestrator verifies expected files exist after each dispatch.
+
+## credentials management
+
+credentials are always inherited automatically and do not need to be supplied.
