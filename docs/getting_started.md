@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Terraform Agentic Workflows** is a development template that uses AI agents to build production-ready Terraform code through **Spec-Driven Development (SDD)** — a 4-phase workflow: Clarify, Design, Implement, Validate.
+**Terraform Agentic Workflows** is a development template that uses AI agents to build production-ready Terraform code through **Spec-Driven Development (SDD)** — a structured workflow: Clarify, Design, Review, Implement, Validate, PR.
 
 It supports three core use cases:
 
@@ -33,7 +33,8 @@ Install the **Dev Containers** extension in VS Code (`ms-vscode-remote.remote-co
 
 - **GitHub** account with a [fine-grained personal access token](#1-github-fine-grained-personal-access-token)
 - **HCP Terraform** account with a [Team API token](#2-hcp-terraform-setup)
-- **AWS** account (credentials managed via HCP Terraform, not locally)
+- **AWS** account (you do not need AWS CLI or local credentials — all AWS access flows through HCP Terraform workspace variables)
+- **Claude Code** subscription — authenticate via `claude login` inside the devcontainer, or set `ANTHROPIC_API_KEY` in your shell profile
 
 ---
 
@@ -61,10 +62,11 @@ Fine-grained tokens provide scoped access with granular permissions. Classic tok
 
 6. Click **Generate token** and copy it immediately
 
-**Export the token:**
+**Export the token** (and add to your shell profile so it persists across sessions):
 
 ```bash
 export GITHUB_TOKEN="github_pat_your_token_here"
+# Add the line above to ~/.zshrc or ~/.bashrc for persistence
 ```
 
 ### 2. HCP Terraform Setup
@@ -85,22 +87,22 @@ The template uses HCP Terraform for remote execution, state management, and work
 
 **Project Access:**
 
-| Permission | Required |
-|------------|----------|
-| Read | Yes |
-| Create Workspaces | Yes |
-| Delete Workspaces | Yes |
+| Permission | Required | Why |
+|------------|----------|-----|
+| Read | Yes | List and view project workspaces |
+| Create Workspaces | Yes | Consumer workflows create sandbox workspaces |
+| Delete Workspaces | Yes | Clean up sandbox workspaces after testing |
 
 **Workspace Permissions:**
 
-| Permission | Required |
-|------------|----------|
-| Read Variables | Yes |
-| Read State | Yes |
-| Write State | Yes |
-| Download Sentinel Mocks | Yes |
-| Manage Workspace Run Tasks | Yes |
-| Lock/Unlock Workspaces | Yes |
+| Permission | Required | Why |
+|------------|----------|-----|
+| Read Variables | Yes | Inspect workspace configuration |
+| Read State | Yes | Access state for planning and validation |
+| Write State | Yes | Apply changes to workspace state |
+| Download Sentinel Mocks | Yes | Policy testing support |
+| Manage Workspace Run Tasks | Yes | Configure run task integrations |
+| Lock/Unlock Workspaces | Yes | Prevent concurrent modifications during runs |
 
 #### Generate Team API Token
 
@@ -110,11 +112,14 @@ The template uses HCP Terraform for remote execution, state management, and work
 
 > **Important:** This must be a **Team API Token**, not a user or organization token. The devcontainer maps `TEAM_TFE_TOKEN` to `TFE_TOKEN` automatically.
 
-**Export the token:**
+**Export the token** (and add to your shell profile so it persists across sessions):
 
 ```bash
 export TEAM_TFE_TOKEN="your_terraform_team_token_here"
+# Add the line above to ~/.zshrc or ~/.bashrc for persistence
 ```
+
+> **Day 2 Operations:** If you plan to use the [consumer module uplift pipeline](#day-2-operations--consumer-module-uplift), also configure a `TFE_TOKEN_DEPENDABOT` repository secret (Settings -> Secrets and variables -> Dependabot) with read-only access to the private module registry.
 
 ### 3. AWS Credentials
 
@@ -141,33 +146,21 @@ See: [Dynamic Provider Credentials](https://developer.hashicorp.com/terraform/cl
 
 ### 4. Shell Configuration
 
-Add the tokens to your shell profile so the devcontainer can access them.
-
-**Bash** (`~/.bashrc` or `~/.bash_profile`):
+Verify that both tokens are in your shell profile (`~/.zshrc` or `~/.bashrc`) so the devcontainer can access them:
 
 ```bash
-# GitHub Fine-Grained Personal Access Token
+# ~/.zshrc or ~/.bashrc
 export GITHUB_TOKEN="github_pat_your_token_here"
-
-# HCP Terraform Team Token
 export TEAM_TFE_TOKEN="your_terraform_team_token_here"
+
+# Optional: Vault Radar secret scanning in pre-commit hooks
+# export VAULT_RADAR_LICENSE="your_license_here"
 ```
 
-**Zsh** (`~/.zshrc`):
-
-```zsh
-# GitHub Fine-Grained Personal Access Token
-export GITHUB_TOKEN="github_pat_your_token_here"
-
-# HCP Terraform Team Token
-export TEAM_TFE_TOKEN="your_terraform_team_token_here"
-```
-
-Reload your shell:
+Reload your shell after editing:
 
 ```bash
-source ~/.bashrc   # Bash
-source ~/.zshrc    # Zsh
+source ~/.zshrc    # or: source ~/.bashrc
 ```
 
 ---
@@ -187,12 +180,12 @@ git clone https://github.com/YOUR_ORG/your-new-repo.git
 code your-new-repo
 ```
 
-When VS Code opens, it will detect the devcontainer configuration and prompt you to **Reopen in Container**. The repository includes two devcontainer variants — choose the one that matches your setup:
+When VS Code opens, it will detect the devcontainer configuration and prompt you to **Reopen in Container**. The repository includes two devcontainer variants:
 
 | Variant | Path | Use when |
 |---------|------|----------|
-| `claude-code` | `.devcontainer/claude-code/` | Using Claude Code CLI (recommended) |
-| `vscode-agent` | `.devcontainer/vscode-agent/` | Using VS Code Copilot agent |
+| `claude-code` | `.devcontainer/claude-code/` | You have a Claude Code subscription (recommended for this template) |
+| `vscode-agent` | `.devcontainer/vscode-agent/` | You use GitHub Copilot as your AI coding assistant |
 
 The devcontainer includes all required tools pre-installed:
 
@@ -250,7 +243,16 @@ Configure [branch protection rules](https://docs.github.com/en/repositories/conf
 - `Trivy IaC Security Scan`
 - `Validate Examples`
 
-> **Note:** The `validate.yml` workflow must be triggered on `pull_request` events for these to appear as required status checks. The `no-commit-to-branch` pre-commit hook provides additional local protection against direct commits to `main`.
+> **Important:** The template ships `validate.yml` with a `workflow_dispatch` trigger only. You must add a `pull_request` trigger for these to run automatically on PRs and appear as required status checks. Add this to the `on:` block:
+>
+> ```yaml
+> on:
+>   pull_request:
+>     branches: [main]
+>   workflow_dispatch:
+> ```
+>
+> The `no-commit-to-branch` pre-commit hook (included in the template's `.pre-commit-config.yaml`) provides additional local protection against direct commits to `main`.
 >
 > **References:**
 > - [Managing branch protection rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-a-branch-protection-rule/managing-a-branch-protection-rule)
@@ -258,15 +260,32 @@ Configure [branch protection rules](https://docs.github.com/en/repositories/conf
 > - [Required status checks](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-a-branch-protection-rule/troubleshooting-required-status-checks)
 
 
+### 5. Try Your First Workflow
+
+Once validation passes, open the Claude Code terminal and run your first workflow:
+
+```bash
+# Start the module authoring workflow — the agent will ask you what to build
+/tf-module-plan
+```
+
+The agent walks you through clarification questions, researches AWS docs and provider resources, then produces a design document in `specs/`. When you're ready to implement:
+
+```bash
+/tf-module-implement
+```
+
+This writes tests first (TDD), builds the module to pass them, and runs the full quality pipeline.
+
 ---
 
 ## Core Workflows
 
-All three workflows follow the same 4-phase SDD structure. Start any workflow by typing the slash command in Claude Code.
+All three workflows follow the same SDD structure. Start any workflow by typing the slash command in Claude Code.
 
 ### Module Authoring
 
-Create reusable Terraform modules with raw resources, secure defaults, and comprehensive tests.
+Create reusable Terraform modules with direct provider resources (not module wrappers), secure defaults, and comprehensive tests.
 
 | Aspect | Detail |
 |--------|--------|
@@ -286,8 +305,10 @@ Create reusable Terraform modules with raw resources, secure defaults, and compr
 
 1. **Clarify** — Gather requirements, ask clarification questions, research AWS docs and provider resources
 2. **Design** — Produce `specs/{feature}/design.md` with architecture, interfaces, security controls, test scenarios
-3. **Implement** — Write tests first (TDD), then build resources to pass them
-4. **Validate** — Run `terraform fmt`, `validate`, `test`, `tflint`, `trivy`, `terraform-docs`
+3. **Human Review** — Approve the design before any code is written
+4. **Implement** — Write tests first (TDD), then build resources to pass them
+5. **Validate** — Run `terraform fmt`, `validate`, `test`, `tflint`, `trivy`, `terraform-docs`
+6. **PR** — Create a pull request with the implementation for final review
 
 ### Provider Development
 
@@ -311,8 +332,10 @@ Build Terraform Provider resources using HashiCorp's Plugin Framework.
 
 1. **Clarify** — Research cloud service APIs, Plugin Framework patterns, existing providers
 2. **Design** — Produce `specs/{feature}/provider-design-{resource}.md` with schema, CRUD logic, error handling
-3. **Implement** — Write test stubs first, then implement CRUD methods
-4. **Validate** — Run `go test`, `golangci-lint`, acceptance tests
+3. **Human Review** — Approve the design before any code is written
+4. **Implement** — Write test stubs first, then implement CRUD methods
+5. **Validate** — Run `go test`, `golangci-lint`, acceptance tests
+6. **PR** — Create a pull request with the implementation for final review
 
 ### Consumer Provisioning
 
@@ -336,8 +359,10 @@ Compose infrastructure from private registry modules and deploy to HCP Terraform
 
 1. **Clarify** — Research available private registry modules, wiring patterns, workspace config
 2. **Design** — Produce `specs/{feature}/consumer-design.md` with module selection, wiring, security
-3. **Implement** — Compose modules, configure workspace, deploy to sandbox
-4. **Validate** — Run `pre-commit`, verify deployment, create PR
+3. **Human Review** — Approve the design before any code is written
+4. **Implement** — Compose modules, configure workspace, deploy to sandbox
+5. **Validate** — Run `pre-commit`, verify deployment
+6. **PR** — Create a pull request with the implementation for final review
 
 > **Note:** Consumer code uses **only** private registry modules. Raw resources are prohibited except glue resources (`random_id`, `null_resource`, `terraform_data`). Module versions must use pessimistic constraints (`~> X.Y`).
 
@@ -373,15 +398,18 @@ Dependabot PR → Classify → Validate → Risk Assessment → Decision
 | **Plan fails** | Breaking (high) | Breaking (critical) |
 
 5. **Decision** — Labels the PR and acts:
-   - **Auto-merge** — Squash merge immediately
+   - **Auto-close** — No actual plan changes (Dependabot bumped version but nothing differs); close the PR
+   - **Auto-merge** — Squash merge immediately (adds-only with patch/minor bump)
    - **Needs-review** — Post analysis comment, request human review
    - **Breaking-change** — Block merge, trigger `@claude` remediation agent
 
 ### Agent Remediation
 
-When a breaking change is detected or the plan fails, `@claude review and make a recommendation` is posted on the PR, triggering the **module-upgrade-remediation** agent:
+When a breaking change is detected or the plan fails, the pipeline posts `@claude review and make a recommendation` as a PR comment. This triggers the `terraform-claude-review.yml` workflow, which invokes the **module-upgrade-remediation** agent. (Requires [Claude for GitHub](https://github.com/apps/claude) or equivalent app installed on the repository.)
 
-1. Fetches the **old and new module interfaces** from the private registry via MCP
+The agent:
+
+1. Fetches the **old and new module interfaces** from the private registry via [MCP](#mcp-servers)
 2. Identifies missing inputs, removed outputs, type changes
 3. Fixes the consumer `.tf` files (adds required inputs, updates output references)
 4. Pushes the fix — the pipeline **re-runs automatically** on the adapted code
@@ -442,7 +470,7 @@ Configured in `.pre-commit-config.yaml`, installed automatically by `validate-en
 | `check-added-large-files` | Reject files > 500 KB |
 | `check-merge-conflict` | Detect conflict markers |
 | `detect-private-key` | Prevent credential commits |
-| `no-commit-to-branch` | Protect `main` from direct commits |
+| `no-commit-to-branch` | Protect `main` from direct commits (included in template) |
 | `vault-radar-scan` | HashiCorp Vault Radar secret scanning |
 
 ### TFLint
@@ -453,7 +481,7 @@ Configured in `.tflint.hcl` with three plugins and full rule coverage:
 |--------|---------|-------|
 | AWS | 0.46.0 | Auto-enabled resource validation + `aws_resource_missing_tags` |
 | Azure | 0.31.1 | Auto-enabled resource validation |
-| Terraform | Built-in | All 20 rules explicitly configured |
+| Terraform | Built-in | All 20 rules explicitly configured (19 enabled, 1 disabled) |
 
 ### Constitutions
 
