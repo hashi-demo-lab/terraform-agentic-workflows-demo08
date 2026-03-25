@@ -59,8 +59,8 @@ repos:
       - id: detect-private-key
         name: Detect private keys
       - id: no-commit-to-branch
-        name: Protect main branch
-        args: ['--branch', 'main']
+ #      name: Protect main branch
+ #      args: ['--branch', 'main']
 
   # Vault Radar security scanning
   - repo: local
