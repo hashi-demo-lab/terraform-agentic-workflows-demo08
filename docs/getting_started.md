@@ -174,7 +174,59 @@ source ~/.zshrc    # Zsh
 
 ## First Run
 
-### 5. Branch Protection (Recommended)
+### 1. Create Repository from Template
+
+1. Navigate to this repository on GitHub
+2. Click **Use this template** → **Create a new repository**
+3. Name your repository, configure visibility, and click **Create repository**
+
+### 2. Clone and Open in Devcontainer
+
+```bash
+git clone https://github.com/YOUR_ORG/your-new-repo.git
+code your-new-repo
+```
+
+When VS Code opens, it will detect the devcontainer configuration and prompt you to **Reopen in Container**. The repository includes two devcontainer variants — choose the one that matches your setup:
+
+| Variant | Path | Use when |
+|---------|------|----------|
+| `claude-code` | `.devcontainer/claude-code/` | Using Claude Code CLI (recommended) |
+| `vscode-agent` | `.devcontainer/vscode-agent/` | Using VS Code Copilot agent |
+
+The devcontainer includes all required tools pre-installed:
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Terraform | 1.14.x | Infrastructure as Code |
+| TFLint | 0.60.x | Terraform linting |
+| terraform-docs | 0.21.x | Documentation generation |
+| Trivy | Latest | Security scanning |
+| Go | 1.24.x | Provider development |
+| GitHub CLI | Latest | Repository operations |
+| Vault Radar | 0.43.x | Secret detection |
+| Claude Code | Latest | AI agent orchestration |
+| Infracost | 0.10.x | Cost estimation |
+| Checkov | Latest | Policy-as-code scanning |
+| golangci-lint | 2.10.x | Go linting (provider development) |
+| pre-commit | Latest | Git hook management |
+
+### 3. Validate Environment
+
+Run the environment validation script to confirm everything is configured:
+
+```bash
+bash .foundations/scripts/bash/validate-env.sh
+```
+
+The script classifies checks as:
+
+- **GATE** — Must pass to proceed (TFE_TOKEN, GITHUB_TOKEN, Terraform, GitHub CLI)
+- **WARN** — Nice-to-have; degrades capability but doesn't block (TFLint, pre-commit, Trivy, terraform-docs)
+
+If all gates pass, the script automatically initializes TFLint and installs pre-commit hooks.
+
+### 4. Branch Protection (Recommended)
 
 Configure [branch protection rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-a-branch-protection-rule/about-protected-branches) or [repository rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets) on `main` to enforce quality gates before merge.
 
@@ -205,48 +257,6 @@ Configure [branch protection rules](https://docs.github.com/en/repositories/conf
 > - [Managing rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/managing-rulesets-for-a-repository)
 > - [Required status checks](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-a-branch-protection-rule/troubleshooting-required-status-checks)
 
-### 1. Create Repository from Template
-
-1. Navigate to this repository on GitHub
-2. Click **Use this template** → **Create a new repository**
-3. Name your repository, configure visibility, and click **Create repository**
-
-### 2. Clone and Open in Devcontainer
-
-```bash
-git clone https://github.com/YOUR_ORG/your-new-repo.git
-code your-new-repo
-```
-
-When VS Code opens, it will detect the devcontainer configuration and prompt you to **Reopen in Container**. Click it.
-
-The devcontainer includes all required tools pre-installed:
-
-| Tool | Version | Purpose |
-|------|---------|---------|
-| Terraform | 1.14.x | Infrastructure as Code |
-| TFLint | 0.60.x | Terraform linting |
-| terraform-docs | 0.21.x | Documentation generation |
-| Trivy | Latest | Security scanning |
-| Go | 1.24.x | Provider development |
-| GitHub CLI | Latest | Repository operations |
-| Vault Radar | 0.43.x | Secret detection |
-| Claude Code | Latest | AI agent orchestration |
-
-### 3. Validate Environment
-
-Run the environment validation script to confirm everything is configured:
-
-```bash
-bash .foundations/scripts/bash/validate-env.sh
-```
-
-The script classifies checks as:
-
-- **GATE** — Must pass to proceed (TFE_TOKEN, GITHUB_TOKEN, Terraform, GitHub CLI)
-- **WARN** — Nice-to-have; degrades capability but doesn't block (TFLint, pre-commit, Trivy, terraform-docs)
-
-If all gates pass, the script automatically initializes TFLint and installs pre-commit hooks.
 
 ---
 
@@ -258,8 +268,8 @@ All three workflows follow the same 4-phase SDD structure. Start any workflow by
 
 Create reusable Terraform modules with raw resources, secure defaults, and comprehensive tests.
 
-| | |
-|---|---|
+| Aspect | Detail |
+|--------|--------|
 | **Plan & Design** | `/tf-module-plan` |
 | **Implement & Validate** | `/tf-module-implement` |
 | **Constitution** | `.foundations/memory/module-constitution.md` |
@@ -283,8 +293,8 @@ Create reusable Terraform modules with raw resources, secure defaults, and compr
 
 Build Terraform Provider resources using HashiCorp's Plugin Framework.
 
-| | |
-|---|---|
+| Aspect | Detail |
+|--------|--------|
 | **Plan & Design** | `/tf-provider-plan` |
 | **Implement & Validate** | `/tf-provider-implement` |
 | **Constitution** | `.foundations/memory/provider-constitution.md` |
@@ -308,8 +318,8 @@ Build Terraform Provider resources using HashiCorp's Plugin Framework.
 
 Compose infrastructure from private registry modules and deploy to HCP Terraform.
 
-| | |
-|---|---|
+| Aspect | Detail |
+|--------|--------|
 | **Plan & Design** | `/tf-consumer-plan` |
 | **Implement & Validate** | `/tf-consumer-implement` |
 | **Constitution** | `.foundations/memory/consumer-constitution.md` |
@@ -339,10 +349,11 @@ An automated pipeline for managing module version upgrades in consumer configura
 
 ### How It Works
 
-```
+```text
 Dependabot PR → Classify → Validate → Risk Assessment → Decision
-                                                          ├─ auto-merge (low risk)
-                                                          ├─ needs-review (medium)
+                                                          ├─ auto-close (no changes)
+                                                          ├─ auto-merge (no impact)
+                                                          ├─ needs-review (medium/high)
                                                           └─ breaking-change → @claude agent
 ```
 
@@ -353,9 +364,9 @@ Dependabot PR → Classify → Validate → Risk Assessment → Decision
 3. **Validate** — Runs `terraform fmt` → `init` → `validate` → `tflint` → `plan`
 4. **Risk Assessment** — A deterministic matrix (no AI) maps version type × plan impact to a risk level:
 
-| | Patch/Minor | Major |
-|---|---|---|
-| **No changes** | Auto-merge | Auto-merge |
+| Plan Impact | Patch/Minor | Major |
+|-------------|-------------|-------|
+| **No plan changes** | Auto-merge | Auto-merge |
 | **Adds only** | Needs review (low) | Needs review (medium) |
 | **Changes to existing** | Needs review (medium) | Needs review (high) |
 | **Destroy/Replace** | Breaking (high) | Breaking (critical) |
@@ -368,7 +379,7 @@ Dependabot PR → Classify → Validate → Risk Assessment → Decision
 
 ### Agent Remediation
 
-When a breaking change is detected, the `@claude` mention triggers the **module-upgrade-remediation** agent:
+When a breaking change is detected or the plan fails, `@claude review and make a recommendation` is posted on the PR, triggering the **module-upgrade-remediation** agent:
 
 1. Fetches the **old and new module interfaces** from the private registry via MCP
 2. Identifies missing inputs, removed outputs, type changes
@@ -392,8 +403,11 @@ After a PR is merged to `main`:
 | `.github/dependabot.yml` | Monthly scan of private Terraform registry |
 | `.github/workflows/terraform-consumer-uplift.yml` | Multi-job uplift pipeline |
 | `.github/workflows/terraform-apply.yml` | Post-merge apply workflow |
+| `.github/workflows/terraform-claude-review.yml` | Handles `@claude` mention trigger on PRs |
 | `.claude/agents/module-upgrade-remediation.md` | Claude agent for breaking change fixes |
 | `.foundations/scripts/bash/classify-version-bump.sh` | Semver classification logic |
+
+> **Note:** Dependabot requires a separate `TFE_TOKEN_DEPENDABOT` secret configured in your repository's Dependabot secrets (Settings → Secrets and variables → Dependabot). This token needs read-only access to the private module registry.
 
 ---
 
