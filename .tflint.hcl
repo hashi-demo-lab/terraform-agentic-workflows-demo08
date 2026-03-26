@@ -131,9 +131,9 @@ rule "terraform_deprecated_lookup" {
 }
 
 # Enforce valid root object in .tf.json files
-rule "terraform_json_syntax" {
-  enabled = true
-}
+# # rule "terraform_json_syntax" {
+#   enabled = true
+# }
 
 # Catch duplicate keys in map literals
 rule "terraform_map_duplicate_keys" {

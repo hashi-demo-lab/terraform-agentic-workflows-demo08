@@ -133,3 +133,65 @@ Contributions are welcome. Please open an issue to discuss proposed changes befo
 ## License
 
 This project is licensed under the [Apache License 2.0](LICENSE).
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.7 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.38.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_partition.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_action_group_definitions"></a> [action\_group\_definitions](#input\_action\_group\_definitions) | List of action group definitions. Each must specify either lambda\_arn or custom\_control for execution, and optionally api\_schema or function\_schema for the API contract. | <pre>list(object({<br/>    name                 = string<br/>    description          = optional(string, "")<br/>    lambda_arn           = optional(string)<br/>    custom_control       = optional(string)<br/>    api_schema_payload   = optional(string)<br/>    api_schema_s3_bucket = optional(string)<br/>    api_schema_s3_key    = optional(string)<br/>    function_schema      = optional(any)<br/>  }))</pre> | `[]` | no |
+| <a name="input_agent_instruction"></a> [agent\_instruction](#input\_agent\_instruction) | Instruction prompt defining agent behavior. Must be 40-20000 characters. | `string` | n/a | yes |
+| <a name="input_agent_name"></a> [agent\_name](#input\_agent\_name) | Name of the Bedrock Agent. Alphanumeric, hyphens, and underscores only. | `string` | n/a | yes |
+| <a name="input_api_throttle_burst_limit"></a> [api\_throttle\_burst\_limit](#input\_api\_throttle\_burst\_limit) | API Gateway burst request limit (concurrent requests). | `number` | `50` | no |
+| <a name="input_api_throttle_rate_limit"></a> [api\_throttle\_rate\_limit](#input\_api\_throttle\_rate\_limit) | API Gateway steady-state request rate limit (requests per second). | `number` | `100` | no |
+| <a name="input_cost_center"></a> [cost\_center](#input\_cost\_center) | Cost center code for billing attribution. Used in CostCenter tag. | `string` | n/a | yes |
+| <a name="input_enable_api_gateway"></a> [enable\_api\_gateway](#input\_enable\_api\_gateway) | Enable an HTTP API Gateway endpoint for external agent invocation with IAM authorization. | `bool` | `false` | no |
+| <a name="input_enable_code_interpreter"></a> [enable\_code\_interpreter](#input\_enable\_code\_interpreter) | Enable the code interpreter sandbox for Python code execution. | `bool` | `true` | no |
+| <a name="input_enable_knowledge_base"></a> [enable\_knowledge\_base](#input\_enable\_knowledge\_base) | Enable knowledge base for retrieval-augmented generation. Requires opensearch\_collection\_arn and knowledge\_base\_s3\_bucket\_arn. | `bool` | `false` | no |
+| <a name="input_enable_memory"></a> [enable\_memory](#input\_enable\_memory) | Enable conversation memory with session summaries for context persistence across sessions. | `bool` | `false` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | Deployment environment name. Must be one of: dev, staging, prod. | `string` | n/a | yes |
+| <a name="input_foundation_model_id"></a> [foundation\_model\_id](#input\_foundation\_model\_id) | Foundation model identifier (e.g., "anthropic.claude-3-5-sonnet-20241022-v2:0"). Model access must be enabled in the account. | `string` | n/a | yes |
+| <a name="input_guardrail_config"></a> [guardrail\_config](#input\_guardrail\_config) | Configuration to create a new guardrail. Mutually exclusive with guardrail\_id. | <pre>object({<br/>    name                      = string<br/>    blocked_input_messaging   = optional(string, "Sorry, I cannot process that request.")<br/>    blocked_outputs_messaging = optional(string, "Sorry, I cannot provide that response.")<br/>    content_filters = optional(list(object({<br/>      type            = string<br/>      input_strength  = optional(string, "HIGH")<br/>      output_strength = optional(string, "HIGH")<br/>    })), [])<br/>    topic_denials = optional(list(object({<br/>      name       = string<br/>      definition = string<br/>      examples   = optional(list(string), [])<br/>    })), [])<br/>    pii_filters = optional(list(object({<br/>      type   = string<br/>      action = optional(string, "BLOCK")<br/>    })), [])<br/>  })</pre> | `null` | no |
+| <a name="input_guardrail_id"></a> [guardrail\_id](#input\_guardrail\_id) | ID of an existing Bedrock Guardrail to associate with the agent. Mutually exclusive with guardrail\_config. | `string` | `null` | no |
+| <a name="input_guardrail_version"></a> [guardrail\_version](#input\_guardrail\_version) | Version number of the existing guardrail. Required when guardrail\_id is provided. | `string` | `null` | no |
+| <a name="input_idle_session_ttl"></a> [idle\_session\_ttl](#input\_idle\_session\_ttl) | Idle session timeout in seconds. Agent sessions are terminated after this period of inactivity. | `number` | `600` | no |
+| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | ARN of an existing KMS key for encryption at rest. If null, the module creates a KMS key with proper Bedrock service grants. | `string` | `null` | no |
+| <a name="input_knowledge_base_description"></a> [knowledge\_base\_description](#input\_knowledge\_base\_description) | Description of the knowledge base purpose. The agent uses this description to decide when to query the knowledge base. | `string` | `"Knowledge base for agent context"` | no |
+| <a name="input_knowledge_base_embedding_model"></a> [knowledge\_base\_embedding\_model](#input\_knowledge\_base\_embedding\_model) | Embedding model for knowledge base vector generation. | `string` | `"amazon.titan-embed-text-v2:0"` | no |
+| <a name="input_knowledge_base_s3_bucket_arn"></a> [knowledge\_base\_s3\_bucket\_arn](#input\_knowledge\_base\_s3\_bucket\_arn) | ARN of the S3 bucket containing knowledge base source documents. Required when enable\_knowledge\_base is true. | `string` | `null` | no |
+| <a name="input_log_retention_days"></a> [log\_retention\_days](#input\_log\_retention\_days) | CloudWatch log group retention period in days. Must be a valid CloudWatch retention value. | `number` | `90` | no |
+| <a name="input_memory_storage_days"></a> [memory\_storage\_days](#input\_memory\_storage\_days) | Number of days to retain conversation memory. Only used when memory is enabled. | `number` | `30` | no |
+| <a name="input_opensearch_collection_arn"></a> [opensearch\_collection\_arn](#input\_opensearch\_collection\_arn) | ARN of the OpenSearch Serverless collection for knowledge base vector storage. Required when enable\_knowledge\_base is true. | `string` | `null` | no |
+| <a name="input_opensearch_vector_index_name"></a> [opensearch\_vector\_index\_name](#input\_opensearch\_vector\_index\_name) | Name of the vector index in the OpenSearch Serverless collection. | `string` | `"bedrock-knowledge-base-default-index"` | no |
+| <a name="input_owner"></a> [owner](#input\_owner) | Team or individual responsible for this agent. Used in Owner tag. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | Additional tags to apply to all taggable resources. Merged with required tags; consumer tags take precedence. | `map(string)` | `{}` | no |
+
+## Outputs
+
+No outputs.
+<!-- END_TF_DOCS -->
