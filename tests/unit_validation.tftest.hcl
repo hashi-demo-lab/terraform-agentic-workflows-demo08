@@ -20,6 +20,12 @@ mock_provider "aws" {
       partition = "aws"
     }
   }
+
+  mock_data "aws_iam_policy_document" {
+    defaults = {
+      json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
+    }
+  }
 }
 
 # === Validation Errors (reject) ===
@@ -47,7 +53,7 @@ run "test_agent_instruction_above_maximum_rejected" {
   variables {
     agent_name          = "test-agent"
     foundation_model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-    agent_instruction   = join("", [for i in range(20001) : "a"])
+    agent_instruction   = format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", join("", [for i in range(1000) : "a"]), join("", [for i in range(1000) : "b"]), join("", [for i in range(1000) : "c"]), join("", [for i in range(1000) : "d"]), join("", [for i in range(1000) : "e"]), join("", [for i in range(1000) : "f"]), join("", [for i in range(1000) : "g"]), join("", [for i in range(1000) : "h"]), join("", [for i in range(1000) : "i"]), join("", [for i in range(1000) : "j"]), join("", [for i in range(1000) : "k"]), join("", [for i in range(1000) : "l"]), join("", [for i in range(1000) : "m"]), join("", [for i in range(1000) : "n"]), join("", [for i in range(1000) : "o"]), join("", [for i in range(1000) : "p"]), join("", [for i in range(1000) : "q"]), join("", [for i in range(1000) : "r"]), join("", [for i in range(1000) : "s"]), join("", [for i in range(1000) : "t"]), "x")
     environment         = "dev"
     owner               = "platform-team"
     cost_center         = "CC-1234"
@@ -269,7 +275,7 @@ run "test_agent_instruction_maximum_valid_length" {
   variables {
     agent_name          = "test-agent"
     foundation_model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-    agent_instruction   = join("", [for i in range(20000) : "a"])
+    agent_instruction   = format("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", join("", [for i in range(1000) : "a"]), join("", [for i in range(1000) : "b"]), join("", [for i in range(1000) : "c"]), join("", [for i in range(1000) : "d"]), join("", [for i in range(1000) : "e"]), join("", [for i in range(1000) : "f"]), join("", [for i in range(1000) : "g"]), join("", [for i in range(1000) : "h"]), join("", [for i in range(1000) : "i"]), join("", [for i in range(1000) : "j"]), join("", [for i in range(1000) : "k"]), join("", [for i in range(1000) : "l"]), join("", [for i in range(1000) : "m"]), join("", [for i in range(1000) : "n"]), join("", [for i in range(1000) : "o"]), join("", [for i in range(1000) : "p"]), join("", [for i in range(1000) : "q"]), join("", [for i in range(1000) : "r"]), join("", [for i in range(1000) : "s"]), join("", [for i in range(1000) : "t"]))
     environment         = "dev"
     owner               = "platform-team"
     cost_center         = "CC-1234"

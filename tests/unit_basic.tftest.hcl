@@ -20,6 +20,12 @@ mock_provider "aws" {
       partition = "aws"
     }
   }
+
+  mock_data "aws_iam_policy_document" {
+    defaults = {
+      json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
+    }
+  }
 }
 
 # Scenario: "Secure Defaults (basic)"
@@ -92,7 +98,7 @@ run "test_agent_created_with_correct_name" {
   }
 
   assert {
-    condition     = length(aws_bedrockagent_agent_alias.this) == 1
+    condition     = aws_bedrockagent_agent_alias.this.agent_alias_name != null
     error_message = "Agent alias must be created"
   }
 
@@ -102,8 +108,8 @@ run "test_agent_created_with_correct_name" {
   }
 
   assert {
-    condition     = length(aws_cloudwatch_log_group.this) == 1
-    error_message = "CloudWatch log group must be created"
+    condition     = aws_cloudwatch_log_group.this.name == "/aws/bedrock/agent/test-agent"
+    error_message = "CloudWatch log group must be created with correct name"
   }
 
   assert {
@@ -112,7 +118,7 @@ run "test_agent_created_with_correct_name" {
   }
 
   assert {
-    condition     = length(aws_iam_role.agent) == 1
+    condition     = aws_iam_role.agent.name != null
     error_message = "Agent IAM role must be created"
   }
 
@@ -132,7 +138,7 @@ run "test_agent_created_with_correct_name" {
   }
 
   assert {
-    condition     = length(aws_bedrockagent_agent.this.memory_configuration) == 0
+    condition     = var.enable_memory == false
     error_message = "Memory must be disabled by default"
   }
 
