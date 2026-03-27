@@ -116,6 +116,8 @@ This is the automated pipeline that executes on every PR targeting `main`.
 
 **Finding**: The `terraform init -backend=false` flag is critical. Without it, init would try to configure the cloud backend and fail without credentials.
 
+**Finding**: `aquasecurity/trivy-action` tags use the `v` prefix (e.g., `v0.35.0` not `0.35.0`). Older versions (< v0.29.0) have a broken transitive dependency on `aquasecurity/setup-trivy` that fails at "Set up job". Use `v0.35.0` or later.
+
 ### Phase B: Human Review
 
 ```
