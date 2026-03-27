@@ -6,6 +6,8 @@ After `/tf-module-implement` completes (code written, tests pass, validation sco
 
 This pipeline is designed to execute automatically via GitHub Actions once a PR is approved and merged by a human reviewer.
 
+**Validated**: 2026-03-27 — Full e2e run completed successfully. Module `hashi-demos-apj/bedrock-agentcore/aws` published as `v0.2.0` to PMR via automated pipeline.
+
 ---
 
 ## One-Time Setup (Per Module)
@@ -29,12 +31,16 @@ gh label create "semver:major" --color "d93f0b" --description "Major version bum
 The release workflow reads module coordinates from repository variables (not secrets) so they appear in logs for debuggability.
 
 ```bash
-gh variable set TFE_ORG --body "hashi-demos-apj"
-gh variable set TFE_MODULE --body "bedrock-agentcore"
-gh variable set TFE_PROVIDER --body "aws"
+# gh variable set requires gh >= 2.35.0; older versions need the API:
+REPO="owner/repo"
+gh api "repos/$REPO/actions/variables" -X POST -f name=TFE_ORG -f value=hashi-demos-apj
+gh api "repos/$REPO/actions/variables" -X POST -f name=TFE_MODULE -f value=bedrock-agentcore
+gh api "repos/$REPO/actions/variables" -X POST -f name=TFE_PROVIDER -f value=aws
 ```
 
 **Finding**: `TFE_TOKEN` must already exist as a **repository secret** (not a variable). This token needs `Manage Modules` permission on the HCP Terraform organization.
+
+**Lesson (from e2e)**: The `gh variable set` subcommand does not exist in older `gh` CLI versions (< 2.35.0). The devcontainer ships an older version. Use the `gh api` form shown above as a reliable fallback.
 
 **Finding**: If this repo hosts multiple modules in the future, these variables would need to become workflow-level inputs or matrix values. The current design assumes one module per repo.
 
@@ -65,10 +71,12 @@ curl -s \
 
 **Finding**: The `registry-name` must be `"private"` for PMR. The `no-code` attribute controls whether the module appears in the no-code provisioning UI — set to `false` for infrastructure modules.
 
+**Lesson (from e2e)**: After creation, the module status is `pending` until the first version is successfully published with a tarball upload. This is normal — the status transitions to `setup_complete` after the first version's tarball is accepted.
+
 ### Step 4: Verify `TFE_TOKEN` Permissions
 
 The token used in the release workflow needs:
-- **Manage Modules** — to create versions via API
+- **Manage Modules** — to create versions and upload tarballs via API
 - The token must be a **Team** or **Organization** token, not a User token, for CI reliability
 
 ```bash
@@ -78,6 +86,10 @@ curl -s \
   "https://app.terraform.io/api/v2/organizations/hashi-demos-apj/registry-modules" \
   | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'Modules visible: {len(d.get(\"data\",[]))}')"
 ```
+
+**Lesson (CRITICAL, from e2e)**: The `TFE_TOKEN` stored as a GitHub secret **must** have `Manage Modules` permission. During our e2e run, the release workflow failed with `HTTP 404` on the create-version API call because the original secret was a low-privilege token with only `Traverse` + `Create Workspaces`. The version calculator step succeeded (it only reads), but the publish step failed (it writes). Always verify the secret token can both read AND write module versions before relying on the pipeline.
+
+**Lesson (from e2e)**: The MCP-configured Terraform token (used by the `terraform` MCP server) may have different permissions than the `TFE_TOKEN` GitHub secret. These are separate tokens — verify each independently.
 
 ---
 
@@ -112,11 +124,13 @@ This is the automated pipeline that executes on every PR targeting `main`.
 
 **Finding**: Unit tests are **blocking** (unlike the reference template which uses `continue-on-error`). This means a PR cannot merge with failing tests. This is intentional — the module has 35 passing tests and we want to maintain that bar.
 
-**Finding**: `terraform-docs` with `git-push: true` will push a commit to the PR branch if `README.md` needs updating. This means the validation workflow may trigger **twice** on a fresh PR — once for the original push, and once for the docs commit. The second run is expected and lightweight.
+**Lesson (from e2e)**: `terraform-docs` with `git-push: true` pushes a commit to the PR branch if `README.md` needs updating. This caused a push conflict when we tried to push locally after the workflow had already pushed a docs commit. Always `git pull --rebase` before pushing to a branch with an active validation workflow. The workflow may also trigger a second run — the second run is expected and lightweight.
 
 **Finding**: The `terraform init -backend=false` flag is critical. Without it, init would try to configure the cloud backend and fail without credentials.
 
-**Finding**: `aquasecurity/trivy-action` tags use the `v` prefix (e.g., `v0.35.0` not `0.35.0`). Older versions (< v0.29.0) have a broken transitive dependency on `aquasecurity/setup-trivy` that fails at "Set up job". Use `v0.35.0` or later.
+**Lesson (from e2e)**: `aquasecurity/trivy-action` tags use the `v` prefix (e.g., `v0.35.0` not `0.35.0`). Using `@0.28.0` (without `v`) fails at "Set up job" with `unable to find version`. Even with the correct prefix, versions below `v0.29.0` have a broken transitive dependency on `aquasecurity/setup-trivy@v0.2.1` which also fails at "Set up job". **Use `v0.35.0` or later.** This cost two failed CI runs to diagnose.
+
+**Lesson (from e2e)**: Changes to `.py` and `.md` files do **not** trigger the validate workflow — the path filter only matches `*.tf`, `*.tfvars`, `*.tftest.hcl`. This is correct behavior but means Python script fixes require a manual `workflow_dispatch` run or must be bundled with a `.tf` change to get validated.
 
 ### Phase B: Human Review
 
@@ -138,6 +152,8 @@ This is the automated pipeline that executes on every PR targeting `main`.
 
 **Finding**: The semver label is a **human judgment call**. The automation enforces that one exists but cannot determine the correct bump level. Reviewers must verify the label matches the actual change scope. A mislabeled patch for a breaking change will silently publish a wrong version.
 
+**Lesson (from e2e)**: Adding labels via `gh pr edit --add-label` can fail on repos with legacy GitHub Projects (Classic) due to a GraphQL deprecation error. Use the REST API instead: `gh api "repos/OWNER/REPO/issues/PR_NUMBER/labels" -X POST --input - <<< '{"labels":["semver:minor"]}'`.
+
 ### Phase C: Release to PMR (`module_release.yml`)
 
 **Trigger**: `pull_request: types: [closed]` on `main` branch, gated by `github.event.pull_request.merged == true`
@@ -154,7 +170,9 @@ This is the automated pipeline that executes on every PR targeting `main`.
 │     - If no versions exist → 0.1.0                           │
 │     - Otherwise increment based on RELEASE_TYPE              │
 │  5. publish_module_version.py:                               │
-│     - POST new version to PMR API with commit SHA            │
+│     - POST new version to PMR API → get upload URL           │
+│     - Package module source as tarball (excluding .git etc)  │
+│     - PUT tarball to pre-signed upload URL                   │
 │  6. Create + push git tag (v{VERSION})                       │
 │  7. Create GitHub Release with auto-generated notes          │
 │  8. Summary with direct PMR link → GitHub Step Summary       │
@@ -167,11 +185,13 @@ This is the automated pipeline that executes on every PR targeting `main`.
 
 **Finding**: The Python version calculator queries the **PMR API** (not git tags) for the current version. This means PMR is the source of truth. If someone manually creates a git tag without publishing to PMR, the version calculator won't see it. Conversely, if PMR has a version but the git tag was deleted, the calculator will still increment correctly.
 
-**Finding (CRITICAL)**: For API-driven (non-VCS) modules, creating a version via the API returns an **upload URL**. You must then create a tarball of the module source and `PUT` it to that URL. Without the upload, the module stays in `pending` status forever. The reference template's `publish_module_version.py` only created the version record — it did not upload. Our fixed version performs all three steps: create version → package tarball → upload to pre-signed URL.
+**Lesson (CRITICAL, from e2e)**: For API-driven (non-VCS) modules, creating a version via the API returns an **upload URL**. You must then create a tarball of the module source and `PUT` it to that URL. Without the upload, the module version stays in `pending` status and the module itself stays in `pending` forever. The reference template's `publish_module_version.py` from `hashi-demo-lab/tf-module-template` **only created the version record — it did not upload the tarball**. Our fixed version performs all three steps: create version → package tarball → upload to pre-signed URL. This was the single most important fix discovered during e2e testing.
 
 **Finding**: The tarball should contain only Terraform module files (`.tf`, `modules/`, `examples/`, `tests/`, `README.md`, etc.) and exclude repo scaffolding (`.git`, `.github`, `specs`, `.claude`, `__pycache__`, `.terraform`). The upload URL is a pre-signed archivist URL that accepts `application/octet-stream`.
 
 **Finding**: The `commit-sha` attribute in the PMR API links the published version to the merge commit. This is informational only — PMR does not fetch code from GitHub. The module source is uploaded directly via the tarball.
+
+**Lesson (from e2e)**: The release workflow is re-runnable. On the first attempt it failed due to a bad `TFE_TOKEN`. After updating the secret, we re-ran the same workflow via `gh api "repos/OWNER/REPO/actions/runs/RUN_ID/rerun" -X POST` and it succeeded on the second attempt. GitHub Actions re-runs pick up updated secrets immediately.
 
 ---
 
@@ -186,20 +206,23 @@ This is the automated pipeline that executes on every PR targeting `main`.
 | `terraform validate` fails | Fix HCL errors, push |
 | Unit tests fail | Fix tests or module code, push |
 | terraform-docs push fails | Check branch protection; the action needs `contents: write` |
+| Trivy action version not found | Use `v` prefix and version `>= v0.35.0` |
 
 ### Release Fails After Merge
 
 | Failure | Recovery |
 |---------|----------|
 | No semver label on merged PR | **Cannot auto-recover.** The merged PR is closed. Manually run the version calculator and publish scripts with env vars set, or create a no-op PR with the correct label. |
-| PMR API rejects version | Check TFE_TOKEN permissions. If version already exists (409), it's a no-op. |
-| Git tag already exists | Delete the tag (`git push --delete origin v1.2.3`) and re-run the workflow. Or bump version manually. |
+| PMR API returns 404 on create-version | **Token permissions.** The `TFE_TOKEN` secret lacks `Manage Modules`. Update the secret, then re-run the workflow. |
+| PMR API rejects version (422) | Version already exists. If the tarball was uploaded, this is a no-op. If not, delete the version via API and re-run. |
+| Tarball upload fails | Check tarball size (should be < 5MB for typical modules). Re-run the workflow — the create-version step will fail with 422, so you may need to delete the pending version first. |
+| Git tag already exists | Delete the tag (`git push --delete origin v1.2.3`) and re-run the workflow. Or create the remaining artifacts (release) manually. |
 | GitHub Release creation fails | Non-critical. The module is already in PMR. Create the release manually via `gh release create`. |
 | Python dependency install fails | Pin to known-good versions in `requirements.txt`. Current pins: `requests==2.31.0`, `packaging==24.0`. |
 
 **Finding**: The most dangerous failure is a **merged PR without a semver label**. The `module_validate.yml` workflow enforces labels on PRs, but if branch protection is misconfigured (e.g., admins can merge without checks), a labelless PR can slip through. The release workflow will then fail at the "Determine Release Type" step.
 
-**Finding**: If the release workflow fails partway (e.g., PMR publish succeeds but git tag fails), re-running the workflow will attempt to publish the same version again. The PMR API returns `422` for duplicate versions. The workflow should be re-run after fixing the specific failing step, or the remaining steps (tag, release) should be done manually.
+**Lesson (from e2e)**: If the release workflow fails partway (e.g., PMR publish succeeds but git tag fails), re-running the workflow will attempt to publish the same version again. The PMR API returns `422` for duplicate versions, which causes the re-run to fail at the publish step. In this case, either delete the version via API before re-running, or complete the remaining steps (tag, release) manually.
 
 ---
 
@@ -251,21 +274,49 @@ The current pipeline assumes **one module per repository**. If this repo evolves
 
 ---
 
-## Verification Checklist
+## Lessons Learned (E2E Run 2026-03-27)
 
-After one-time setup, verify the pipeline end-to-end:
+Summary of all issues encountered during the first end-to-end validation, ordered by severity:
 
-- [ ] Semver labels exist in repository (`semver:patch`, `semver:minor`, `semver:major`)
-- [ ] Repository variables set (`TFE_ORG`, `TFE_MODULE`, `TFE_PROVIDER`)
-- [ ] `TFE_TOKEN` secret exists with Manage Modules permission
-- [ ] Module entity created in PMR (API call from Step 3)
-- [ ] PR opened with `.tf` file changes triggers `module_validate.yml`
-- [ ] Validation workflow passes all blocking steps
-- [ ] `terraform-docs` auto-commits if README needs update
-- [ ] PR merged triggers `module_release.yml`
-- [ ] Version calculated correctly (first release → `0.1.0`)
-- [ ] Module version published to PMR
-- [ ] Git tag `v0.1.0` created and pushed
-- [ ] GitHub Release `v0.1.0` created with release notes
-- [ ] Module visible at: `app.terraform.io/app/hashi-demos-apj/registry/modules/private/hashi-demos-apj/bedrock-agentcore/aws`
-- [ ] Consumer can reference: `source = "app.terraform.io/hashi-demos-apj/bedrock-agentcore/aws"` with `version = "0.1.0"`
+### Critical
+
+1. **Reference template publish script is incomplete.** The `hashi-demo-lab/tf-module-template` `publish_module_version.py` only creates a version record via the API — it does not upload the module tarball. For non-VCS (API-driven) modules, this leaves the module permanently in `pending` status. **Fix**: Our version adds tarball packaging and upload to the pre-signed archivist URL.
+
+2. **TFE_TOKEN permission mismatch.** The GitHub secret `TFE_TOKEN` had `Traverse` + `Create Workspaces` but not `Manage Modules`. The version calculator (read-only) succeeded, but the publish step (write) returned HTTP 404. **Fix**: Updated the secret with a token that has `Manage Modules` permission.
+
+### High
+
+3. **Trivy action versioning.** `aquasecurity/trivy-action` requires the `v` prefix on tags AND versions `>= v0.29.0` (older versions have a broken `setup-trivy` dependency). Cost two failed CI runs. **Fix**: Pinned to `v0.35.0`.
+
+4. **terraform-docs auto-push causes rebase conflicts.** The validation workflow pushes a docs commit to the PR branch, which means local pushes will be rejected until you pull. **Mitigation**: Always `git pull --rebase` before pushing to a branch with an active validation workflow.
+
+### Medium
+
+5. **`gh variable set` unavailable in older CLI.** The devcontainer's `gh` version doesn't have the `variable` subcommand. **Fix**: Use `gh api repos/OWNER/REPO/actions/variables -X POST` as a fallback.
+
+6. **`gh pr edit --add-label` fails with legacy Projects.** Repos with GitHub Projects (Classic) get a GraphQL deprecation error. **Fix**: Use the REST labels API directly.
+
+7. **Path filters don't cover Python scripts.** Changes to `.py` files in `.github/workflows/` don't trigger the validate workflow. Python fixes need a manual `workflow_dispatch` or must be bundled with `.tf` changes. **Consideration**: Add `'.github/workflows/*.py'` to the paths filter if Python script validation is desired.
+
+### Low
+
+8. **Release workflow is re-runnable (with caveats).** Updated secrets take effect immediately on re-run. However, if the PMR version was already created (but tarball not uploaded), re-running will fail with 422 on the create-version step. Manual cleanup needed in that case.
+
+---
+
+## Verification Checklist (Completed 2026-03-27)
+
+- [x] Semver labels exist in repository (`semver:patch`, `semver:minor`, `semver:major`)
+- [x] Repository variables set (`TFE_ORG`, `TFE_MODULE`, `TFE_PROVIDER`)
+- [x] `TFE_TOKEN` secret exists with Manage Modules permission
+- [x] Module entity created in PMR (`mod-juCA9PNWnEnE3sKo`)
+- [x] PR opened with `.tf` file changes triggers `module_validate.yml`
+- [x] Validation workflow passes all blocking steps (run `23630829470`)
+- [x] `terraform-docs` auto-commits if README needs update (commit `d19533e`)
+- [x] PR merged triggers `module_release.yml` (run `23631781611`)
+- [x] Version calculated correctly (`0.2.0` — second release after manual `0.1.0`)
+- [x] Module version published to PMR with tarball upload
+- [x] Git tag `v0.2.0` created and pushed
+- [x] GitHub Release `v0.2.0` created with auto-generated release notes
+- [x] Module visible at: `app.terraform.io/app/hashi-demos-apj/registry/modules/private/hashi-demos-apj/bedrock-agentcore/aws`
+- [x] Consumer can reference: `source = "app.terraform.io/hashi-demos-apj/bedrock-agentcore/aws"` with `version = "0.2.0"`
