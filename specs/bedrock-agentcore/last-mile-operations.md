@@ -126,6 +126,8 @@ This is the automated pipeline that executes on every PR targeting `main`.
 
 **Lesson (from e2e)**: `terraform-docs` with `git-push: true` pushes a commit to the PR branch if `README.md` needs updating. This caused a push conflict when we tried to push locally after the workflow had already pushed a docs commit. Always `git pull --rebase` before pushing to a branch with an active validation workflow. The workflow may also trigger a second run — the second run is expected and lightweight.
 
+**Lesson (IMPORTANT, from e2e)**: `terraform-docs` only manages content between `<!-- BEGIN_TF_DOCS -->` and `<!-- END_TF_DOCS -->` markers — it injects inputs, outputs, and resources there but **never touches content outside those markers**. If the README prose above the markers describes the framework/template repo rather than the module itself, that stale content will be published to PMR as the module's documentation. Consumers then see framework docs instead of module usage instructions. **The `/tf-module-implement` pipeline does not rewrite the README prose sections** — this must be done manually or added as a pipeline step. Ensure the root README is module-focused (title, features, usage examples, prerequisites, security defaults) before the first publish to PMR, since PMR ingests the full README from the uploaded tarball.
+
 **Finding**: The `terraform init -backend=false` flag is critical. Without it, init would try to configure the cloud backend and fail without credentials.
 
 **Lesson (from e2e)**: `aquasecurity/trivy-action` tags use the `v` prefix (e.g., `v0.35.0` not `0.35.0`). Using `@0.28.0` (without `v`) fails at "Set up job" with `unable to find version`. Even with the correct prefix, versions below `v0.29.0` have a broken transitive dependency on `aquasecurity/setup-trivy@v0.2.1` which also fails at "Set up job". **Use `v0.35.0` or later.** This cost two failed CI runs to diagnose.
@@ -301,6 +303,10 @@ Summary of all issues encountered during the first end-to-end validation, ordere
 ### Low
 
 8. **Release workflow is re-runnable (with caveats).** Updated secrets take effect immediately on re-run. However, if the PMR version was already created (but tarball not uploaded), re-running will fail with 422 on the create-version step. Manual cleanup needed in that case.
+
+9. **README published to PMR contained framework docs, not module docs.** `terraform-docs` only manages the `BEGIN_TF_DOCS`/`END_TF_DOCS` block — it does not rewrite the prose above it. The `/tf-module-implement` pipeline also does not update the prose README. Since PMR ingests the full README from the tarball, the first two published versions showed SDD framework content to consumers instead of module usage docs. **Fix**: Rewrote README to be module-focused before subsequent publishes. **Prevention**: Add a README rewrite step to the module implementation checklist or validate that the README title matches the module name before publishing.
+
+10. **`__pycache__`/`.pyc` files not gitignored.** Python bytecode cache files were created locally during syntax validation (`py_compile`) and left in the working tree. They were not committed only because explicit `git add` with named files was used instead of `git add .`. **Fix**: Added `__pycache__/` and `*.pyc` to `.gitignore`.
 
 ---
 
