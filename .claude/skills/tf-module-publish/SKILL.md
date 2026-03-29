@@ -2,13 +2,13 @@
 name: tf-module-publish
 description: >
   Publish a Terraform module to HCP Terraform's Private Module Registry (PMR) via GitHub Actions.
-  Covers per-module PMR setup (labels, variables, module entity, token verification), README
-  preparation, and the repeatable PR-merge-publish cycle. Use this skill when the user wants to
-  publish a module to the private registry, set up the release pipeline for a new module, configure
-  module publishing, create semver labels, or verify that the release workflow is working. Also
-  trigger when the user says things like "publish to PMR", "set up the release pipeline", "module
-  is stuck in pending", "configure module publishing", "last mile", or references the
-  module_release/module_validate GitHub Actions workflows.
+  Covers per-module PMR setup (repo naming, VCS-connected module creation, labels, variables,
+  token verification), README preparation, and the repeatable PR-merge-publish cycle. Use this
+  skill when the user wants to publish a module to the private registry, set up the release
+  pipeline for a new module, configure module publishing, create semver labels, or verify that the
+  release workflow is working. Also trigger when the user says things like "publish to PMR", "set
+  up the release pipeline", "module is stuck in pending", "configure module publishing", "last
+  mile", or references the module_release/module_validate GitHub Actions workflows.
 user-invocable: true
 argument-hint: "[module-name] - Set up and publish module to HCP Terraform PMR"
 ---
@@ -19,7 +19,9 @@ After `/tf-module-implement` produces a validated module on a feature branch, th
 
 The template repo ships with two GitHub Actions workflows that handle CI/CD:
 - `module_validate.yml` — runs on PRs (fmt, validate, tflint, trivy, unit tests, terraform-docs)
-- `module_release.yml` — runs on merge to main (version calculation, PMR publish with tarball upload, git tag, GitHub Release)
+- `module_release.yml` — runs on merge to main (version calculation, PMR version creation, git tag, GitHub Release)
+
+The module is registered in PMR as a **VCS-connected, branch-based** module. PMR is linked to the GitHub repo via GitHub App and fetches source code directly from the configured branch — no tarball upload is needed.
 
 This skill covers the **per-module setup** that those workflows depend on.
 
@@ -27,7 +29,7 @@ This skill covers the **per-module setup** that those workflows depend on.
 
 ### Step 1: Resolve module coordinates
 
-Determine the three values the release pipeline needs. These come from the module being published:
+Determine the values the release pipeline needs:
 
 - **TFE_ORG** — the HCP Terraform organization name (e.g., `hashi-demos-apj`)
 - **TFE_MODULE** — the module name, matching the Terraform naming convention (e.g., `bedrock-agentcore`)
@@ -35,7 +37,20 @@ Determine the three values the release pipeline needs. These come from the modul
 
 Derive these from the repo context — check `versions.tf` for the required provider, and ask the user for the org name if not already known.
 
-### Step 2: Create semver labels
+### Step 2: Ensure the repo follows the naming convention
+
+The repo **must** be named `terraform-{provider}-{module-name}` (e.g., `terraform-aws-bedrock-agentcore`). This is required for VCS-connected PMR modules — HCP Terraform derives the module name and provider from the repo name.
+
+If the repo needs renaming:
+```bash
+gh api "repos/OWNER/CURRENT-NAME" -X PATCH -f name="terraform-<provider>-<module-name>"
+# Update local remote
+git remote set-url origin https://github.com/OWNER/terraform-<provider>-<module-name>.git
+```
+
+GitHub automatically redirects the old URL, but local git remotes need updating.
+
+### Step 3: Create semver labels
 
 The validation workflow enforces exactly one semver label per PR. Create all three if they don't already exist:
 
@@ -45,9 +60,9 @@ gh label create "semver:minor" --color "1d76db" --description "Minor version bum
 gh label create "semver:major" --color "d93f0b" --description "Major version bump"
 ```
 
-Labels are repo-scoped — if they exist from a prior module, this is a no-op (`gh label create` errors on duplicates, safe to ignore).
+Labels are repo-scoped — `gh label create` errors on duplicates (safe to ignore).
 
-### Step 3: Set repository variables
+### Step 4: Set repository variables
 
 The release workflow reads module coordinates from repository variables (not secrets) so they appear in logs. Use the API form since `gh variable set` requires gh >= 2.35.0:
 
@@ -60,7 +75,7 @@ gh api "repos/$REPO/actions/variables" -X POST -f name=TFE_PROVIDER -f value="<p
 
 To update existing variables, use `-X PATCH` on `repos/$REPO/actions/variables/TFE_MODULE` instead of `-X POST`.
 
-### Step 4: Verify TFE_TOKEN permissions
+### Step 5: Verify TFE_TOKEN permissions
 
 The `TFE_TOKEN` GitHub secret must have **Manage Modules** permission on the HCP Terraform organization. A token with only `Traverse` or `Create Workspaces` will cause the version calculator (read-only) to succeed but the publish step (write) to fail with HTTP 404 — a confusing partial failure where the workflow reports the correct version number but then can't create it.
 
@@ -73,34 +88,53 @@ curl -s -H "Authorization: Bearer $TFE_TOKEN" \
 
 If not, confirm with the user that the secret has the right scope. This is the most common cause of release workflow failures.
 
-### Step 5: Create the module entity in PMR
+### Step 6: Create the VCS-connected module in PMR
 
-Before any version can be published, the module shell must exist in PMR. This is a one-time API call per module. The module starts in `pending` status — this is normal and resolves automatically when the first version is published with a tarball upload.
+The module must be registered in PMR with a VCS connection to the GitHub repo. This uses the **VCS endpoint** (not the plain registry-modules endpoint which creates API-driven modules without source metadata).
 
+First, find the GitHub App installation ID for the org:
+```bash
+curl -s -H "Authorization: Bearer $TFE_TOKEN" \
+  "https://app.terraform.io/api/v2/organizations/<org>/github-app-installations" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin)['data'][0]; print(f'ID: {d[\"id\"]}, Name: {d[\"attributes\"][\"name\"]}')"
+```
+
+Then create the module with VCS connection, branch-based publishing, tracking `main`:
 ```bash
 curl -s \
   -H "Authorization: Bearer $TFE_TOKEN" \
   -H "Content-Type: application/vnd.api+json" \
   -X POST \
-  "https://app.terraform.io/api/v2/organizations/<org>/registry-modules" \
+  "https://app.terraform.io/api/v2/organizations/<org>/registry-modules/vcs" \
   -d '{
     "data": {
       "type": "registry-modules",
       "attributes": {
-        "name": "<module-name>",
-        "provider": "<provider>",
-        "registry-name": "private",
+        "vcs-repo": {
+          "identifier": "<github-org>/terraform-<provider>-<module-name>",
+          "display-identifier": "<github-org>/terraform-<provider>-<module-name>",
+          "github-app-installation-id": "<ghain-xxx>",
+          "branch": "main",
+          "tags": false
+        },
         "no-code": false
       }
     }
   }'
 ```
 
-Returns `422` if the module already exists (safe to retry). Verify via `mcp__terraform__search_private_modules`.
+Key points:
+- Use the `/registry-modules/vcs` endpoint, NOT `/registry-modules` (which creates non-VCS modules)
+- `display-identifier` is required — set it to the same value as `identifier`
+- `branch: "main"` and `tags: false` configures branch-based publishing
+- The module name and provider are derived from the repo name (`terraform-{provider}-{name}`)
+- The module starts in `pending` status — it resolves when the first version is published
 
-### Step 6: Prepare the README
+Verify via `mcp__terraform__search_private_modules`. The PMR UI should now show Source, Branch, and Commit metadata.
 
-PMR ingests the full root README from the uploaded tarball. `terraform-docs` only manages content between `<!-- BEGIN_TF_DOCS -->` and `<!-- END_TF_DOCS -->` markers — everything above those markers is static prose that must be written manually.
+### Step 7: Prepare the README
+
+PMR ingests the root README directly from the VCS-connected repo. `terraform-docs` only manages content between `<!-- BEGIN_TF_DOCS -->` and `<!-- END_TF_DOCS -->` markers — everything above those markers is static prose that must be written manually.
 
 Before publishing, verify the README describes the **module**, not the template repo. It should include:
 - Module title and one-line description
@@ -111,7 +145,7 @@ Before publishing, verify the README describes the **module**, not the template 
 
 The `/tf-module-implement` pipeline does not rewrite the prose README — this step must be done explicitly.
 
-### Step 7: Add semver label and verify the pipeline
+### Step 8: Add semver label and verify the pipeline
 
 1. Add `semver:minor` label to the PR (first release). Use the REST API to avoid GitHub Projects (Classic) errors:
    ```bash
@@ -120,28 +154,20 @@ The `/tf-module-implement` pipeline does not rewrite the prose README — this s
 2. Confirm `module_validate.yml` triggers and passes
 3. If `terraform-docs` pushes a commit, run `git pull --rebase` before any local pushes
 4. After human review, merge the PR
-5. Confirm `module_release.yml` triggers, publishes to PMR, creates git tag and GitHub Release
-6. Verify via `mcp__terraform__get_private_module_details`
+5. Confirm `module_release.yml` triggers, creates version in PMR, creates git tag and GitHub Release
+6. Verify via `mcp__terraform__get_private_module_details` — confirm Source/Branch/Commit metadata is populated
 
 ## Troubleshooting
 
 ### Module stuck in `pending` status
 
-For API-driven (non-VCS) modules, creating a version returns an upload URL. A tarball of the module source must be PUT to that URL. Without the upload, the version stays in `pending` forever. The `publish_module_version.py` in the template handles this three-step flow (create version, package tarball, upload). If a version is stuck, fix manually:
+For VCS-connected modules, `pending` means no version has been published yet. Create the first version by merging a PR with a semver label. If the release workflow already ran, check the logs for errors.
 
-```bash
-# Create version and capture upload URL
-RESPONSE=$(curl -s -H "Authorization: Bearer $TFE_TOKEN" \
-  -H "Content-Type: application/vnd.api+json" -X POST \
-  "https://app.terraform.io/api/v2/organizations/<org>/registry-modules/private/<org>/<module>/<provider>/versions" \
-  -d '{"data":{"type":"registry-module-versions","attributes":{"version":"0.1.0","commit-sha":"'$(git rev-parse HEAD)'"}}}')
+For non-VCS (API-driven) modules, `pending` means a version was created but the tarball was never uploaded. This indicates the module was created via the wrong API endpoint — delete it and recreate using the `/registry-modules/vcs` endpoint (Step 6).
 
-UPLOAD_URL=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['links']['upload'])")
+### PMR shows no Source/Branch/Commit metadata
 
-# Package (exclude non-module files) and upload
-tar -czf /tmp/module.tar.gz --exclude='.git' --exclude='.github' --exclude='specs' --exclude='.claude' --exclude='__pycache__' --exclude='.terraform' .
-curl -s -H "Content-Type: application/octet-stream" -X PUT --data-binary @/tmp/module.tar.gz "$UPLOAD_URL"
-```
+The module was created via the plain `/registry-modules` endpoint (API-driven, `non_vcs`) instead of the `/registry-modules/vcs` endpoint. The `publishing-mechanism` cannot be changed after creation. Delete the module and recreate it with a VCS connection (Step 6).
 
 ### Release workflow fails at "Publish Module Version" (HTTP 404)
 
