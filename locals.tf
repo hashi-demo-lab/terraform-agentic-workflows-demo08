@@ -1,6 +1,6 @@
 locals {
   # Required tags merged with consumer-provided tags.
-  # Consumer tags take precedence via merge ordering (last map wins).
+  # Consumer tags take precedence via merge ordering (last map wins on duplicates).
   required_tags = {
     Name        = var.agent_name
     ManagedBy   = "terraform"
