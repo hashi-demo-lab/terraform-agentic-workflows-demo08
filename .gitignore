@@ -49,6 +49,9 @@ notes-during-refactoring/
 __pycache__/
 *.pyc
 
+# Trivy policy cache (downloaded at scan time)
+.cache/
+
 # OS files
 .DS_Store
 .copilot/config.json
