@@ -1,5 +1,5 @@
 output "agent_id" {
-  description = "Unique identifier of the Bedrock Agent"
+  description = "Unique identifier of the Bedrock Agent."
   value       = aws_bedrockagent_agent.this.agent_id
 }
 

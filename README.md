@@ -192,7 +192,7 @@ No modules.
 | <a name="output_agent_alias_arn"></a> [agent\_alias\_arn](#output\_agent\_alias\_arn) | Full ARN of the agent alias |
 | <a name="output_agent_alias_id"></a> [agent\_alias\_id](#output\_agent\_alias\_id) | Identifier of the agent alias used for invocation |
 | <a name="output_agent_arn"></a> [agent\_arn](#output\_agent\_arn) | Full ARN of the Bedrock Agent |
-| <a name="output_agent_id"></a> [agent\_id](#output\_agent\_id) | Unique identifier of the Bedrock Agent |
+| <a name="output_agent_id"></a> [agent\_id](#output\_agent\_id) | Unique identifier of the Bedrock Agent. |
 | <a name="output_agent_role_arn"></a> [agent\_role\_arn](#output\_agent\_role\_arn) | ARN of the IAM role used by the agent |
 | <a name="output_api_endpoint"></a> [api\_endpoint](#output\_api\_endpoint) | HTTP API Gateway endpoint URL (null when disabled) |
 | <a name="output_guardrail_id"></a> [guardrail\_id](#output\_guardrail\_id) | ID of the module-created guardrail (null when using BYO or no guardrail) |
