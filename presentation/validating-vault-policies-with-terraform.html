@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Validating Vault Policies in Terraform &mdash; A Structured Approach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Design Tokens ────────────────────────────────── */
+    :root {
+      --bg:          oklch(97.5% 0.005 55);
+      --bg-alt:      oklch(95% 0.008 55);
+      --bg-warm:     oklch(96% 0.015 80);
+      --bg-cool:     oklch(96.5% 0.008 240);
+      --bg-light:    oklch(98.5% 0.003 55);
+      --bg-dark:     oklch(15% 0.01 260);
+      --bg-code:     oklch(17% 0.015 260);
+      --text:        oklch(18% 0.01 55);
+      --text-muted:  oklch(45% 0.01 55);
+      --text-faint:  oklch(65% 0.008 55);
+      --vault-gold:  #FFD814;
+      --vault-dark:  #1A1A2E;
+      --accent:      oklch(55% 0.15 270);
+      --border:      oklch(88% 0.008 55);
+      --success:     oklch(55% 0.18 155);
+      --danger:      oklch(55% 0.2 25);
+      --warning:     oklch(70% 0.15 80);
+
+      --step-0: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --step-1: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+      --step-2: clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem);
+      --step-3: clamp(2.5rem, 1.8rem + 3.5vw, 4rem);
+      --step-hero: clamp(3rem, 2rem + 5vw, 5.5rem);
+
+      --space-xs:  clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem);
+      --space-s:   clamp(0.75rem, 0.6rem + 0.75vw, 1.25rem);
+      --space-m:   clamp(1.5rem, 1rem + 2.5vw, 3rem);
+      --space-l:   clamp(3rem, 2rem + 5vw, 6rem);
+      --space-xl:  clamp(5rem, 3rem + 10vw, 10rem);
+
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+      --measure: 65ch;
+      --code-radius: 0.75rem;
+    }
+
+    /* ── Base ──────────────────────────────────────────── */
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+      scroll-snap-type: y mandatory;
+      overflow-y: scroll;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+      font-size: var(--step-0);
+      font-weight: 400;
+      line-height: 1.65;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Outfit', system-ui, sans-serif;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    p { max-width: var(--measure); }
+
+    /* ── Progress Bar ─────────────────────────────────── */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--vault-gold), var(--accent));
+      box-shadow: 0 0 8px oklch(55% 0.15 270 / 0.4);
+      z-index: 200;
+      width: 0%;
+      transition: width 0.15s linear;
+      will-change: width;
+    }
+
+    /* ── Chapter Side Navigation ──────────────────────── */
+    .chapter-nav {
+      position: fixed;
+      right: clamp(1rem, 2vw, 2.5rem);
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      align-items: flex-end;
+    }
+
+    .chapter-nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: var(--text-faint);
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      transition: color 0.3s var(--ease-out-expo);
+    }
+
+    .chapter-nav a .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.3s var(--ease-out-expo), transform 0.3s var(--ease-out-expo);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .chapter-nav a .dot svg {
+      position: absolute;
+      inset: -4px;
+      width: calc(100% + 8px);
+      height: calc(100% + 8px);
+    }
+    .chapter-nav .dot svg circle.progress {
+      stroke-dasharray: 44;
+      stroke-dashoffset: 44;
+      transition: stroke-dashoffset 0.3s var(--ease-out-quart);
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2;
+      transform: rotate(-90deg);
+      transform-origin: center;
+    }
+
+    .chapter-nav a .label {
+      opacity: 0;
+      transform: translateX(8px);
+      transition: opacity 0.3s var(--ease-out-expo), transform 0.3s var(--ease-out-expo);
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .chapter-nav a:hover .label,
+    .chapter-nav a.active .label {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .chapter-nav a:hover .dot { background: var(--text-muted); }
+    .chapter-nav a.active .dot {
+      background: var(--accent);
+      transform: scale(1.4);
+    }
+    .chapter-nav a.active { color: var(--text); }
+
+    @media (max-width: 768px) {
+      .chapter-nav { display: none; }
+    }
+
+    /* ── Slide ────────────────────────────────────────── */
+    .slide {
+      min-height: 100vh;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: var(--space-l) 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .wrap {
+      width: min(90%, 72rem);
+      margin-inline: auto;
+      padding-inline: var(--space-s);
+    }
+
+    /* ── Reveal Animations ────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(2rem);
+      transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+    .reveal-delay-6 { transition-delay: 0.6s; }
+    .reveal-delay-7 { transition-delay: 0.7s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      html { scroll-snap-type: none; scroll-behavior: auto; }
+      .hero-word { opacity: 1 !important; transform: none !important; }
+      .scroll-hint { animation: none !important; }
+    }
+
+    /* ── Slide Backgrounds ────────────────────────────── */
+    .slide--hero        { background: var(--bg); }
+    .slide--situation   { background: var(--bg-warm); }
+    .slide--yaml        { background: var(--bg); }
+    .slide--problem     { background: var(--bg-warm); }
+    .slide--approaches  { background: var(--bg-cool); }
+    .slide--answer      { background: var(--bg); }
+    .slide--validation  { background: var(--bg-warm); }
+    .slide--policydoc   { background: var(--bg-cool); }
+    .slide--results     { background: var(--bg); }
+    .slide--summary     { background: var(--bg-alt); }
+
+    /* ── Background blending ─────────────────────────── */
+    .slide::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      background: linear-gradient(to bottom, transparent, var(--next-bg, transparent));
+      pointer-events: none;
+      z-index: 1;
+    }
+    .slide--hero::after        { --next-bg: var(--bg-warm); }
+    .slide--situation::after   { --next-bg: var(--bg); }
+    .slide--yaml::after        { --next-bg: var(--bg-warm); }
+    .slide--problem::after     { --next-bg: var(--bg-cool); }
+    .slide--approaches::after  { --next-bg: var(--bg); }
+    .slide--answer::after      { --next-bg: var(--bg-warm); }
+    .slide--validation::after  { --next-bg: var(--bg-cool); }
+    .slide--policydoc::after   { --next-bg: var(--bg); }
+    .slide--results::after     { --next-bg: var(--bg-alt); }
+    .slide--summary::after     { --next-bg: transparent; }
+
+    /* ── Hero ─────────────────────────────────────────── */
+    .hero-headline {
+      font-size: var(--step-hero);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-m);
+    }
+
+    .hero-word {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(1.5rem);
+      transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
+    }
+
+    .hero-word.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--vault-dark);
+      color: var(--vault-gold);
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.5rem 1.25rem;
+      border-radius: 2rem;
+      margin-bottom: var(--space-m);
+    }
+
+    .hero-badge svg { height: 1.2rem; }
+
+    .hero-subtitle {
+      font-size: var(--step-1);
+      color: var(--text-muted);
+      margin-bottom: var(--space-l);
+      opacity: 0;
+      transform: translateY(1.5rem);
+    }
+    .hero-subtitle.show {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
+    }
+
+    .hero-scqa {
+      display: flex;
+      gap: var(--space-s);
+      flex-wrap: wrap;
+      opacity: 0;
+    }
+    .hero-scqa.show {
+      opacity: 1;
+      transition: opacity 0.6s var(--ease-out-expo) 0.2s;
+    }
+
+    .scqa-pill {
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.35rem 1rem;
+      border-radius: 2rem;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      background: var(--bg-light);
+      transition: all 0.3s var(--ease-out-expo);
+    }
+
+    .scqa-pill[data-active="true"] {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: oklch(96% 0.015 270);
+    }
+
+    .scroll-hint {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.875rem;
+      color: var(--text-faint);
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      margin-top: var(--space-m);
+      opacity: 0;
+    }
+    .scroll-hint.show {
+      opacity: 1;
+      transition: opacity 0.6s var(--ease-out-expo);
+    }
+
+    .scroll-hint .arrow {
+      display: inline-block;
+      animation: bounce-down 2s var(--ease-out-expo) infinite;
+    }
+
+    @keyframes bounce-down {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
+    }
+
+    /* ── Section Headers ──────────────────────────────── */
+    .section-label {
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: var(--space-s);
+    }
+
+    .section-title {
+      font-size: var(--step-3);
+      font-weight: 800;
+      margin-bottom: var(--space-m);
+      max-width: 22ch;
+    }
+
+    .section-lead {
+      font-size: var(--step-1);
+      color: var(--text-muted);
+      max-width: var(--measure);
+      margin-bottom: var(--space-m);
+    }
+
+    /* ── Code Blocks ──────────────────────────────────── */
+    .code-block {
+      background: var(--bg-dark);
+      border-radius: var(--code-radius);
+      overflow: hidden;
+      margin: var(--space-s) 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(0.75rem, 0.7rem + 0.25vw, 0.9rem);
+      line-height: 1.7;
+      position: relative;
+    }
+
+    .code-block .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      background: oklch(12% 0.01 260);
+      border-bottom: 1px solid oklch(25% 0.01 260);
+    }
+
+    .code-block .code-lang {
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: oklch(60% 0.008 55);
+    }
+
+    .code-block .code-file {
+      font-size: 0.75rem;
+      color: oklch(55% 0.008 55);
+      font-weight: 500;
+    }
+
+    .code-block pre {
+      padding: 1.25rem;
+      overflow-x: auto;
+      margin: 0;
+    }
+
+    .code-block code {
+      color: oklch(85% 0.008 55);
+      font-family: inherit;
+      font-size: inherit;
+    }
+
+    /* Syntax highlighting tokens */
+    .tk-kw { color: oklch(72% 0.14 300); }      /* keywords: purple */
+    .tk-str { color: oklch(72% 0.15 155); }      /* strings: green */
+    .tk-fn { color: oklch(75% 0.15 220); }       /* functions: blue */
+    .tk-num { color: oklch(72% 0.15 55); }       /* numbers: orange */
+    .tk-cm { color: oklch(50% 0.008 55); font-style: italic; } /* comments: gray */
+    .tk-op { color: oklch(70% 0.08 55); }        /* operators */
+    .tk-type { color: oklch(72% 0.12 80); }      /* types: gold */
+    .tk-attr { color: oklch(75% 0.12 200); }     /* attributes: teal */
+    .tk-val { color: oklch(72% 0.15 155); }      /* values: green */
+    .tk-err { color: oklch(70% 0.2 25); }        /* errors: red */
+    .tk-accent { color: var(--vault-gold); font-weight: 600; }
+    .tk-dim { color: oklch(40% 0.008 55); }
+
+    .code-highlight-line {
+      background: oklch(25% 0.02 270 / 0.3);
+      display: inline-block;
+      width: 100%;
+      margin: 0 -1.25rem;
+      padding: 0 1.25rem;
+    }
+
+    /* ── Cards ────────────────────────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+      gap: var(--space-s);
+      margin-top: var(--space-m);
+    }
+
+    .card-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+      gap: var(--space-s);
+      margin-top: var(--space-m);
+    }
+
+    .card {
+      padding: var(--space-m);
+      border-radius: 0.75rem;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      transition: transform 0.3s var(--ease-out-quart), box-shadow 0.3s var(--ease-out-quart);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px oklch(0% 0 0 / 0.08);
+    }
+
+    .card h3 {
+      font-size: var(--step-1);
+      font-weight: 700;
+      margin-bottom: var(--space-xs);
+    }
+
+    .card p {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+    }
+
+    .card .card-icon {
+      font-size: 1.75rem;
+      margin-bottom: var(--space-xs);
+      line-height: 1;
+    }
+
+    /* ── Verdict badges ──────────────────────────────── */
+    .verdict {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 2rem;
+      margin-top: var(--space-xs);
+    }
+
+    .verdict--bad {
+      background: oklch(92% 0.04 25);
+      color: var(--danger);
+    }
+
+    .verdict--ok {
+      background: oklch(92% 0.04 80);
+      color: oklch(50% 0.15 80);
+    }
+
+    .verdict--good {
+      background: oklch(92% 0.04 155);
+      color: var(--success);
+    }
+
+    /* ── Approach comparison ──────────────────────────── */
+    .approach-card {
+      padding: var(--space-m);
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+      background: var(--bg-light);
+      transition: transform 0.3s var(--ease-out-quart), box-shadow 0.3s var(--ease-out-quart);
+    }
+
+    .approach-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px oklch(0% 0 0 / 0.08);
+    }
+
+    .approach-card h3 {
+      font-size: var(--step-1);
+      font-weight: 700;
+      margin-bottom: var(--space-xs);
+    }
+
+    .approach-card .pros-cons {
+      margin-top: var(--space-s);
+    }
+
+    .approach-card .pro, .approach-card .con {
+      font-size: 0.875rem;
+      padding: 0.3rem 0;
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+
+    .approach-card .pro::before {
+      content: '+';
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--success);
+      flex-shrink: 0;
+    }
+
+    .approach-card .con::before {
+      content: '\2013';
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--danger);
+      flex-shrink: 0;
+    }
+
+    /* ── Flow diagram ────────────────────────────────── */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      flex-wrap: wrap;
+      margin: var(--space-m) 0;
+    }
+
+    .flow-step {
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .flow-step--accent {
+      background: var(--vault-dark);
+      color: var(--vault-gold);
+      border-color: var(--vault-dark);
+    }
+
+    .flow-arrow {
+      font-size: 1.25rem;
+      color: var(--text-faint);
+    }
+
+    /* ── Callout ──────────────────────────────────────── */
+    .callout {
+      margin: var(--space-m) 0;
+      padding: var(--space-m);
+      border-left: 4px solid var(--accent);
+      background: oklch(93% 0.015 270 / 0.3);
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    .callout .callout-label {
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: var(--space-xs);
+    }
+
+    .callout .callout-text {
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: var(--step-2);
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .callout .callout-sub {
+      font-size: var(--step-0);
+      color: var(--text-muted);
+      margin-top: var(--space-xs);
+      max-width: var(--measure);
+    }
+
+    .callout--gold {
+      border-left-color: var(--vault-gold);
+      background: oklch(96% 0.02 80 / 0.5);
+    }
+    .callout--gold .callout-label { color: oklch(45% 0.12 80); }
+
+    .callout--danger {
+      border-left-color: var(--danger);
+      background: oklch(96% 0.015 25 / 0.3);
+    }
+    .callout--danger .callout-label { color: var(--danger); }
+
+    .callout--success {
+      border-left-color: var(--success);
+      background: oklch(96% 0.015 155 / 0.3);
+    }
+    .callout--success .callout-label { color: var(--success); }
+
+    /* ── Split layout ─────────────────────────────────── */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-m);
+      align-items: start;
+      margin-top: var(--space-m);
+    }
+
+    @media (max-width: 900px) {
+      .split { grid-template-columns: 1fr; }
+    }
+
+    /* ── Test results table ───────────────────────────── */
+    .test-grid {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: var(--space-m);
+    }
+
+    .test-row {
+      display: grid;
+      grid-template-columns: 2fr 2fr 1fr;
+      gap: var(--space-s);
+      align-items: center;
+      padding: 1rem 1.25rem;
+      border-radius: 0.5rem;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      transition: transform 0.3s var(--ease-out-quart), box-shadow 0.3s var(--ease-out-quart);
+    }
+
+    .test-row:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px oklch(0% 0 0 / 0.06);
+    }
+
+    .test-row .test-name {
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-weight: 700;
+      font-size: 0.9375rem;
+    }
+
+    .test-row .test-input {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .test-row .test-result {
+      text-align: right;
+    }
+
+    .test-pass {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--success);
+    }
+
+    @media (max-width: 768px) {
+      .test-row { grid-template-columns: 1fr; gap: 0.5rem; }
+      .test-row .test-result { text-align: left; }
+    }
+
+    /* ── Key hint ─────────────────────────────────────── */
+    .key-hint {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 0.75rem;
+      color: var(--text-faint);
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      padding: 0.35rem 1rem;
+      border-radius: 2rem;
+      z-index: 100;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .key-hint kbd {
+      display: inline-block;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 0.1rem 0.4rem;
+      font-family: inherit;
+      font-size: 0.6875rem;
+      margin: 0 0.1rem;
+    }
+
+    /* ── Inline code ──────────────────────────────────── */
+    code.inline {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85em;
+      background: oklch(92% 0.008 55);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Summary takeaways ────────────────────────────── */
+    .takeaway-list {
+      list-style: none;
+      padding: 0;
+      margin-top: var(--space-m);
+    }
+
+    .takeaway-list li {
+      padding: var(--space-s) 0;
+      border-bottom: 1px solid var(--border);
+      font-size: var(--step-0);
+      color: var(--text);
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+    }
+
+    .takeaway-list li:last-child { border-bottom: none; }
+
+    .takeaway-list .takeaway-num {
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: var(--step-2);
+      font-weight: 800;
+      color: var(--accent);
+      opacity: 0.3;
+      flex-shrink: 0;
+      width: 2.5rem;
+      text-align: right;
+    }
+
+    .takeaway-list .takeaway-text strong {
+      display: block;
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: var(--step-1);
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .takeaway-list .takeaway-text {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+    }
+
+    /* ── Explanation cards ─────────────────────────────── */
+    .explain-card {
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: var(--space-m);
+      margin: var(--space-s) 0;
+    }
+
+    .explain-card h4 {
+      font-size: var(--step-0);
+      font-weight: 700;
+      margin-bottom: var(--space-xs);
+      color: var(--accent);
+    }
+
+    .explain-card p {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Stagger list item reveals ────────────────────── */
+    .approach-card .pro,
+    .approach-card .con,
+    .takeaway-list li {
+      opacity: 0;
+      transform: translateX(-12px);
+      transition: opacity 0.4s var(--ease-out-expo), transform 0.4s var(--ease-out-expo);
+    }
+    .approach-card.visible .pro,
+    .approach-card.visible .con,
+    .takeaway-list.visible li {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .approach-card .pro,
+    .approach-card .con,
+    .takeaway-list li {
+      transition-delay: calc(var(--li-i, 0) * 80ms);
+    }
+
+    /* ── Hover effects ────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .card:hover,
+      .approach-card:hover,
+      .test-row:hover {
+        transform: none !important;
+      }
+      .approach-card .pro,
+      .approach-card .con,
+      .takeaway-list li {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+      .slide::after { display: none !important; }
+      .chapter-nav .dot svg circle.progress { transition: none !important; }
+      .hero-subtitle, .hero-scqa, .scroll-hint {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Chapter Navigation -->
+<nav class="chapter-nav" id="chapterNav" aria-label="Chapter navigation">
+  <a href="#hero" data-chapter="0"><span class="label">Start</span><span class="dot"><svg viewBox="0 0 18 18"><circle class="progress" cx="9" cy="9" r="7"/></svg></span></a>
+  <a href="#situation" data-chapter="1"><span class="label">Situation</span><span class="dot"><svg viewBox="0 0 18 18"><circle class="progress" cx="9" cy="9" r="7"/></svg></span></a>
+  <a href="#yaml" data-chapter="2"><span class="label">Current YAML</span><span class="dot"><svg viewBox="0 0 18 18"><circle class="progress" cx="9" cy="9" r="7"/></svg></span></a>
+  <a href="#problem" data-chapter="3"><span class="label">The Gap</span><span class="dot"><svg viewBox="0 0 18 18"><circle class="progress" cx="9" cy="9" r="7"/></svg></span></a>
+  <a href="#approaches" data-chapter="4"><span class="label">Approaches</span><span class="dot"><svg viewBox="0 0 18 18"><circle class="progress" cx="9" cy="9" r="7"/></svg></span></a>
+  <a href="#answer" data-chapter="5"><span class="label">The Answer</span><span class="dot"><svg viewBox="0 0 18 18"><circle class="progress" cx="9" cy="9" r="7"/></svg></span></a>
+  <a href="#validation" data-chapter="6"><span class="label">Validation</span><span class="dot"><svg viewBox="0 0 18 18"><circle class="progress" cx="9" cy="9" r="7"/></svg></span></a>
+  <a href="#policydoc" data-chapter="7"><span class="label">Policy Doc</span><span class="dot"><svg viewBox="0 0 18 18"><circle class="progress" cx="9" cy="9" r="7"/></svg></span></a>
+  <a href="#results" data-chapter="8"><span class="label">Results</span><span class="dot"><svg viewBox="0 0 18 18"><circle class="progress" cx="9" cy="9" r="7"/></svg></span></a>
+  <a href="#summary" data-chapter="9"><span class="label">Summary</span><span class="dot"><svg viewBox="0 0 18 18"><circle class="progress" cx="9" cy="9" r="7"/></svg></span></a>
+</nav>
+
+<!-- Keyboard Hint -->
+<div class="key-hint" id="keyHint">
+  <kbd>&larr;</kbd> <kbd>&rarr;</kbd> navigate &middot; <kbd>Space</kbd> advance
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- CHAPTER 1: Hero                                       -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="slide slide--hero" id="hero">
+  <div class="wrap">
+    <div class="hero-badge reveal">
+      <svg viewBox="0 0 258.56 273.8" xmlns="http://www.w3.org/2000/svg" aria-label="HashiCorp"><path d="M107.77 0 0 62.21 0 62.26 0 211.54 40.47 234.95 40.47 85.56 107.77 46.71 107.77 0Z" fill="currentColor"/><path d="M150.79 0 150.79 118.96 107.77 118.96 107.77 74.54 67.25 97.94 67.25 250.34 107.77 273.75 107.77 155.16 150.79 155.16 150.79 199.26 191.31 175.91 191.31 23.41 150.79 0Z" fill="currentColor"/><path d="M150.79 273.8 258.56 211.64 258.56 211.59 258.56 62.31 218.09 38.91 218.09 188.24 150.79 227.09 150.79 273.8Z" fill="currentColor"/></svg>
+      HashiCorp Vault + Terraform
+    </div>
+
+    <h1 class="hero-headline" id="heroHeadline">
+      <span class="hero-word">Validating</span>
+      <span class="hero-word">Vault</span>
+      <span class="hero-word">Policies</span><br>
+      <span class="hero-word">in</span>
+      <span class="hero-word">Terraform</span>
+    </h1>
+
+    <p class="hero-subtitle" id="heroSubtitle">
+      How to catch policy errors at <code class="inline">terraform plan</code> &mdash; before they ever reach Vault
+    </p>
+
+    <div class="hero-scqa" id="heroScqa">
+      <span class="scqa-pill" data-active="false" id="pill-s">Situation</span>
+      <span class="scqa-pill" data-active="false" id="pill-c">Complication</span>
+      <span class="scqa-pill" data-active="false" id="pill-a">Answer</span>
+    </div>
+
+    <div class="scroll-hint" id="scrollHint">
+      Scroll or press <kbd>&rarr;</kbd> to begin <span class="arrow">&darr;</span>
+    </div>
+  </div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- CHAPTER 2: Situation                                  -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="slide slide--situation" id="situation">
+  <div class="wrap">
+    <div class="section-label reveal">Situation</div>
+    <h2 class="section-title reveal reveal-delay-1">Consumer teams define their own Vault configuration</h2>
+
+    <p class="section-lead reveal reveal-delay-2">
+      Teams submit namespace configuration as YAML files in a Git repository. Terraform parses these files, transforms them into resources, and deploys them to Vault.
+    </p>
+
+    <div class="flow reveal reveal-delay-3">
+      <div class="flow-step">Team YAML Config</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step">Git Commit</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step">Terraform Plan</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step flow-step--accent">Vault Deploy</div>
+    </div>
+
+    <div class="callout--gold callout reveal reveal-delay-4">
+      <div class="callout-label">The Goal</div>
+      <div class="callout-text">Validate configs at Git commit &amp; before deploy</div>
+      <div class="callout-sub">Using Terraform input validation rules, we can already validate YAML structure. Policies are the remaining gap.</div>
+    </div>
+
+    <div class="explain-card reveal reveal-delay-5">
+      <h4>What is <code class="inline">yamldecode()</code>?</h4>
+      <p>A built-in Terraform function that converts a YAML string into a native Terraform object (maps, lists, strings). This lets Terraform inspect and validate the data inside YAML files at plan time &mdash; no external tools needed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- CHAPTER 3: Current YAML format                        -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="slide slide--yaml" id="yaml">
+  <div class="wrap">
+    <div class="section-label reveal">Situation &mdash; Current State</div>
+    <h2 class="section-title reveal reveal-delay-1">Policies today live as raw HCL strings</h2>
+
+    <div class="split">
+      <div>
+        <p class="reveal reveal-delay-2" style="color: var(--text-muted); margin-bottom: var(--space-s);">
+          Consumer teams embed Vault policy HCL directly in their YAML configuration files via <code class="inline">inline_policies</code>. The HCL is a plain string &mdash; Terraform passes it through without inspection.
+        </p>
+
+        <div class="code-block reveal reveal-delay-3">
+          <div class="code-header">
+            <span class="code-lang">YAML</span>
+            <span class="code-file">team_config.yaml</span>
+          </div>
+          <pre><code><span class="tk-attr">jwt_roles_access</span><span class="tk-op">:</span>
+  - <span class="tk-attr">role_name</span><span class="tk-op">:</span> <span class="tk-str">my_role1</span>
+    <span class="tk-attr">jwt_type</span><span class="tk-op">:</span> <span class="tk-str">gitlab</span>
+    <span class="tk-attr">inline_policies</span><span class="tk-op">: |</span>
+<span class="code-highlight-line">      <span class="tk-cm"># This is an opaque string to Terraform</span></span>
+<span class="code-highlight-line">      <span class="tk-kw">path</span> <span class="tk-str">"/kv/data/secret1"</span> {</span>
+<span class="code-highlight-line">        <span class="tk-attr">capabilities</span> = [<span class="tk-str">"read"</span>]</span>
+<span class="code-highlight-line">      }</span>
+  - <span class="tk-attr">role_name</span><span class="tk-op">:</span> <span class="tk-str">my_role2</span>
+    <span class="tk-attr">jwt_type</span><span class="tk-op">:</span> <span class="tk-str">gitlab</span>
+    <span class="tk-attr">inline_policies</span><span class="tk-op">: |</span>
+      <span class="tk-kw">path</span> <span class="tk-str">"/kv/data/secret2"</span> {
+        <span class="tk-attr">capabilities</span> = [<span class="tk-str">"read"</span>]
+      }</code></pre>
+        </div>
+      </div>
+
+      <div>
+        <div class="callout--danger callout reveal reveal-delay-4">
+          <div class="callout-label">The Problem</div>
+          <div class="callout-text">Terraform cannot see inside this string</div>
+          <div class="callout-sub">After <code class="inline">yamldecode()</code>, the policy is just a string like <code class="inline">"path \"/kv/data/secret1\" { capabilities = [\"read\"] }"</code>. Terraform has no way to check if the HCL is valid, if capabilities are real, or if paths are allowed.</div>
+        </div>
+
+        <div class="explain-card reveal reveal-delay-5">
+          <h4>What is an HCL string?</h4>
+          <p>HCL (HashiCorp Configuration Language) is the syntax Vault uses for ACL policies. When embedded in YAML via the <code class="inline">|</code> pipe operator, it becomes a multi-line string. Terraform sees it as plain text &mdash; it doesn't parse the HCL grammar inside.</p>
+        </div>
+
+        <div class="explain-card reveal reveal-delay-6">
+          <h4>Why does this matter?</h4>
+          <p>Errors in the policy string &mdash; typos like <code class="inline">"reade"</code> instead of <code class="inline">"read"</code>, or dangerous paths like <code class="inline">sys/auth/*</code> &mdash; won't be caught until Vault tries to apply them, which may be too late.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- CHAPTER 4: The HCL Parsing Gap                        -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="slide slide--problem" id="problem">
+  <div class="wrap">
+    <div class="section-label reveal">Complication</div>
+    <h2 class="section-title reveal reveal-delay-1">Terraform has no <code class="inline">hcldecode()</code></h2>
+
+    <p class="section-lead reveal reveal-delay-2">
+      Terraform provides decode functions for YAML and JSON, but nothing for HCL. Policy strings remain opaque &mdash; a blind spot in our validation pipeline.
+    </p>
+
+    <div class="card-grid-3 reveal reveal-delay-3">
+      <div class="card" style="border-top: 3px solid var(--success);">
+        <div class="card-icon">&check;</div>
+        <h3><code class="inline">yamldecode()</code></h3>
+        <p>Parses YAML into native Terraform objects. We use this to read consumer configs. Works perfectly for structured data.</p>
+        <div class="verdict verdict--good">Available</div>
+      </div>
+      <div class="card" style="border-top: 3px solid var(--success);">
+        <div class="card-icon">&check;</div>
+        <h3><code class="inline">jsondecode()</code></h3>
+        <p>Parses JSON into native Terraform objects. Could work for policies &mdash; if consumers rewrote them in JSON.</p>
+        <div class="verdict verdict--good">Available</div>
+      </div>
+      <div class="card" style="border-top: 3px solid var(--danger);">
+        <div class="card-icon">&cross;</div>
+        <h3><code class="inline">hcldecode()</code></h3>
+        <p>Does not exist. No built-in way to parse HCL policy strings into structured data that Terraform can validate.</p>
+        <div class="verdict verdict--bad">Does Not Exist</div>
+      </div>
+    </div>
+
+    <div class="callout reveal reveal-delay-4">
+      <div class="callout-label">What We Want to Catch</div>
+      <div class="callout-text" style="font-size: var(--step-1);">Three categories of policy errors &mdash; all before Vault sees them</div>
+      <div class="callout-sub" style="margin-top: var(--space-s);">
+        <strong>Syntax errors</strong> &mdash; malformed HCL or JSON<br>
+        <strong>Structural errors</strong> &mdash; missing capabilities, invalid nesting<br>
+        <strong>Data errors</strong> &mdash; invalid capabilities like "reade", disallowed path prefixes like "sys/auth/*"
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- CHAPTER 5: The Approaches                             -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="slide slide--approaches" id="approaches">
+  <div class="wrap">
+    <div class="section-label reveal">Complication &mdash; Evaluated Approaches</div>
+    <h2 class="section-title reveal reveal-delay-1">Three approaches, none ideal</h2>
+
+    <div class="card-grid-3">
+      <div class="approach-card reveal reveal-delay-2">
+        <h3>A. Rewrite as JSON</h3>
+        <p style="font-size: 0.9375rem; color: var(--text-muted);">Have consumers write policies in JSON instead of HCL, then use <code class="inline">jsondecode()</code> to parse and validate.</p>
+        <div class="pros-cons">
+          <div class="pro" style="--li-i: 0">Uses native Terraform functions</div>
+          <div class="pro" style="--li-i: 1">No external dependencies</div>
+          <div class="con" style="--li-i: 2">JSON is harder to read than HCL for policies</div>
+          <div class="con" style="--li-i: 3">Forces consumers to learn a new format</div>
+          <div class="con" style="--li-i: 4">Vault docs/examples all use HCL</div>
+        </div>
+        <div class="verdict verdict--ok" style="margin-top: var(--space-s);">Workable But Awkward</div>
+      </div>
+
+      <div class="approach-card reveal reveal-delay-3">
+        <h3>B. External HCL&rarr;JSON Tool</h3>
+        <p style="font-size: 0.9375rem; color: var(--text-muted);">Keep HCL policies but use an external tool (e.g., <code class="inline">hcl2json</code>) to convert to JSON at plan time, then validate.</p>
+        <div class="pros-cons">
+          <div class="pro" style="--li-i: 0">Consumers keep writing HCL</div>
+          <div class="pro" style="--li-i: 1">Can validate after conversion</div>
+          <div class="con" style="--li-i: 2">Requires external runtime dependency</div>
+          <div class="con" style="--li-i: 3">Breaks pure <code class="inline">terraform plan</code></div>
+          <div class="con" style="--li-i: 4">CI/CD must install the tool</div>
+          <div class="con" style="--li-i: 5">Version/compatibility risks</div>
+        </div>
+        <div class="verdict verdict--bad" style="margin-top: var(--space-s);">Too Many Dependencies</div>
+      </div>
+
+      <div class="approach-card reveal reveal-delay-4">
+        <h3>C. Regex Parsing</h3>
+        <p style="font-size: 0.9375rem; color: var(--text-muted);">Parse HCL policy strings using Terraform's <code class="inline">regex()</code> function to extract paths and capabilities.</p>
+        <div class="pros-cons">
+          <div class="pro" style="--li-i: 0">No external tools</div>
+          <div class="pro" style="--li-i: 1">No format changes for consumers</div>
+          <div class="con" style="--li-i: 2">HCL syntax is too complex for regex</div>
+          <div class="con" style="--li-i: 3">Can't handle comments, multi-line, nesting</div>
+          <div class="con" style="--li-i: 4">Fragile &mdash; breaks on edge cases</div>
+          <div class="con" style="--li-i: 5">Can't validate semantics</div>
+        </div>
+        <div class="verdict verdict--bad" style="margin-top: var(--space-s);">Fragile &amp; Unreliable</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- CHAPTER 6: The Answer                                 -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="slide slide--answer" id="answer">
+  <div class="wrap">
+    <div class="section-label reveal">Answer</div>
+    <h2 class="section-title reveal reveal-delay-1">Restructure the data model entirely</h2>
+
+    <p class="section-lead reveal reveal-delay-2">
+      Instead of parsing HCL inside Terraform, <strong>don't pass HCL strings through Terraform at all</strong>. Define policies as structured YAML objects that Terraform can natively type-check.
+    </p>
+
+    <div class="split">
+      <div>
+        <div class="code-block reveal reveal-delay-3">
+          <div class="code-header">
+            <span class="code-lang">YAML</span>
+            <span class="code-file">team_example.yaml &mdash; new format</span>
+          </div>
+          <pre><code><span class="tk-attr">team_name</span><span class="tk-op">:</span> <span class="tk-str">"example-team"</span>
+
+<span class="tk-attr">jwt_roles</span><span class="tk-op">:</span>
+  - <span class="tk-attr">role_name</span><span class="tk-op">:</span> <span class="tk-str">example-app1</span>
+    <span class="tk-attr">jwt_type</span><span class="tk-op">:</span> <span class="tk-str">gitlab</span>
+    <span class="tk-attr">bound_claims</span><span class="tk-op">:</span>
+      <span class="tk-attr">namespace_id</span><span class="tk-op">:</span> <span class="tk-str">"12345"</span>
+<span class="code-highlight-line">    <span class="tk-accent">policy_rules</span><span class="tk-op">:</span></span>
+<span class="code-highlight-line">      - <span class="tk-attr">path</span><span class="tk-op">:</span> <span class="tk-str">"kv/data/teams/example-team/*"</span></span>
+<span class="code-highlight-line">        <span class="tk-attr">capabilities</span><span class="tk-op">:</span> [<span class="tk-str">"read"</span>, <span class="tk-str">"list"</span>]</span>
+<span class="code-highlight-line">      - <span class="tk-attr">path</span><span class="tk-op">:</span> <span class="tk-str">"kv/metadata/teams/example-team/*"</span></span>
+<span class="code-highlight-line">        <span class="tk-attr">capabilities</span><span class="tk-op">:</span> [<span class="tk-str">"list"</span>]</span></code></pre>
+        </div>
+      </div>
+
+      <div>
+        <div class="callout--success callout reveal reveal-delay-4">
+          <div class="callout-label">Key Insight</div>
+          <div class="callout-text">Policies become data, not strings</div>
+          <div class="callout-sub">After <code class="inline">yamldecode()</code>, each policy rule is a Terraform object with typed fields: <code class="inline">path</code> is a string, <code class="inline">capabilities</code> is a list. Terraform can validate every field natively.</div>
+        </div>
+
+        <div class="explain-card reveal reveal-delay-5">
+          <h4>What changed?</h4>
+          <p>Instead of <code class="inline">inline_policies: |</code> (a raw HCL string), we now have <code class="inline">policy_rules:</code> (a list of objects). Each object has a <code class="inline">path</code> and <code class="inline">capabilities</code> array &mdash; structured data that Terraform understands.</p>
+        </div>
+
+        <div class="explain-card reveal reveal-delay-6">
+          <h4>But who generates the actual HCL for Vault?</h4>
+          <p>The <code class="inline">vault_policy_document</code> data source takes structured input and generates valid HCL policy text. Terraform handles the HCL generation &mdash; consumers never write it.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- CHAPTER 7: Validation Rules                           -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="slide slide--validation" id="validation">
+  <div class="wrap">
+    <div class="section-label reveal">Answer &mdash; Validation Layer</div>
+    <h2 class="section-title reveal reveal-delay-1">Five validation rules, zero external tools</h2>
+
+    <p class="section-lead reveal reveal-delay-2">
+      Terraform <code class="inline">variable</code> validation blocks run during <code class="inline">plan</code>, before any API calls. Each rule uses native Terraform functions &mdash; <code class="inline">contains()</code>, <code class="inline">startswith()</code>, <code class="inline">alltrue()</code>.
+    </p>
+
+    <div class="code-block reveal reveal-delay-3">
+      <div class="code-header">
+        <span class="code-lang">Terraform</span>
+        <span class="code-file">modules/consumer_validation/variables.tf</span>
+      </div>
+      <pre><code><span class="tk-cm"># Validate: capabilities must be from Vault's allowed set</span>
+<span class="tk-kw">validation</span> {
+  <span class="tk-attr">condition</span> = <span class="tk-fn">alltrue</span>([
+    <span class="tk-kw">for</span> p <span class="tk-kw">in</span> var.consumer_config_paths : <span class="tk-fn">alltrue</span>(<span class="tk-fn">flatten</span>([
+      <span class="tk-kw">for</span> role <span class="tk-kw">in</span> <span class="tk-fn">yamldecode</span>(<span class="tk-fn">file</span>(<span class="tk-str">"${path.module}/${p}"</span>))[<span class="tk-str">"jwt_roles"</span>] : [
+        <span class="tk-kw">for</span> rule <span class="tk-kw">in</span> role[<span class="tk-str">"policy_rules"</span>] : [
+          <span class="tk-kw">for</span> cap <span class="tk-kw">in</span> rule[<span class="tk-str">"capabilities"</span>] :
+<span class="code-highlight-line">          <span class="tk-fn">contains</span>([<span class="tk-str">"create"</span>,<span class="tk-str">"read"</span>,<span class="tk-str">"update"</span>,<span class="tk-str">"delete"</span>,<span class="tk-str">"list"</span>,<span class="tk-str">"sudo"</span>,<span class="tk-str">"deny"</span>], cap)</span>
+        ]
+      ]
+    ]))
+  ])
+  <span class="tk-attr">error_message</span> = <span class="tk-fn">format</span>(
+    <span class="tk-str">"Invalid capability detected. Allowed: create, read, ... Found: %s"</span>,
+    <span class="tk-fn">join</span>(<span class="tk-str">", "</span>, <span class="tk-fn">distinct</span>(<span class="tk-fn">flatten</span>([<span class="tk-cm">/* identifies the bad values */</span>])))
+  )
+}</code></pre>
+    </div>
+
+    <div class="card-grid reveal reveal-delay-4" style="grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));">
+      <div class="card">
+        <h3 style="font-size: var(--step-0);">Structural</h3>
+        <p style="font-size: 0.8125rem;">Every role has &ge;1 rule, every rule has &ge;1 capability</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size: var(--step-0);">Capability Check</h3>
+        <p style="font-size: 0.8125rem;">All capabilities from Vault's allowed set (create, read, update&hellip;)</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size: var(--step-0);">Path Prefix</h3>
+        <p style="font-size: 0.8125rem;">Paths must start with allowed prefixes (kv/data/, kv/metadata/&hellip;)</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size: var(--step-0);">Security</h3>
+        <p style="font-size: 0.8125rem;">No <code class="inline">sudo</code> on wildcard paths &mdash; prevents privilege escalation</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size: var(--step-0);">Naming</h3>
+        <p style="font-size: 0.8125rem;">Role names must be 3&ndash;64 chars, alphanumeric with hyphens</p>
+      </div>
+    </div>
+
+    <div class="explain-card reveal reveal-delay-5">
+      <h4>How do <code class="inline">validation</code> blocks work?</h4>
+      <p>Each <code class="inline">validation</code> block on a <code class="inline">variable</code> has a <code class="inline">condition</code> (must be <code class="inline">true</code>) and an <code class="inline">error_message</code>. They run during <code class="inline">terraform plan</code> &mdash; before resources are created. If any condition is <code class="inline">false</code>, the plan fails immediately with the error message. Multiple validation blocks on the same variable run in order.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- CHAPTER 8: vault_policy_document                      -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="slide slide--policydoc" id="policydoc">
+  <div class="wrap">
+    <div class="section-label reveal">Answer &mdash; HCL Generation</div>
+    <h2 class="section-title reveal reveal-delay-1">vault_policy_document generates the HCL for you</h2>
+
+    <div class="split">
+      <div>
+        <p class="reveal reveal-delay-2" style="color: var(--text-muted); margin-bottom: var(--space-s);">
+          The <code class="inline">vault_policy_document</code> data source is the bridge between structured data and Vault. It takes <code class="inline">rule</code> blocks as input and outputs valid HCL policy text via the <code class="inline">.hcl</code> attribute.
+        </p>
+
+        <div class="code-block reveal reveal-delay-3">
+          <div class="code-header">
+            <span class="code-lang">Terraform</span>
+            <span class="code-file">modules/consumer_validation/main.tf</span>
+          </div>
+          <pre><code><span class="tk-cm"># Generate Vault policy HCL from structured rules</span>
+<span class="tk-kw">data</span> <span class="tk-str">"vault_policy_document"</span> <span class="tk-str">"consumer_policies"</span> {
+  <span class="tk-attr">for_each</span> = local.all_roles
+
+  <span class="tk-kw">dynamic</span> <span class="tk-str">"rule"</span> {
+    <span class="tk-attr">for_each</span> = each.value.policy_rules
+    <span class="tk-kw">content</span> {
+<span class="code-highlight-line">      <span class="tk-attr">path</span>         = rule.value[<span class="tk-str">"path"</span>]</span>
+<span class="code-highlight-line">      <span class="tk-attr">capabilities</span> = rule.value[<span class="tk-str">"capabilities"</span>]</span>
+    }
+  }
+}
+
+<span class="tk-cm"># Create the actual Vault policies</span>
+<span class="tk-kw">resource</span> <span class="tk-str">"vault_policy"</span> <span class="tk-str">"consumer_policies"</span> {
+  <span class="tk-attr">for_each</span> = local.all_roles
+
+  <span class="tk-attr">name</span>   = each.key
+<span class="code-highlight-line">  <span class="tk-attr">policy</span> = <span class="tk-fn">data</span>.vault_policy_document.consumer_policies[each.key].<span class="tk-accent">hcl</span></span>
+}</code></pre>
+        </div>
+      </div>
+
+      <div>
+        <div class="code-block reveal reveal-delay-4">
+          <div class="code-header">
+            <span class="code-lang">HCL</span>
+            <span class="code-file">Generated output &rarr; Vault</span>
+          </div>
+          <pre><code><span class="tk-cm"># Managed by consumer config</span>
+<span class="tk-kw">path</span> <span class="tk-str">"kv/data/teams/example-team/*"</span> {
+  <span class="tk-attr">capabilities</span> = [<span class="tk-str">"read"</span>, <span class="tk-str">"list"</span>]
+}
+
+<span class="tk-cm"># Managed by consumer config</span>
+<span class="tk-kw">path</span> <span class="tk-str">"kv/metadata/teams/example-team/*"</span> {
+  <span class="tk-attr">capabilities</span> = [<span class="tk-str">"list"</span>]
+}</code></pre>
+        </div>
+
+        <div class="explain-card reveal reveal-delay-5">
+          <h4>What is a <code class="inline">data</code> source?</h4>
+          <p>A Terraform <code class="inline">data</code> source reads or computes information without creating infrastructure. <code class="inline">vault_policy_document</code> runs locally during plan &mdash; it doesn't call the Vault API. It converts structured input into the exact HCL format Vault expects.</p>
+        </div>
+
+        <div class="explain-card reveal reveal-delay-6">
+          <h4>What is <code class="inline">dynamic "rule"</code>?</h4>
+          <p>The <code class="inline">dynamic</code> block generates repeated nested blocks from a list. Instead of writing each <code class="inline">rule {}</code> block by hand, it loops over <code class="inline">policy_rules</code> from the YAML and creates one <code class="inline">rule</code> per entry. This is how structured YAML data flows into the policy document.</p>
+        </div>
+
+        <div class="callout--success callout reveal reveal-delay-7" style="margin-top: var(--space-s);">
+          <div class="callout-label">Double Validation</div>
+          <div class="callout-text" style="font-size: var(--step-1);">vault_policy_document also validates capabilities internally</div>
+          <div class="callout-sub">Even if someone bypassed our variable validation, this data source would reject invalid capabilities &mdash; a second safety layer for free.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- CHAPTER 9: Test Results                               -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="slide slide--results" id="results">
+  <div class="wrap">
+    <div class="section-label reveal">Answer &mdash; Proof</div>
+    <h2 class="section-title reveal reveal-delay-1">Tested end-to-end against live Vault</h2>
+
+    <p class="section-lead reveal reveal-delay-2">
+      Every validation rule was tested with intentionally bad input. All errors caught at <code class="inline">terraform plan</code> &mdash; nothing reached Vault.
+    </p>
+
+    <div class="test-grid">
+      <div class="test-row reveal reveal-delay-2">
+        <div class="test-name">Capability typo</div>
+        <div class="test-input">"reade" instead of "read"</div>
+        <div class="test-result"><span class="test-pass"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="oklch(92% 0.04 155)"/><path d="M5 8l2 2 4-4" stroke="oklch(55% 0.18 155)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Rejected</span></div>
+      </div>
+      <div class="test-row reveal reveal-delay-3">
+        <div class="test-name">Disallowed path</div>
+        <div class="test-input">sys/auth/* (sensitive endpoint)</div>
+        <div class="test-result"><span class="test-pass"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="oklch(92% 0.04 155)"/><path d="M5 8l2 2 4-4" stroke="oklch(55% 0.18 155)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Rejected</span></div>
+      </div>
+      <div class="test-row reveal reveal-delay-4">
+        <div class="test-name">Sudo on wildcard</div>
+        <div class="test-input">["read", "sudo"] on kv/data/*</div>
+        <div class="test-result"><span class="test-pass"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="oklch(92% 0.04 155)"/><path d="M5 8l2 2 4-4" stroke="oklch(55% 0.18 155)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Rejected</span></div>
+      </div>
+      <div class="test-row reveal reveal-delay-5">
+        <div class="test-name">Empty capabilities</div>
+        <div class="test-input">capabilities: []</div>
+        <div class="test-result"><span class="test-pass"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="oklch(92% 0.04 155)"/><path d="M5 8l2 2 4-4" stroke="oklch(55% 0.18 155)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Rejected</span></div>
+      </div>
+      <div class="test-row reveal reveal-delay-6">
+        <div class="test-name">Invalid role name</div>
+        <div class="test-input">"a" (too short, 1 char)</div>
+        <div class="test-result"><span class="test-pass"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="oklch(92% 0.04 155)"/><path d="M5 8l2 2 4-4" stroke="oklch(55% 0.18 155)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Rejected</span></div>
+      </div>
+      <div class="test-row reveal reveal-delay-7" style="border: 1px solid oklch(80% 0.04 155);">
+        <div class="test-name">Valid config</div>
+        <div class="test-input">team_example.yaml &rarr; 2 policies</div>
+        <div class="test-result"><span class="test-pass" style="color: oklch(45% 0.12 155)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="oklch(85% 0.06 155)"/><path d="M5 8l2 2 4-4" stroke="oklch(40% 0.18 155)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Deployed to Vault</span></div>
+      </div>
+    </div>
+
+    <div class="code-block reveal reveal-delay-7" style="margin-top: var(--space-m);">
+      <div class="code-header">
+        <span class="code-lang">Shell</span>
+        <span class="code-file">Actual terraform plan error output</span>
+      </div>
+      <pre><code><span class="tk-err">Error: Invalid value for variable</span>
+
+  on modules/consumer_validation/variables.tf line 25:
+
+<span class="tk-accent">Invalid capability detected.</span> Allowed capabilities: create, read,
+update, delete, list, sudo, deny, subscribe, patch.
+<span class="tk-err">Found invalid: reade</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- CHAPTER 10: Summary                                   -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="slide slide--summary" id="summary">
+  <div class="wrap">
+    <div class="section-label reveal">Summary</div>
+    <h2 class="section-title reveal reveal-delay-1">The structured approach eliminates the parsing gap</h2>
+
+    <ul class="takeaway-list">
+      <li class="reveal reveal-delay-2" style="--li-i: 0">
+        <span class="takeaway-num">01</span>
+        <div class="takeaway-text">
+          <strong>Restructure, don't parse</strong>
+          Replace raw HCL strings with structured YAML objects (<code class="inline">path</code> + <code class="inline">capabilities</code>). Terraform validates data it understands &mdash; don't ask it to parse a language it can't read.
+        </div>
+      </li>
+      <li class="reveal reveal-delay-3" style="--li-i: 1">
+        <span class="takeaway-num">02</span>
+        <div class="takeaway-text">
+          <strong>Variable validation runs at plan time</strong>
+          Five validation rules catch syntax, structural, data, and security errors before any Vault API call. Each rule uses only native Terraform functions.
+        </div>
+      </li>
+      <li class="reveal reveal-delay-4" style="--li-i: 2">
+        <span class="takeaway-num">03</span>
+        <div class="takeaway-text">
+          <strong>vault_policy_document bridges the gap</strong>
+          This data source converts structured input into valid HCL policy text. It also validates capabilities internally &mdash; a second safety layer for free.
+        </div>
+      </li>
+      <li class="reveal reveal-delay-5" style="--li-i: 3">
+        <span class="takeaway-num">04</span>
+        <div class="takeaway-text">
+          <strong>Zero external dependencies</strong>
+          No Python scripts, no <code class="inline">hcl2json</code>, no shell exec. Pure Terraform. Works identically in every CI/CD environment.
+        </div>
+      </li>
+      <li class="reveal reveal-delay-6" style="--li-i: 4">
+        <span class="takeaway-num">05</span>
+        <div class="takeaway-text">
+          <strong>Migration is a one-time cost</strong>
+          Existing HCL policies can be converted to the structured format with a simple script. New consumers never write HCL &mdash; they define structured rules and Terraform handles the rest.
+        </div>
+      </li>
+    </ul>
+
+    <div class="flow reveal reveal-delay-7" style="margin-top: var(--space-l);">
+      <div class="flow-step">Structured YAML</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step">yamldecode()</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step">Variable Validation</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step">vault_policy_document</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step flow-step--accent">vault_policy</div>
+    </div>
+  </div>
+</section>
+
+<script>
+  /* ── Scroll-Driven Progress Bar ──────────────────────── */
+  const progressBar = document.getElementById('progressBar');
+  const slides = document.querySelectorAll('.slide');
+
+  function updateProgress() {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+    progressBar.style.width = progress + '%';
+  }
+
+  /* ── Chapter Navigation ──────────────────────────────── */
+  const chapterNav = document.getElementById('chapterNav');
+  const navLinks = chapterNav.querySelectorAll('a');
+
+  function updateChapterNav() {
+    const scrollCenter = window.scrollY + window.innerHeight / 2;
+    let activeIndex = 0;
+
+    slides.forEach((slide, i) => {
+      const rect = slide.getBoundingClientRect();
+      const slideTop = rect.top + window.scrollY;
+      if (scrollCenter >= slideTop) activeIndex = i;
+    });
+
+    navLinks.forEach((link, i) => {
+      link.classList.toggle('active', i === activeIndex);
+      const circle = link.querySelector('circle.progress');
+      if (circle) {
+        circle.style.strokeDashoffset = i <= activeIndex ? '0' : '44';
+      }
+    });
+
+    // Update SCQA pills
+    const pillS = document.getElementById('pill-s');
+    const pillC = document.getElementById('pill-c');
+    const pillA = document.getElementById('pill-a');
+
+    if (pillS) pillS.dataset.active = activeIndex >= 1 && activeIndex <= 2;
+    if (pillC) pillC.dataset.active = activeIndex >= 3 && activeIndex <= 4;
+    if (pillA) pillA.dataset.active = activeIndex >= 5;
+  }
+
+  /* ── IntersectionObserver Reveal ─────────────────────── */
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.reveal, .approach-card, .takeaway-list').forEach(el => {
+    revealObserver.observe(el);
+  });
+
+  /* ── Set staggered list item delays ──────────────────── */
+  document.querySelectorAll('.approach-card .pro, .approach-card .con').forEach((li, i) => {
+    const parent = li.closest('.approach-card');
+    const siblings = parent.querySelectorAll('.pro, .con');
+    const index = Array.from(siblings).indexOf(li);
+    li.style.setProperty('--li-i', index);
+  });
+
+  document.querySelectorAll('.takeaway-list li').forEach((li, i) => {
+    li.style.setProperty('--li-i', i);
+  });
+
+  /* ── Hero Animation Sequence ─────────────────────────── */
+  window.addEventListener('load', () => {
+    const badge = document.querySelector('.hero-badge');
+    const words = document.querySelectorAll('.hero-word');
+    const subtitle = document.getElementById('heroSubtitle');
+    const scqa = document.getElementById('heroScqa');
+    const hint = document.getElementById('scrollHint');
+
+    if (badge) setTimeout(() => badge.classList.add('visible'), 200);
+    words.forEach((word, i) => {
+      setTimeout(() => word.classList.add('show'), 400 + i * 120);
+    });
+    if (subtitle) setTimeout(() => subtitle.classList.add('show'), 1200);
+    if (scqa) setTimeout(() => scqa.classList.add('show'), 1600);
+    if (hint) setTimeout(() => hint.classList.add('show'), 2000);
+  });
+
+  /* ── Keyboard Navigation ─────────────────────────────── */
+  document.addEventListener('keydown', (e) => {
+    const slideArray = Array.from(slides);
+    const scrollCenter = window.scrollY + window.innerHeight / 2;
+    let currentIndex = 0;
+
+    slideArray.forEach((slide, i) => {
+      if (scrollCenter >= slide.offsetTop) currentIndex = i;
+    });
+
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      const next = Math.min(currentIndex + 1, slideArray.length - 1);
+      slideArray[next].scrollIntoView({ behavior: 'smooth' });
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = Math.max(currentIndex - 1, 0);
+      slideArray[prev].scrollIntoView({ behavior: 'smooth' });
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      slideArray[0].scrollIntoView({ behavior: 'smooth' });
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      slideArray[slideArray.length - 1].scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+
+  /* ── Scroll event listener ───────────────────────────── */
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        updateProgress();
+        updateChapterNav();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  /* ── Initial state ───────────────────────────────────── */
+  updateProgress();
+  updateChapterNav();
+</script>
+
+</body>
+</html>
