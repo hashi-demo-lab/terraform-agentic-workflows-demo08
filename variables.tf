@@ -60,12 +60,12 @@ variable "cost_center" {
 
 variable "idle_session_ttl" {
   type        = number
-  description = "Idle session timeout in seconds. Agent sessions are terminated after this period of inactivity."
+  description = "Idle session timeout in seconds. Agent sessions are terminated after this period of inactivity. Increase for long-running analytical or multi-step agent workflows."
   default     = 600
 
   validation {
-    condition     = var.idle_session_ttl >= 60 && var.idle_session_ttl <= 3600
-    error_message = "idle_session_ttl must be between 60 and 3600 seconds."
+    condition     = var.idle_session_ttl >= 60 && var.idle_session_ttl <= 7200
+    error_message = "idle_session_ttl must be between 60 and 7200 seconds (1 minute to 2 hours)."
   }
 }
 
