@@ -64,8 +64,8 @@ variable "idle_session_ttl" {
   default     = 600
 
   validation {
-    condition     = var.idle_session_ttl >= 60 && var.idle_session_ttl <= 3600
-    error_message = "idle_session_ttl must be between 60 and 3600 seconds."
+    condition     = var.idle_session_ttl >= 60 && var.idle_session_ttl <= 7200
+    error_message = "idle_session_ttl must be between 60 and 7200 seconds."
   }
 }
 
