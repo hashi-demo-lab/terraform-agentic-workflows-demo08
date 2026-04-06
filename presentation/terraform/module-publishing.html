@@ -1,0 +1,2797 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Publishing Terraform Modules to HCP Terraform PMR</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: oklch(97.5% 0.005 280);
+        --bg-alt: oklch(95% 0.008 280);
+        --bg-warm: oklch(96% 0.012 300);
+        --bg-cool: oklch(96.5% 0.01 220);
+        --bg-light: oklch(98.5% 0.003 280);
+        --bg-dark: oklch(15% 0.01 260);
+        --text: oklch(18% 0.01 280);
+        --text-muted: oklch(45% 0.01 280);
+        --text-faint: oklch(65% 0.008 280);
+        --hcp-purple: oklch(55% 0.2 290);
+        --hcp-teal: oklch(62% 0.14 195);
+        --hcp-dark: #1b1834;
+        --accent: oklch(55% 0.2 290);
+        --border: oklch(88% 0.008 280);
+        --success: oklch(55% 0.18 155);
+        --danger: oklch(55% 0.2 25);
+        --warning: oklch(70% 0.15 80);
+        --step-0: clamp(0.9rem, 0.85rem + 0.25vw, 1.0625rem);
+        --step-1: clamp(1.15rem, 1rem + 0.5vw, 1.35rem);
+        --step-2: clamp(1.5rem, 1.2rem + 1.25vw, 2.1rem);
+        --step-3: clamp(2rem, 1.5rem + 2.5vw, 3.2rem);
+        --step-hero: clamp(2.75rem, 2rem + 4vw, 5rem);
+        --space-xs: clamp(0.4rem, 0.35rem + 0.3vw, 0.6rem);
+        --space-s: clamp(0.6rem, 0.5rem + 0.5vw, 1rem);
+        --space-m: clamp(1.25rem, 0.8rem + 2vw, 2.5rem);
+        --space-l: clamp(2rem, 1.5rem + 3vw, 4rem);
+        --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+        --measure: 58ch;
+        --code-radius: 0.625rem;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+        overflow: hidden;
+        height: 100%;
+      }
+      body {
+        font-family: "DM Sans", system-ui, sans-serif;
+        font-size: var(--step-0);
+        font-weight: 400;
+        line-height: 1.6;
+        color: var(--text);
+        background: var(--bg);
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+        height: 100%;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: "Outfit", system-ui, sans-serif;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+      p {
+        max-width: var(--measure);
+      }
+
+      /* ── Horizontal slide deck ──────────────────────── */
+      .deck {
+        display: flex;
+        height: 100vh;
+        width: max-content;
+        transition: transform 0.6s var(--ease-out-expo);
+        will-change: transform;
+      }
+
+      .slide {
+        width: 100vw;
+        height: 100vh;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: var(--space-l) 0;
+        position: relative;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .wrap {
+        width: min(88%, 68rem);
+        margin-inline: auto;
+        padding-inline: var(--space-s);
+      }
+
+      /* ── Progress bar (bottom) ─────────────────────── */
+      .progress-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--hcp-purple), var(--hcp-teal));
+        box-shadow: 0 0 12px oklch(55% 0.2 290 / 0.4);
+        z-index: 200;
+        width: 0%;
+        transition: width 0.4s var(--ease-out-expo);
+      }
+
+      /* ── Bottom dot nav ────────────────────────────── */
+      .dot-nav {
+        position: fixed;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+        background: oklch(98% 0.003 280 / 0.85);
+        backdrop-filter: blur(12px);
+        padding: 0.4rem 0.8rem;
+        border-radius: 2rem;
+        border: 1px solid var(--border);
+      }
+
+      .dot-nav button {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--border);
+        border: none;
+        cursor: pointer;
+        transition:
+          background 0.3s,
+          transform 0.3s var(--ease-out-expo);
+        padding: 0;
+      }
+      .dot-nav button:hover {
+        background: var(--text-muted);
+      }
+      .dot-nav button.active {
+        background: var(--accent);
+        transform: scale(1.5);
+      }
+
+      .slide-counter {
+        position: fixed;
+        bottom: 18px;
+        right: clamp(1rem, 2vw, 2.5rem);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.75rem;
+        color: var(--text-faint);
+        z-index: 100;
+      }
+
+      /* ── Reveal ────────────────────────────────────── */
+      .reveal {
+        opacity: 0;
+        transform: translateX(2rem);
+        transition:
+          opacity 0.7s var(--ease-out-expo),
+          transform 0.7s var(--ease-out-expo);
+      }
+      .reveal.visible {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      .reveal-delay-1 {
+        transition-delay: 0.08s;
+      }
+      .reveal-delay-2 {
+        transition-delay: 0.16s;
+      }
+      .reveal-delay-3 {
+        transition-delay: 0.24s;
+      }
+      .reveal-delay-4 {
+        transition-delay: 0.32s;
+      }
+      .reveal-delay-5 {
+        transition-delay: 0.4s;
+      }
+      .reveal-delay-6 {
+        transition-delay: 0.48s;
+      }
+      .reveal-delay-7 {
+        transition-delay: 0.56s;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .reveal {
+          opacity: 1;
+          transform: none;
+          transition: none;
+        }
+        .hero-word {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      }
+
+      /* ── Slide Backgrounds ─────────────────────────── */
+      .slide--hero {
+        background: var(--bg);
+      }
+      .slide--situation {
+        background: var(--bg-warm);
+      }
+      .slide--complication {
+        background: var(--bg);
+      }
+      .slide--models {
+        background: var(--bg-cool);
+      }
+      .slide--answer {
+        background: var(--bg-warm);
+      }
+      .slide--pipeline {
+        background: var(--bg);
+      }
+      .slide--gotchas {
+        background: var(--bg-warm);
+      }
+      .slide--security {
+        background: var(--bg-cool);
+      }
+      .slide--readme {
+        background: var(--bg);
+      }
+      .slide--summary {
+        background: var(--bg-alt);
+      }
+
+      /* ── Hero ──────────────────────────────────────── */
+      .hero-headline {
+        font-size: var(--step-hero);
+        font-weight: 800;
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+        margin-bottom: var(--space-m);
+      }
+      .hero-word {
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(1.5rem);
+        transition:
+          opacity 0.6s var(--ease-out-expo),
+          transform 0.6s var(--ease-out-expo);
+      }
+      .hero-word.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--hcp-dark);
+        color: var(--hcp-teal);
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 0.45rem 1.1rem;
+        border-radius: 2rem;
+        margin-bottom: var(--space-m);
+      }
+      .hero-badge svg {
+        height: 1.1rem;
+      }
+      .hero-subtitle {
+        font-size: var(--step-1);
+        color: var(--text-muted);
+        margin-bottom: var(--space-l);
+        opacity: 0;
+        transform: translateY(1rem);
+      }
+      .hero-subtitle.show {
+        opacity: 1;
+        transform: translateY(0);
+        transition:
+          opacity 0.6s var(--ease-out-expo),
+          transform 0.6s var(--ease-out-expo);
+      }
+      .hero-scqa {
+        display: flex;
+        gap: var(--space-s);
+        flex-wrap: wrap;
+        opacity: 0;
+      }
+      .hero-scqa.show {
+        opacity: 1;
+        transition: opacity 0.6s var(--ease-out-expo) 0.2s;
+      }
+      .scqa-pill {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.3rem 0.9rem;
+        border-radius: 2rem;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        background: var(--bg-light);
+        transition: all 0.3s var(--ease-out-expo);
+      }
+      .scqa-pill[data-active="true"] {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: oklch(96% 0.015 290);
+      }
+      .scroll-hint {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.8rem;
+        color: var(--text-faint);
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 600;
+        margin-top: var(--space-m);
+        opacity: 0;
+      }
+      .scroll-hint.show {
+        opacity: 1;
+        transition: opacity 0.6s var(--ease-out-expo);
+      }
+
+      /* ── Typography ────────────────────────────────── */
+      .section-label {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: var(--space-xs);
+      }
+      .section-title {
+        font-size: var(--step-3);
+        font-weight: 800;
+        margin-bottom: var(--space-m);
+        max-width: 24ch;
+      }
+      .section-lead {
+        font-size: var(--step-1);
+        color: var(--text-muted);
+        max-width: var(--measure);
+        margin-bottom: var(--space-m);
+      }
+
+      /* ── Code ──────────────────────────────────────── */
+      .code-block {
+        background: var(--bg-dark);
+        border-radius: var(--code-radius);
+        overflow: hidden;
+        margin: var(--space-s) 0;
+        font-family: "JetBrains Mono", monospace;
+        font-size: clamp(0.7rem, 0.65rem + 0.2vw, 0.85rem);
+        line-height: 1.65;
+      }
+      .code-block .code-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 1rem;
+        background: oklch(12% 0.01 260);
+        border-bottom: 1px solid oklch(25% 0.01 260);
+      }
+      .code-block .code-lang {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: 0.625rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: oklch(60% 0.008 280);
+      }
+      .code-block pre {
+        padding: 1rem;
+        overflow-x: auto;
+        margin: 0;
+      }
+      .code-block code {
+        color: oklch(85% 0.008 280);
+        font-family: inherit;
+      }
+      .tk-kw {
+        color: oklch(72% 0.14 300);
+      }
+      .tk-str {
+        color: oklch(72% 0.15 155);
+      }
+      .tk-fn {
+        color: oklch(75% 0.15 220);
+      }
+      .tk-cm {
+        color: oklch(50% 0.008 280);
+        font-style: italic;
+      }
+      .tk-attr {
+        color: oklch(75% 0.12 200);
+      }
+      .tk-val {
+        color: oklch(72% 0.15 155);
+      }
+      .tk-err {
+        color: oklch(70% 0.2 25);
+      }
+      .tk-accent {
+        color: var(--hcp-teal);
+        font-weight: 600;
+      }
+      .code-highlight-line {
+        background: oklch(25% 0.02 290 / 0.3);
+        display: inline-block;
+        width: 100%;
+        margin: 0 -1rem;
+        padding: 0 1rem;
+      }
+      code.inline {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.82em;
+        background: oklch(92% 0.008 280);
+        padding: 0.12em 0.35em;
+        border-radius: 4px;
+        color: var(--accent);
+        font-weight: 500;
+      }
+
+      /* ── Cards ─────────────────────────────────────── */
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+        gap: var(--space-s);
+        margin-top: var(--space-m);
+      }
+      .card-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-s);
+        margin-top: var(--space-m);
+      }
+      @media (max-width: 900px) {
+        .card-grid-3 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        padding: var(--space-m);
+        border-radius: 0.625rem;
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+        transition:
+          transform 0.3s var(--ease-out-quart),
+          box-shadow 0.3s var(--ease-out-quart);
+      }
+      .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 28px oklch(0% 0 0 / 0.07);
+      }
+      .card h3 {
+        font-size: var(--step-1);
+        font-weight: 700;
+        margin-bottom: var(--space-xs);
+      }
+      .card p {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+      }
+      .card .card-icon {
+        font-size: 1.5rem;
+        margin-bottom: var(--space-xs);
+        line-height: 1;
+      }
+
+      .verdict {
+        display: inline-flex;
+        align-items: center;
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: 0.625rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 0.2rem 0.65rem;
+        border-radius: 2rem;
+        margin-top: var(--space-xs);
+      }
+      .verdict--good {
+        background: oklch(92% 0.04 155);
+        color: var(--success);
+      }
+      .verdict--warn {
+        background: oklch(92% 0.04 80);
+        color: oklch(50% 0.15 80);
+      }
+      .verdict--neutral {
+        background: oklch(92% 0.02 280);
+        color: var(--text-muted);
+      }
+
+      /* ── Approach cards ────────────────────────────── */
+      .approach-card {
+        padding: var(--space-m);
+        border-radius: 0.625rem;
+        border: 1px solid var(--border);
+        background: var(--bg-light);
+        transition:
+          transform 0.3s var(--ease-out-quart),
+          box-shadow 0.3s var(--ease-out-quart);
+      }
+      .approach-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 28px oklch(0% 0 0 / 0.07);
+      }
+      .approach-card h3 {
+        font-size: var(--step-1);
+        font-weight: 700;
+        margin-bottom: var(--space-xs);
+      }
+      .approach-card .pros-cons {
+        margin-top: var(--space-xs);
+      }
+      .approach-card .pro,
+      .approach-card .con {
+        font-size: 0.8125rem;
+        padding: 0.2rem 0;
+        display: flex;
+        align-items: baseline;
+        gap: 0.4rem;
+      }
+      .approach-card .pro::before {
+        content: "+";
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 700;
+        color: var(--success);
+        flex-shrink: 0;
+      }
+      .approach-card .con::before {
+        content: "\2013";
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 700;
+        color: var(--danger);
+        flex-shrink: 0;
+      }
+      .approach-card .pro,
+      .approach-card .con {
+        opacity: 0;
+        transform: translateX(-8px);
+        transition:
+          opacity 0.4s var(--ease-out-expo),
+          transform 0.4s var(--ease-out-expo);
+        transition-delay: calc(var(--li-i, 0) * 60ms);
+      }
+      .approach-card.visible .pro,
+      .approach-card.visible .con {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      /* ── Callout ───────────────────────────────────── */
+      .callout {
+        margin: var(--space-m) 0;
+        padding: var(--space-m);
+        border-left: 4px solid var(--accent);
+        background: oklch(93% 0.015 290 / 0.3);
+        border-radius: 0 0.5rem 0.5rem 0;
+      }
+      .callout .callout-label {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: var(--space-xs);
+      }
+      .callout .callout-text {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: var(--step-2);
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1.2;
+      }
+      .callout .callout-sub {
+        font-size: var(--step-0);
+        color: var(--text-muted);
+        margin-top: var(--space-xs);
+        max-width: var(--measure);
+      }
+      .callout--teal {
+        border-left-color: var(--hcp-teal);
+        background: oklch(96% 0.02 195 / 0.4);
+      }
+      .callout--teal .callout-label {
+        color: oklch(45% 0.14 195);
+      }
+      .callout--danger {
+        border-left-color: var(--danger);
+        background: oklch(96% 0.015 25 / 0.3);
+      }
+      .callout--danger .callout-label {
+        color: var(--danger);
+      }
+      .callout--success {
+        border-left-color: var(--success);
+        background: oklch(96% 0.015 155 / 0.3);
+      }
+      .callout--success .callout-label {
+        color: var(--success);
+      }
+      .callout--warn {
+        border-left-color: var(--warning);
+        background: oklch(96% 0.015 80 / 0.3);
+      }
+      .callout--warn .callout-label {
+        color: oklch(45% 0.12 80);
+      }
+
+      /* ── Split ─────────────────────────────────────── */
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-m);
+        align-items: start;
+        margin-top: var(--space-m);
+      }
+      @media (max-width: 900px) {
+        .split {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── Explain card ──────────────────────────────── */
+      .explain-card {
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+        border-radius: 0.625rem;
+        padding: var(--space-m);
+        margin: var(--space-xs) 0;
+      }
+      .explain-card h4 {
+        font-size: var(--step-0);
+        font-weight: 700;
+        margin-bottom: var(--space-xs);
+        color: var(--accent);
+      }
+      .explain-card p {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+      }
+
+      /* ── Gotcha cards ──────────────────────────────── */
+      .gotcha-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+        gap: var(--space-s);
+        margin-top: var(--space-m);
+      }
+      .gotcha-card {
+        padding: var(--space-m);
+        border-radius: 0.625rem;
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+        border-top: 3px solid var(--warning);
+        transition: transform 0.3s var(--ease-out-quart);
+      }
+      .gotcha-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px oklch(0% 0 0 / 0.06);
+      }
+      .gotcha-card .gotcha-num {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: 0.625rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: oklch(50% 0.15 80);
+        margin-bottom: var(--space-xs);
+      }
+      .gotcha-card h4 {
+        font-size: var(--step-0);
+        font-weight: 700;
+        margin-bottom: var(--space-xs);
+      }
+      .gotcha-card p {
+        font-size: 0.8125rem;
+        color: var(--text-muted);
+      }
+      .gotcha-card .tip {
+        margin-top: var(--space-xs);
+        font-size: 0.75rem;
+        color: var(--success);
+        font-weight: 600;
+        font-family: "Outfit", system-ui, sans-serif;
+      }
+
+      /* ── Takeaways ─────────────────────────────────── */
+      .takeaway-list {
+        list-style: none;
+        padding: 0;
+        margin-top: var(--space-m);
+      }
+      .takeaway-list li {
+        padding: var(--space-xs) 0;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+      }
+      .takeaway-list li:last-child {
+        border-bottom: none;
+      }
+      .takeaway-list .takeaway-num {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: var(--step-2);
+        font-weight: 800;
+        color: var(--accent);
+        opacity: 0.3;
+        flex-shrink: 0;
+        width: 2rem;
+        text-align: right;
+      }
+      .takeaway-list .takeaway-text strong {
+        display: block;
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: var(--step-0);
+        font-weight: 700;
+        margin-bottom: 0.15rem;
+      }
+      .takeaway-list .takeaway-text {
+        color: var(--text-muted);
+        font-size: 0.8125rem;
+      }
+      .takeaway-list li {
+        opacity: 0;
+        transform: translateX(-8px);
+        transition:
+          opacity 0.4s var(--ease-out-expo),
+          transform 0.4s var(--ease-out-expo);
+        transition-delay: calc(var(--li-i, 0) * 60ms);
+      }
+      .takeaway-list.visible li {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card:hover,
+        .approach-card:hover,
+        .gotcha-card:hover {
+          transform: none !important;
+        }
+        .approach-card .pro,
+        .approach-card .con,
+        .takeaway-list li {
+          opacity: 1 !important;
+          transform: none !important;
+          transition: none !important;
+        }
+        .hero-subtitle,
+        .hero-scqa,
+        .scroll-hint {
+          opacity: 1 !important;
+          transform: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="dot-nav" id="dotNav"></nav>
+    <div class="slide-counter" id="slideCounter"></div>
+
+    <div class="deck" id="deck">
+      <!-- ━━━ 1. HERO ━━━ -->
+      <section class="slide slide--hero" id="hero">
+        <div class="wrap">
+          <div class="hero-badge reveal">
+            <svg
+              viewBox="0 0 258.56 273.8"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-label="HashiCorp"
+              style="height: 1.1rem"
+            >
+              <path
+                d="M107.77 0 0 62.21 0 62.26 0 211.54 40.47 234.95 40.47 85.56 107.77 46.71 107.77 0Z"
+                fill="currentColor"
+              />
+              <path
+                d="M150.79 0 150.79 118.96 107.77 118.96 107.77 74.54 67.25 97.94 67.25 250.34 107.77 273.75 107.77 155.16 150.79 155.16 150.79 199.26 191.31 175.91 191.31 23.41 150.79 0Z"
+                fill="currentColor"
+              />
+              <path
+                d="M150.79 273.8 258.56 211.64 258.56 211.59 258.56 62.31 218.09 38.91 218.09 188.24 150.79 227.09 150.79 273.8Z"
+                fill="currentColor"
+              />
+            </svg>
+            HCP Terraform &bull; Private Module Registry
+          </div>
+          <h1 class="hero-headline" id="heroHeadline">
+            <span class="hero-word">Publishing</span>
+            <span class="hero-word">Modules</span><br />
+            <span class="hero-word">to</span>
+            <span class="hero-word">PMR</span>
+          </h1>
+          <p class="hero-subtitle" id="heroSubtitle">
+            Best practices for automated module publishing &mdash; choosing the
+            right model, avoiding common pitfalls, and building a reliable CI/CD
+            pipeline
+          </p>
+          <div class="hero-scqa" id="heroScqa">
+            <span class="scqa-pill" data-active="false" id="pill-s"
+              >Situation</span
+            >
+            <span class="scqa-pill" data-active="false" id="pill-c"
+              >Complication</span
+            >
+            <span class="scqa-pill" data-active="false" id="pill-a"
+              >Answer</span
+            >
+          </div>
+          <div class="scroll-hint" id="scrollHint">
+            Press
+            <kbd
+              style="
+                display: inline-block;
+                background: var(--bg-alt);
+                border: 1px solid var(--border);
+                border-radius: 3px;
+                padding: 0.1rem 0.4rem;
+                font-size: 0.7rem;
+              "
+              >&rarr;</kbd
+            >
+            or click to advance
+          </div>
+        </div>
+      </section>
+
+      <!-- ━━━ 2. SITUATION ━━━ -->
+      <section class="slide slide--situation" id="situation">
+        <div class="wrap">
+          <div class="section-label reveal">Situation</div>
+          <h2 class="section-title reveal reveal-delay-1">
+            Modules need to reach consumers reliably
+          </h2>
+          <p class="section-lead reveal reveal-delay-2">
+            Platform teams invest in building validated, tested Terraform
+            modules. The Private Module Registry is the standard distribution
+            channel &mdash; but the journey from &ldquo;code on a branch&rdquo;
+            to &ldquo;consumable registry entry&rdquo; has more moving parts
+            than the docs suggest.
+          </p>
+          <svg
+            class="reveal reveal-delay-3"
+            viewBox="0 0 780 80"
+            xmlns="http://www.w3.org/2000/svg"
+            style="width: 100%; max-width: 780px; margin: var(--space-m) 0"
+          >
+            <defs>
+              <marker
+                id="a1"
+                viewBox="0 0 10 10"
+                refX="10"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto"
+              >
+                <path
+                  d="M0 0L10 5L0 10"
+                  fill="none"
+                  stroke="#9b8ec4"
+                  stroke-width="1.5"
+                />
+              </marker>
+              <filter id="s1">
+                <feDropShadow
+                  dx="0"
+                  dy="3"
+                  stdDeviation="4"
+                  flood-color="#000"
+                  flood-opacity=".05"
+                />
+              </filter>
+            </defs>
+            <g filter="url(#s1)">
+              <rect
+                x="0"
+                y="12"
+                width="150"
+                height="52"
+                rx="10"
+                fill="#f7f5fa"
+                stroke="#ddd8e8"
+              />
+              <rect
+                x="195"
+                y="12"
+                width="155"
+                height="52"
+                rx="10"
+                fill="#f7f5fa"
+                stroke="#ddd8e8"
+              />
+              <rect
+                x="395"
+                y="12"
+                width="170"
+                height="52"
+                rx="10"
+                fill="#f7f5fa"
+                stroke="#ddd8e8"
+              />
+              <rect
+                x="630"
+                y="10"
+                width="145"
+                height="56"
+                rx="12"
+                fill="#1B1834"
+              />
+            </g>
+            <text
+              x="75"
+              y="43"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="700"
+              font-size="13"
+              fill="#2c2c3e"
+            >
+              Module Code
+            </text>
+            <text
+              x="272"
+              y="43"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="700"
+              font-size="13"
+              fill="#2c2c3e"
+            >
+              Tests &amp; Validation
+            </text>
+            <text
+              x="480"
+              y="43"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="700"
+              font-size="13"
+              fill="#2c2c3e"
+            >
+              Version Management
+            </text>
+            <text
+              x="702"
+              y="43"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="700"
+              font-size="13"
+              fill="#50c4c4"
+            >
+              Private Registry
+            </text>
+            <line
+              x1="154"
+              y1="38"
+              x2="190"
+              y2="38"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a1)"
+            />
+            <line
+              x1="354"
+              y1="38"
+              x2="390"
+              y2="38"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a1)"
+            />
+            <line
+              x1="569"
+              y1="38"
+              x2="625"
+              y2="38"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a1)"
+            />
+          </svg>
+          <div class="callout--teal callout reveal reveal-delay-4">
+            <div class="callout-label">The Goal</div>
+            <div class="callout-text">
+              Merge a PR, get a versioned module in PMR
+            </div>
+            <div class="callout-sub">
+              Automated, repeatable, with proper metadata &mdash; source link,
+              branch, commit SHA &mdash; visible in the registry for
+              auditability.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ━━━ 3. COMPLICATION ━━━ -->
+      <section class="slide slide--complication" id="complication">
+        <div class="wrap">
+          <div class="section-label reveal">Complication</div>
+          <h2 class="section-title reveal reveal-delay-1">
+            The &ldquo;last mile&rdquo; is harder than it looks
+          </h2>
+          <p class="section-lead reveal reveal-delay-2">
+            Publishing a module to PMR seems straightforward &mdash; connect a
+            repo, push a tag. In practice, there are hidden requirements around
+            naming, token permissions, version immutability, and VCS
+            configuration that cause silent failures or modules stuck in
+            <code class="inline">pending</code>.
+          </p>
+          <div class="card-grid reveal reveal-delay-3">
+            <div class="card">
+              <div class="card-icon">&#128268;</div>
+              <h3>VCS Configuration</h3>
+              <p>
+                The publishing mechanism (tag vs branch) is
+                <strong>permanent</strong> once the module is created. The repo
+                must follow
+                <code class="inline">terraform-{provider}-{name}</code> naming.
+                Renaming later breaks ingress.
+              </p>
+            </div>
+            <div class="card">
+              <div class="card-icon">&#128274;</div>
+              <h3>Token Scoping</h3>
+              <p>
+                CI tokens need <strong>Manage Modules</strong> at the org level
+                &mdash; not workspace permissions. A read-capable token that
+                can&rsquo;t write leads to confusing partial failures.
+              </p>
+            </div>
+            <div class="card">
+              <div class="card-icon">&#128204;</div>
+              <h3>Version Immutability</h3>
+              <p>
+                Published versions cannot be overwritten. READMEs are frozen per
+                version. A bad release means publishing a patch &mdash; there is
+                no &ldquo;replace in place.&rdquo;
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ━━━ 4. PUBLISHING MODELS ━━━ -->
+      <section class="slide slide--models" id="models">
+        <div class="wrap">
+          <div class="section-label reveal">Understanding the Options</div>
+          <h2 class="section-title reveal reveal-delay-1">
+            Three publishing models
+          </h2>
+          <div class="card-grid-3">
+            <div class="approach-card reveal reveal-delay-2">
+              <h3>Tag-Based (VCS)</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem">
+                Push a semver tag &rarr; PMR auto-detects and ingests.
+              </p>
+              <div class="pros-cons">
+                <div class="pro">
+                  Fully automatic &mdash; push tag, version appears
+                </div>
+                <div class="pro">Source, branch, commit in PMR UI</div>
+                <div class="pro">Tag prefix support for monorepos</div>
+                <div class="con">No built-in PMR test support</div>
+                <div class="con">Non-semver tags silently ignored</div>
+              </div>
+              <div class="verdict verdict--good">Best for CI/CD automation</div>
+            </div>
+            <div class="approach-card reveal reveal-delay-3">
+              <h3>Branch-Based (VCS)</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem">
+                PMR tracks a branch. Versions created explicitly via API or UI.
+              </p>
+              <div class="pros-cons">
+                <div class="pro">Built-in PMR testing on every commit</div>
+                <div class="pro">
+                  Remote CLI:
+                  <code class="inline">terraform test -cloud-run</code>
+                </div>
+                <div class="pro">Source, branch, commit in PMR UI</div>
+                <div class="con">Merge to main does NOT auto-publish</div>
+                <div class="con">Must create each version explicitly</div>
+              </div>
+              <div class="verdict verdict--warn">
+                Best for dev with testing needs
+              </div>
+            </div>
+            <div class="approach-card reveal reveal-delay-4">
+              <h3>API-Driven (No VCS)</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem">
+                Upload tarballs via API. No VCS connection required.
+              </p>
+              <div class="pros-cons">
+                <div class="pro">No repo naming requirement</div>
+                <div class="pro">Works in air-gapped environments</div>
+                <div class="pro">Full control over published content</div>
+                <div class="con">No source/branch/commit in PMR UI</div>
+                <div class="con">
+                  Must package &amp; upload tarball every time
+                </div>
+              </div>
+              <div class="verdict verdict--neutral">
+                When VCS isn&rsquo;t an option
+              </div>
+            </div>
+          </div>
+
+          <!-- SVG: Tag vs Branch behavior -->
+          <svg
+            class="reveal reveal-delay-5"
+            viewBox="0 0 780 260"
+            xmlns="http://www.w3.org/2000/svg"
+            style="width: 100%; max-width: 780px; margin: var(--space-m) 0"
+          >
+            <defs>
+              <marker
+                id="a2"
+                viewBox="0 0 10 10"
+                refX="10"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto"
+              >
+                <path
+                  d="M0 0L10 5L0 10"
+                  fill="none"
+                  stroke="#9b8ec4"
+                  stroke-width="1.5"
+                />
+              </marker>
+              <filter id="s2">
+                <feDropShadow
+                  dx="0"
+                  dy="2"
+                  stdDeviation="3"
+                  flood-color="#000"
+                  flood-opacity=".05"
+                />
+              </filter>
+            </defs>
+
+            <!-- ROW 1: TAG-BASED -->
+            <text
+              x="0"
+              y="14"
+              font-family="Outfit,sans-serif"
+              font-weight="800"
+              font-size="10"
+              letter-spacing="1"
+              fill="#50c4c4"
+            >
+              TAG-BASED (VCS)
+            </text>
+            <g filter="url(#s2)">
+              <rect
+                x="0"
+                y="24"
+                width="145"
+                height="38"
+                rx="7"
+                fill="#e8f5f5"
+                stroke="#b8dad8"
+              />
+              <rect
+                x="185"
+                y="24"
+                width="145"
+                height="38"
+                rx="7"
+                fill="#dff5e8"
+                stroke="#a8d8b8"
+              />
+              <rect
+                x="370"
+                y="24"
+                width="145"
+                height="38"
+                rx="7"
+                fill="#dff5e8"
+                stroke="#a8d8b8"
+              />
+              <rect
+                x="580"
+                y="24"
+                width="195"
+                height="38"
+                rx="7"
+                fill="#dff5e8"
+                stroke="#a8d8b8"
+              />
+            </g>
+            <text
+              x="72"
+              y="48"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="600"
+              font-size="11.5"
+              fill="#2c2c3e"
+            >
+              git tag v1.2.3
+            </text>
+            <text
+              x="257"
+              y="48"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="600"
+              font-size="11.5"
+              fill="#2c7a3e"
+            >
+              PMR detects
+            </text>
+            <text
+              x="442"
+              y="48"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="600"
+              font-size="11.5"
+              fill="#2c7a3e"
+            >
+              Auto-ingests
+            </text>
+            <text
+              x="677"
+              y="45"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="700"
+              font-size="12"
+              fill="#2c7a3e"
+            >
+              v1.2.3 live
+            </text>
+            <text
+              x="677"
+              y="58"
+              text-anchor="middle"
+              font-family="DM Sans,sans-serif"
+              font-size="9.5"
+              fill="#5a8a5a"
+            >
+              No API call needed
+            </text>
+            <line
+              x1="150"
+              y1="43"
+              x2="180"
+              y2="43"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a2)"
+            />
+            <line
+              x1="335"
+              y1="43"
+              x2="365"
+              y2="43"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a2)"
+            />
+            <line
+              x1="520"
+              y1="43"
+              x2="575"
+              y2="43"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a2)"
+            />
+
+            <!-- DIVIDER 1 -->
+            <line
+              x1="0"
+              y1="80"
+              x2="780"
+              y2="80"
+              stroke="#ddd8e8"
+              stroke-width="1"
+              stroke-dasharray="5,3"
+            />
+
+            <!-- ROW 2: BRANCH-BASED -->
+            <text
+              x="0"
+              y="104"
+              font-family="Outfit,sans-serif"
+              font-weight="800"
+              font-size="10"
+              letter-spacing="1"
+              fill="#6b4dc4"
+            >
+              BRANCH-BASED (VCS)
+            </text>
+            <g filter="url(#s2)">
+              <rect
+                x="0"
+                y="114"
+                width="145"
+                height="38"
+                rx="7"
+                fill="#ece8f5"
+                stroke="#c8bde0"
+              />
+              <rect
+                x="185"
+                y="114"
+                width="145"
+                height="38"
+                rx="7"
+                fill="#faf0e8"
+                stroke="#e0d0b8"
+              />
+              <rect
+                x="370"
+                y="114"
+                width="145"
+                height="38"
+                rx="7"
+                fill="#ece8f5"
+                stroke="#c8bde0"
+              />
+              <rect
+                x="580"
+                y="114"
+                width="195"
+                height="38"
+                rx="7"
+                fill="#dff5e8"
+                stroke="#a8d8b8"
+              />
+            </g>
+            <text
+              x="72"
+              y="138"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="600"
+              font-size="11.5"
+              fill="#2c2c3e"
+            >
+              Merge to main
+            </text>
+            <text
+              x="257"
+              y="132"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="700"
+              font-size="11.5"
+              fill="#8a6a30"
+            >
+              Nothing happens
+            </text>
+            <text
+              x="257"
+              y="145"
+              text-anchor="middle"
+              font-family="DM Sans,sans-serif"
+              font-size="9"
+              fill="#aa8a50"
+            >
+              No auto-publish!
+            </text>
+            <text
+              x="442"
+              y="132"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="600"
+              font-size="11.5"
+              fill="#2c2c3e"
+            >
+              Create version
+            </text>
+            <text
+              x="442"
+              y="145"
+              text-anchor="middle"
+              font-family="DM Sans,sans-serif"
+              font-size="9"
+              fill="#666"
+            >
+              via API or UI
+            </text>
+            <text
+              x="677"
+              y="130"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="700"
+              font-size="12"
+              fill="#2c7a3e"
+            >
+              v1.2.3 live
+            </text>
+            <text
+              x="677"
+              y="145"
+              text-anchor="middle"
+              font-family="DM Sans,sans-serif"
+              font-size="9.5"
+              fill="#5a8a5a"
+            >
+              + PMR can run tests
+            </text>
+            <line
+              x1="150"
+              y1="133"
+              x2="180"
+              y2="133"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a2)"
+            />
+            <line
+              x1="335"
+              y1="133"
+              x2="365"
+              y2="133"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a2)"
+            />
+            <line
+              x1="520"
+              y1="133"
+              x2="575"
+              y2="133"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a2)"
+            />
+
+            <!-- DIVIDER 2 -->
+            <line
+              x1="0"
+              y1="170"
+              x2="780"
+              y2="170"
+              stroke="#ddd8e8"
+              stroke-width="1"
+              stroke-dasharray="5,3"
+            />
+
+            <!-- ROW 3: API-DRIVEN -->
+            <text
+              x="0"
+              y="194"
+              font-family="Outfit,sans-serif"
+              font-weight="800"
+              font-size="10"
+              letter-spacing="1"
+              fill="#666"
+            >
+              API-DRIVEN (NO VCS)
+            </text>
+            <g filter="url(#s2)">
+              <rect
+                x="0"
+                y="204"
+                width="145"
+                height="38"
+                rx="7"
+                fill="#f2f2f2"
+                stroke="#d8d8d8"
+              />
+              <rect
+                x="185"
+                y="204"
+                width="145"
+                height="38"
+                rx="7"
+                fill="#f2f2f2"
+                stroke="#d8d8d8"
+              />
+              <rect
+                x="370"
+                y="204"
+                width="145"
+                height="38"
+                rx="7"
+                fill="#f2f2f2"
+                stroke="#d8d8d8"
+              />
+              <rect
+                x="580"
+                y="204"
+                width="195"
+                height="38"
+                rx="7"
+                fill="#dff5e8"
+                stroke="#a8d8b8"
+              />
+            </g>
+            <text
+              x="72"
+              y="228"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="600"
+              font-size="11.5"
+              fill="#2c2c3e"
+            >
+              Create version
+            </text>
+            <text
+              x="257"
+              y="222"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="600"
+              font-size="11.5"
+              fill="#2c2c3e"
+            >
+              Package tarball
+            </text>
+            <text
+              x="257"
+              y="235"
+              text-anchor="middle"
+              font-family="DM Sans,sans-serif"
+              font-size="9"
+              fill="#666"
+            >
+              exclude .git, .github, etc.
+            </text>
+            <text
+              x="442"
+              y="222"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="600"
+              font-size="11.5"
+              fill="#2c2c3e"
+            >
+              Upload tarball
+            </text>
+            <text
+              x="442"
+              y="235"
+              text-anchor="middle"
+              font-family="DM Sans,sans-serif"
+              font-size="9"
+              fill="#666"
+            >
+              PUT to upload URL
+            </text>
+            <text
+              x="677"
+              y="220"
+              text-anchor="middle"
+              font-family="Outfit,sans-serif"
+              font-weight="700"
+              font-size="12"
+              fill="#2c7a3e"
+            >
+              v1.2.3 live
+            </text>
+            <text
+              x="677"
+              y="235"
+              text-anchor="middle"
+              font-family="DM Sans,sans-serif"
+              font-size="9.5"
+              fill="#888"
+            >
+              No source metadata in UI
+            </text>
+            <line
+              x1="150"
+              y1="223"
+              x2="180"
+              y2="223"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a2)"
+            />
+            <line
+              x1="335"
+              y1="223"
+              x2="365"
+              y2="223"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a2)"
+            />
+            <line
+              x1="520"
+              y1="223"
+              x2="575"
+              y2="223"
+              stroke="#9b8ec4"
+              stroke-width="1.5"
+              marker-end="url(#a2)"
+            />
+          </svg>
+        </div>
+      </section>
+
+      <!-- ━━━ 5. ANSWER ━━━ -->
+      <section class="slide slide--answer" id="answer">
+        <div class="wrap">
+          <div class="section-label reveal">Answer</div>
+          <h2 class="section-title reveal reveal-delay-1">
+            Connect your repo, automate the rest
+          </h2>
+          <div class="split">
+            <div>
+              <p
+                class="section-lead reveal reveal-delay-1"
+                style="margin-bottom: var(--space-s)"
+              >
+                One-time setup to get your module publishing-ready:
+              </p>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                <div
+                  class="card reveal reveal-delay-2"
+                  style="
+                    padding: 0.8rem 1rem;
+                    display: flex;
+                    align-items: baseline;
+                    gap: 0.6rem;
+                  "
+                >
+                  <span
+                    style="
+                      font-family: Outfit, sans-serif;
+                      font-weight: 800;
+                      font-size: 1.1rem;
+                      color: var(--accent);
+                      opacity: 0.4;
+                    "
+                    >1</span
+                  >
+                  <div>
+                    <strong style="font-size: 0.9rem"
+                      >Name repo correctly</strong
+                    ><br /><span
+                      style="font-size: 0.8rem; color: var(--text-muted)"
+                      >Must be
+                      <code class="inline">terraform-{provider}-{name}</code>
+                      for VCS modules</span
+                    >
+                  </div>
+                </div>
+                <div
+                  class="card reveal reveal-delay-3"
+                  style="
+                    padding: 0.8rem 1rem;
+                    display: flex;
+                    align-items: baseline;
+                    gap: 0.6rem;
+                  "
+                >
+                  <span
+                    style="
+                      font-family: Outfit, sans-serif;
+                      font-weight: 800;
+                      font-size: 1.1rem;
+                      color: var(--accent);
+                      opacity: 0.4;
+                    "
+                    >2</span
+                  >
+                  <div>
+                    <strong style="font-size: 0.9rem"
+                      >Create VCS module in PMR</strong
+                    ><br /><span
+                      style="font-size: 0.8rem; color: var(--text-muted)"
+                      >Use
+                      <code class="inline">/registry-modules/vcs</code> endpoint
+                      with OAuth token or GitHub App</span
+                    >
+                  </div>
+                </div>
+                <div
+                  class="card reveal reveal-delay-4"
+                  style="
+                    padding: 0.8rem 1rem;
+                    display: flex;
+                    align-items: baseline;
+                    gap: 0.6rem;
+                  "
+                >
+                  <span
+                    style="
+                      font-family: Outfit, sans-serif;
+                      font-weight: 800;
+                      font-size: 1.1rem;
+                      color: var(--accent);
+                      opacity: 0.4;
+                    "
+                    >3</span
+                  >
+                  <div>
+                    <strong style="font-size: 0.9rem"
+                      >Configure CI secrets &amp; variables</strong
+                    ><br /><span
+                      style="font-size: 0.8rem; color: var(--text-muted)"
+                      ><code class="inline">TFE_TOKEN</code> (secret, Manage
+                      Modules), module coordinates (variables)</span
+                    >
+                  </div>
+                </div>
+                <div
+                  class="card reveal reveal-delay-5"
+                  style="
+                    padding: 0.8rem 1rem;
+                    display: flex;
+                    align-items: baseline;
+                    gap: 0.6rem;
+                  "
+                >
+                  <span
+                    style="
+                      font-family: Outfit, sans-serif;
+                      font-weight: 800;
+                      font-size: 1.1rem;
+                      color: var(--accent);
+                      opacity: 0.4;
+                    "
+                    >4</span
+                  >
+                  <div>
+                    <strong style="font-size: 0.9rem"
+                      >Add GitHub Actions workflows</strong
+                    ><br /><span
+                      style="font-size: 0.8rem; color: var(--text-muted)"
+                      >Validate on PR + release on merge. Create semver labels
+                      for version control.</span
+                    >
+                  </div>
+                </div>
+                <div
+                  class="card reveal reveal-delay-6"
+                  style="
+                    padding: 0.8rem 1rem;
+                    display: flex;
+                    align-items: baseline;
+                    gap: 0.6rem;
+                  "
+                >
+                  <span
+                    style="
+                      font-family: Outfit, sans-serif;
+                      font-weight: 800;
+                      font-size: 1.1rem;
+                      color: var(--accent);
+                      opacity: 0.4;
+                    "
+                    >5</span
+                  >
+                  <div>
+                    <strong style="font-size: 0.9rem"
+                      >Write the module README</strong
+                    ><br /><span
+                      style="font-size: 0.8rem; color: var(--text-muted)"
+                      >Module description, usage examples, prerequisites above
+                      <code class="inline">terraform-docs</code> markers</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="code-block reveal reveal-delay-2">
+              <div class="code-header">
+                <span class="code-lang">API</span
+                ><span
+                  class="code-file"
+                  style="font-size: 0.7rem; color: oklch(55% 0.008 280)"
+                  >Create VCS Module</span
+                >
+              </div>
+              <pre><code><span class="tk-fn">POST</span> /organizations/<span class="tk-str">{org}</span>/registry-modules/<span class="tk-accent">vcs</span>
+
+{
+  <span class="tk-attr">"data"</span>: {
+    <span class="tk-attr">"type"</span>: <span class="tk-str">"registry-modules"</span>,
+    <span class="tk-attr">"attributes"</span>: {
+      <span class="tk-attr">"vcs-repo"</span>: {
+<span class="code-highlight-line">        <span class="tk-attr">"identifier"</span>: <span class="tk-str">"org/terraform-aws-vpc"</span>,</span>
+<span class="code-highlight-line">        <span class="tk-attr">"oauth-token-id"</span>: <span class="tk-str">"ot-xxx"</span>,</span>
+        <span class="tk-cm">// Tag: omit branch, set tags: true</span>
+        <span class="tk-cm">// Branch: set branch, tags: false</span>
+<span class="code-highlight-line">        <span class="tk-attr">"branch"</span>: <span class="tk-str">"main"</span>,</span>
+<span class="code-highlight-line">        <span class="tk-attr">"tags"</span>: <span class="tk-kw">false</span></span>
+      }
+    }
+  }
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ━━━ 6. PIPELINE ━━━ -->
+      <section class="slide slide--pipeline" id="pipeline">
+        <div class="wrap">
+          <div class="section-label reveal">Answer &mdash; Automation</div>
+          <h2 class="section-title reveal reveal-delay-1">
+            Two-workflow CI/CD pipeline
+          </h2>
+          <div class="split">
+            <div>
+              <div
+                class="explain-card reveal reveal-delay-2"
+                style="padding: 1.2rem 1.4rem"
+              >
+                <h4>module_validate.yml &mdash; Triggered on PR</h4>
+                <p style="margin-top: 0.5rem">
+                  Runs when <code class="inline">.tf</code>,
+                  <code class="inline">.tfvars</code>, or
+                  <code class="inline">.tftest.hcl</code> files change. Performs
+                  the full quality gate before code can be merged.
+                </p>
+              </div>
+              <div
+                class="explain-card reveal reveal-delay-3"
+                style="padding: 1.2rem 1.4rem"
+              >
+                <h4>module_release.yml &mdash; Triggered on merge</h4>
+                <p style="margin-top: 0.5rem">
+                  Runs on <code class="inline">pull_request: closed</code> (not
+                  push &mdash; this gives access to PR labels). Handles version
+                  calculation, publishing, tagging, and release creation.
+                </p>
+              </div>
+              <div
+                class="callout--teal callout reveal reveal-delay-4"
+                style="margin-top: var(--space-s)"
+              >
+                <div class="callout-label">Why pull_request: closed?</div>
+                <div class="callout-sub">
+                  A push-triggered workflow can&rsquo;t read PR labels. Using
+                  the closed event with a
+                  <code class="inline">merged == true</code> guard gives you
+                  both the merge commit and the label context for semver
+                  determination.
+                </div>
+              </div>
+            </div>
+            <svg
+              class="reveal reveal-delay-2"
+              viewBox="0 0 400 520"
+              xmlns="http://www.w3.org/2000/svg"
+              style="width: 100%; max-width: 400px"
+            >
+              <defs>
+                <marker
+                  id="a3"
+                  viewBox="0 0 10 10"
+                  refX="10"
+                  refY="5"
+                  markerWidth="7"
+                  markerHeight="7"
+                  orient="auto"
+                >
+                  <path
+                    d="M0 0L10 5L0 10"
+                    fill="none"
+                    stroke="#9b8ec4"
+                    stroke-width="1.5"
+                  />
+                </marker>
+                <filter id="s3">
+                  <feDropShadow
+                    dx="0"
+                    dy="2"
+                    stdDeviation="4"
+                    flood-color="#000"
+                    flood-opacity=".05"
+                  />
+                </filter>
+              </defs>
+              <rect
+                x="0"
+                y="0"
+                width="400"
+                height="195"
+                rx="14"
+                fill="#e8f5f5"
+                stroke="#b8dad8"
+                filter="url(#s3)"
+              />
+              <rect
+                x="10"
+                y="7"
+                width="140"
+                height="20"
+                rx="10"
+                fill="#1B1834"
+              />
+              <text
+                x="80"
+                y="21"
+                text-anchor="middle"
+                font-family="Outfit,sans-serif"
+                font-weight="700"
+                font-size="8.5"
+                letter-spacing="0.8"
+                fill="#50c4c4"
+              >
+                MODULE_VALIDATE.YML
+              </text>
+              <rect
+                x="24"
+                y="36"
+                width="352"
+                height="32"
+                rx="7"
+                fill="#fff"
+                stroke="#c8e0de"
+              />
+              <text
+                x="200"
+                y="57"
+                text-anchor="middle"
+                font-family="Outfit,sans-serif"
+                font-weight="600"
+                font-size="11.5"
+                fill="#2c2c3e"
+              >
+                PR opened + semver label enforced
+              </text>
+              <line
+                x1="200"
+                y1="68"
+                x2="200"
+                y2="78"
+                stroke="#9b8ec4"
+                stroke-width="1.5"
+                marker-end="url(#a3)"
+              />
+              <rect
+                x="24"
+                y="82"
+                width="352"
+                height="32"
+                rx="7"
+                fill="#fff"
+                stroke="#c8e0de"
+              />
+              <text
+                x="200"
+                y="103"
+                text-anchor="middle"
+                font-family="Outfit,sans-serif"
+                font-weight="600"
+                font-size="11.5"
+                fill="#2c2c3e"
+              >
+                fmt &#8594; validate &#8594; TFLint &#8594; Trivy &#8594; tests
+              </text>
+              <line
+                x1="200"
+                y1="114"
+                x2="200"
+                y2="124"
+                stroke="#9b8ec4"
+                stroke-width="1.5"
+                marker-end="url(#a3)"
+              />
+              <rect
+                x="24"
+                y="128"
+                width="352"
+                height="32"
+                rx="7"
+                fill="#fff"
+                stroke="#c8e0de"
+              />
+              <text
+                x="200"
+                y="149"
+                text-anchor="middle"
+                font-family="Outfit,sans-serif"
+                font-weight="600"
+                font-size="11.5"
+                fill="#2c2c3e"
+              >
+                terraform-docs + example validation matrix
+              </text>
+              <line
+                x1="200"
+                y1="195"
+                x2="200"
+                y2="208"
+                stroke="#9b8ec4"
+                stroke-width="1.5"
+                marker-end="url(#a3)"
+              />
+              <rect
+                x="60"
+                y="212"
+                width="280"
+                height="36"
+                rx="9"
+                fill="#faf5f0"
+                stroke="#e0d5c8"
+                filter="url(#s3)"
+              />
+              <text
+                x="200"
+                y="234"
+                text-anchor="middle"
+                font-family="Outfit,sans-serif"
+                font-weight="700"
+                font-size="12"
+                fill="#6b5e50"
+              >
+                Human review &amp; merge
+              </text>
+              <line
+                x1="200"
+                y1="248"
+                x2="200"
+                y2="262"
+                stroke="#9b8ec4"
+                stroke-width="1.5"
+                marker-end="url(#a3)"
+              />
+              <rect
+                x="0"
+                y="266"
+                width="400"
+                height="190"
+                rx="14"
+                fill="#ece8f5"
+                stroke="#c8bde0"
+                filter="url(#s3)"
+              />
+              <rect
+                x="10"
+                y="273"
+                width="135"
+                height="20"
+                rx="10"
+                fill="#6b4dc4"
+              />
+              <text
+                x="77"
+                y="287"
+                text-anchor="middle"
+                font-family="Outfit,sans-serif"
+                font-weight="700"
+                font-size="8.5"
+                letter-spacing="0.8"
+                fill="#fff"
+              >
+                MODULE_RELEASE.YML
+              </text>
+              <rect
+                x="24"
+                y="302"
+                width="352"
+                height="32"
+                rx="7"
+                fill="#fff"
+                stroke="#c8bde0"
+              />
+              <text
+                x="200"
+                y="323"
+                text-anchor="middle"
+                font-family="Outfit,sans-serif"
+                font-weight="600"
+                font-size="11.5"
+                fill="#2c2c3e"
+              >
+                Read labels &#8594; calculate next version
+              </text>
+              <line
+                x1="200"
+                y1="334"
+                x2="200"
+                y2="344"
+                stroke="#9b8ec4"
+                stroke-width="1.5"
+                marker-end="url(#a3)"
+              />
+              <rect
+                x="24"
+                y="348"
+                width="165"
+                height="40"
+                rx="7"
+                fill="#fff"
+                stroke="#c8bde0"
+              />
+              <text
+                x="106"
+                y="365"
+                text-anchor="middle"
+                font-family="Outfit,sans-serif"
+                font-weight="700"
+                font-size="10.5"
+                fill="#50c4c4"
+              >
+                Tag-based
+              </text>
+              <text
+                x="106"
+                y="380"
+                text-anchor="middle"
+                font-family="DM Sans,sans-serif"
+                font-size="9"
+                fill="#666"
+              >
+                Push tag &#8594; auto-ingest
+              </text>
+              <rect
+                x="211"
+                y="348"
+                width="165"
+                height="40"
+                rx="7"
+                fill="#fff"
+                stroke="#c8bde0"
+              />
+              <text
+                x="293"
+                y="365"
+                text-anchor="middle"
+                font-family="Outfit,sans-serif"
+                font-weight="700"
+                font-size="10.5"
+                fill="#6b4dc4"
+              >
+                Branch-based
+              </text>
+              <text
+                x="293"
+                y="380"
+                text-anchor="middle"
+                font-family="DM Sans,sans-serif"
+                font-size="9"
+                fill="#666"
+              >
+                Create version via API
+              </text>
+              <line
+                x1="106"
+                y1="388"
+                x2="106"
+                y2="402"
+                stroke="#9b8ec4"
+                stroke-width="1"
+              />
+              <line
+                x1="293"
+                y1="388"
+                x2="293"
+                y2="402"
+                stroke="#9b8ec4"
+                stroke-width="1"
+              />
+              <line
+                x1="106"
+                y1="402"
+                x2="293"
+                y2="402"
+                stroke="#9b8ec4"
+                stroke-width="1"
+              />
+              <line
+                x1="200"
+                y1="402"
+                x2="200"
+                y2="412"
+                stroke="#9b8ec4"
+                stroke-width="1.5"
+                marker-end="url(#a3)"
+              />
+              <rect
+                x="24"
+                y="416"
+                width="352"
+                height="28"
+                rx="7"
+                fill="#fff"
+                stroke="#c8bde0"
+              />
+              <text
+                x="200"
+                y="435"
+                text-anchor="middle"
+                font-family="Outfit,sans-serif"
+                font-weight="600"
+                font-size="11"
+                fill="#2c2c3e"
+              >
+                Create git tag + GitHub Release
+              </text>
+              <line
+                x1="200"
+                y1="456"
+                x2="200"
+                y2="472"
+                stroke="#9b8ec4"
+                stroke-width="1.5"
+                marker-end="url(#a3)"
+              />
+              <rect
+                x="80"
+                y="476"
+                width="240"
+                height="40"
+                rx="11"
+                fill="#1B1834"
+                filter="url(#s3)"
+              />
+              <text
+                x="200"
+                y="498"
+                text-anchor="middle"
+                font-family="Outfit,sans-serif"
+                font-weight="700"
+                font-size="13"
+                fill="#50c4c4"
+              >
+                Version live in PMR
+              </text>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- ━━━ 6b. PIPELINE CONSIDERATIONS ━━━ -->
+      <section class="slide slide--complication" id="pipeline-detail">
+        <div class="wrap">
+          <div class="section-label reveal">
+            Answer &mdash; Pipeline Considerations
+          </div>
+          <h2 class="section-title reveal reveal-delay-1">
+            What to consider when automating
+          </h2>
+          <div class="split">
+            <div>
+              <div
+                class="card reveal reveal-delay-2"
+                style="margin-bottom: 0.6rem"
+              >
+                <h3 style="font-size: 1rem">Semver label enforcement</h3>
+                <p>
+                  Every PR must carry exactly one label:
+                  <code class="inline">semver:patch</code>,
+                  <code class="inline">semver:minor</code>, or
+                  <code class="inline">semver:major</code>. The validation
+                  workflow should fail fast if no label is present &mdash;
+                  before burning runner minutes on tests.
+                </p>
+              </div>
+              <div
+                class="card reveal reveal-delay-3"
+                style="margin-bottom: 0.6rem"
+              >
+                <h3 style="font-size: 1rem">Unit tests should be blocking</h3>
+                <p>
+                  Don&rsquo;t use
+                  <code class="inline">continue-on-error: true</code> for tests
+                  in CI. A PR that merges with failing tests will publish a
+                  broken version. Make tests a hard gate.
+                </p>
+              </div>
+              <div
+                class="card reveal reveal-delay-4"
+                style="margin-bottom: 0.6rem"
+              >
+                <h3 style="font-size: 1rem">terraform-docs auto-commit</h3>
+                <p>
+                  Use <code class="inline">terraform-docs/gh-actions</code> with
+                  <code class="inline">git-push: true</code> to keep
+                  inputs/outputs documentation current.
+                </p>
+              </div>
+            </div>
+            <div>
+              <div
+                class="card reveal reveal-delay-2"
+                style="margin-bottom: 0.6rem"
+              >
+                <h3 style="font-size: 1rem">Version source of truth</h3>
+                <p>
+                  Query the PMR API for the current latest version rather than
+                  relying on git tags. PMR is the authoritative source &mdash;
+                  tags and PMR can drift if either is managed manually.
+                </p>
+              </div>
+              <div
+                class="card reveal reveal-delay-3"
+                style="margin-bottom: 0.6rem"
+              >
+                <h3 style="font-size: 1rem">Example validation in parallel</h3>
+                <p>
+                  Run <code class="inline">terraform init</code> and
+                  <code class="inline">validate</code> on each example directory
+                  as a separate matrix job. This parallelizes the work and
+                  catches broken examples before merge.
+                </p>
+              </div>
+              <div
+                class="card reveal reveal-delay-4"
+                style="margin-bottom: 0.6rem"
+              >
+                <h3 style="font-size: 1rem">Branch protection matters</h3>
+                <p>
+                  Require status checks to pass before merge. If admins can
+                  bypass checks, a PR without a semver label can merge &mdash;
+                  and the release workflow has no way to determine the version
+                  bump.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ━━━ 7. GOTCHAS ━━━ -->
+      <section class="slide slide--gotchas" id="gotchas">
+        <div class="wrap">
+          <div class="section-label reveal">Things to Know</div>
+          <h2 class="section-title reveal reveal-delay-1">
+            Gotchas that aren&rsquo;t obvious from the docs
+          </h2>
+          <div class="gotcha-grid">
+            <div class="gotcha-card reveal reveal-delay-1">
+              <div class="gotcha-num">01</div>
+              <h4>Versions are immutable</h4>
+              <p>
+                Once published, a version cannot be overwritten (HTTP 422). To
+                fix a bad release, publish a new patch or delete the version via
+                API first.
+              </p>
+              <div class="tip">
+                Tip: Use deprecation/revocation instead of deletion when
+                possible
+              </div>
+            </div>
+            <div class="gotcha-card reveal reveal-delay-2">
+              <div class="gotcha-num">02</div>
+              <h4>README is frozen per version</h4>
+              <p>
+                PMR captures the README at ingestion time. Fixing the README
+                without bumping the version changes nothing in the registry.
+              </p>
+              <div class="tip">
+                Tip: Run terraform-docs and review prose before every release
+              </div>
+            </div>
+            <div class="gotcha-card reveal reveal-delay-3">
+              <div class="gotcha-num">03</div>
+              <h4>Publishing mechanism is permanent</h4>
+              <p>
+                Tag-based or branch-based is frozen at creation. Switching
+                requires deleting the module entirely and recreating it.
+              </p>
+              <div class="tip">
+                Tip: Decide your model before creating the module
+              </div>
+            </div>
+            <div class="gotcha-card reveal reveal-delay-4">
+              <div class="gotcha-num">04</div>
+              <h4>Repo renames break VCS</h4>
+              <p>
+                HCP Terraform caches the repo identifier at creation. After a
+                rename, ingress can fail for hours. HashiCorp recommends against
+                renaming repos with published modules.
+              </p>
+              <div class="tip">
+                Tip: Name the repo correctly before creating the VCS module
+              </div>
+            </div>
+            <div class="gotcha-card reveal reveal-delay-5">
+              <div class="gotcha-num">05</div>
+              <h4>Non-semver tags are silent</h4>
+              <p>
+                Tags that don&rsquo;t match
+                <code class="inline">vX.Y.Z</code> or
+                <code class="inline">X.Y.Z</code> are silently skipped. No
+                error, no log. Module stays in
+                <code class="inline">pending</code> with no feedback.
+              </p>
+              <div class="tip">
+                Tip: Use strict semver &mdash; v1.0.0 or 1.0.0, nothing else
+              </div>
+            </div>
+            <div class="gotcha-card reveal reveal-delay-6">
+              <div class="gotcha-num">06</div>
+              <h4>Monorepos need tag prefixes</h4>
+              <p>
+                Without prefixes, pushing
+                <code class="inline">v1.0.0</code> publishes for
+                <em>every</em> module in the repo. Use
+                <code class="inline">networking-v1.0.0</code> to isolate.
+                Registry strips the prefix automatically.
+              </p>
+              <div class="tip">
+                Tip: One module per repo is simpler unless modules are coupled
+              </div>
+            </div>
+            <div class="gotcha-card reveal reveal-delay-7">
+              <div class="gotcha-num">07</div>
+              <h4>Deleting the last version cascades</h4>
+              <p>
+                Deleting the last version of a provider auto-deletes the
+                provider. Deleting the last provider auto-deletes the module.
+                Cascading cleanup.
+              </p>
+              <div class="tip">
+                Tip: Use version deprecation instead of deletion
+              </div>
+            </div>
+            <div class="gotcha-card reveal">
+              <div class="gotcha-num">08</div>
+              <h4>terraform-docs only manages its markers</h4>
+              <p>
+                Content between <code class="inline">BEGIN_TF_DOCS</code>/<code
+                  class="inline"
+                  >END_TF_DOCS</code
+                >
+                is auto-generated. Everything above is static prose you must
+                maintain yourself.
+              </p>
+              <div class="tip">
+                Tip: Write module-focused prose above the markers before first
+                publish
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ━━━ 8. SECURITY ━━━ -->
+      <section class="slide slide--security" id="security">
+        <div class="wrap">
+          <div class="section-label reveal">Best Practices</div>
+          <h2 class="section-title reveal reveal-delay-1">
+            Token security and CI/CD hygiene
+          </h2>
+          <div class="split">
+            <div>
+              <div class="card reveal reveal-delay-2">
+                <h3>Use dedicated team tokens</h3>
+                <p>
+                  Create a team like
+                  <code class="inline">ci-module-publishers</code> with only
+                  <strong>Manage Modules</strong>. Avoid org tokens
+                  (over-privileged) and user tokens (tied to individuals). Teams
+                  can hold multiple valid tokens for zero-downtime rotation.
+                </p>
+              </div>
+              <div
+                class="card reveal reveal-delay-3"
+                style="margin-top: var(--space-s)"
+              >
+                <h3>Variables vs secrets</h3>
+                <p>
+                  Module coordinates (<code class="inline">TFE_ORG</code>,
+                  <code class="inline">TFE_MODULE</code>,
+                  <code class="inline">TFE_PROVIDER</code>) as repo
+                  <strong>variables</strong> for log visibility.
+                  <code class="inline">TFE_TOKEN</code> as a
+                  <strong>secret</strong>. Never echo tokens in CI output.
+                </p>
+              </div>
+            </div>
+            <div>
+              <div class="code-block reveal reveal-delay-2">
+                <div class="code-header">
+                  <span class="code-lang">Permissions</span>
+                </div>
+                <pre><code><span class="tk-cm">Token Type       Publish?  Notes</span>
+<span class="tk-attr">Team token</span>       <span class="tk-val">Yes</span>       <span class="tk-cm">Recommended for CI</span>
+<span class="tk-attr">User token</span>       <span class="tk-val">Yes</span>       <span class="tk-cm">Tied to individual</span>
+<span class="tk-attr">Org token</span>        <span class="tk-val">Yes</span>       <span class="tk-err">Over-privileged</span>
+<span class="tk-attr">Agent token</span>      <span class="tk-err">No</span>        <span class="tk-cm">Agent pools only</span></code></pre>
+              </div>
+              <div class="callout--warn callout reveal reveal-delay-3">
+                <div class="callout-label">Common failure</div>
+                <div class="callout-text">Read succeeds, write fails</div>
+                <div class="callout-sub">
+                  A Traverse token can query existing versions but creating a
+                  new version needs Manage Modules. Version calculator works,
+                  publish step returns 404.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ━━━ 9. README ━━━ -->
+      <section class="slide slide--readme" id="readme">
+        <div class="wrap">
+          <div class="section-label reveal">Best Practices</div>
+          <h2 class="section-title reveal reveal-delay-1">
+            Your README is your module&rsquo;s first impression
+          </h2>
+          <p class="section-lead reveal reveal-delay-2">
+            PMR displays the root README as the module&rsquo;s documentation
+            page. The README is captured at ingestion time and frozen for that
+            version.
+          </p>
+          <div class="split">
+            <div>
+              <div class="callout--teal callout reveal reveal-delay-3">
+                <div class="callout-label">terraform-docs integration</div>
+                <div class="callout-text">
+                  Auto-generate inputs, outputs, and resources
+                </div>
+                <div class="callout-sub">
+                  Use <code class="inline">terraform-docs</code> with
+                  <code class="inline">BEGIN_TF_DOCS</code> /
+                  <code class="inline">END_TF_DOCS</code> markers. The content
+                  between these markers is auto-generated and always current.
+                  Run it in CI with
+                  <code class="inline">git-push: true</code> to auto-commit
+                  updates to every PR.
+                </div>
+              </div>
+              <div class="explain-card reveal reveal-delay-4">
+                <h4>What goes above the markers (manual)</h4>
+                <p>
+                  Module title, one-line description, features list, basic and
+                  advanced usage examples with the PMR source path,
+                  prerequisites (provider version, required cloud resources),
+                  and security defaults.
+                  <code class="inline">terraform-docs</code> never touches this
+                  content &mdash; you maintain it.
+                </p>
+              </div>
+            </div>
+            <div>
+              <div class="callout--warn callout reveal reveal-delay-3">
+                <div class="callout-label">Remember</div>
+                <div class="callout-text">README is frozen per version</div>
+                <div class="callout-sub">
+                  Fixing the README after publishing does nothing in PMR. You
+                  must publish a new version for consumers to see the update.
+                  Always review the full README before every release.
+                </div>
+              </div>
+              <div class="code-block reveal reveal-delay-4">
+                <div class="code-header">
+                  <span class="code-lang">README.md structure</span>
+                </div>
+                <pre><code><span class="tk-cm"># Module Name</span>
+<span class="tk-cm">Description, features, usage examples</span>
+<span class="tk-cm">Prerequisites, security defaults</span>
+<span class="tk-cm">(you write this)</span>
+
+<span class="tk-accent">&lt;!-- BEGIN_TF_DOCS --&gt;</span>
+<span class="tk-val">## Requirements</span>
+<span class="tk-val">## Providers</span>
+<span class="tk-val">## Inputs</span>
+<span class="tk-val">## Outputs</span>
+<span class="tk-cm">(auto-generated by terraform-docs)</span>
+<span class="tk-accent">&lt;!-- END_TF_DOCS --&gt;</span></code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ━━━ 10. SUMMARY ━━━ -->
+      <section class="slide slide--summary" id="summary">
+        <div class="wrap">
+          <div class="section-label reveal">Summary</div>
+          <h2 class="section-title reveal reveal-delay-1">Key takeaways</h2>
+          <ul class="takeaway-list reveal reveal-delay-2">
+            <li style="--li-i: 0">
+              <span class="takeaway-num">01</span>
+              <div class="takeaway-text">
+                <strong>Choose your publishing model deliberately</strong
+                >Tag-based auto-publishes on tag push. Branch-based requires
+                explicit version creation but supports PMR testing. API-driven
+                gives full control without VCS. The choice is permanent.
+              </div>
+            </li>
+            <li style="--li-i: 1">
+              <span class="takeaway-num">02</span>
+              <div class="takeaway-text">
+                <strong>Name the repo correctly first</strong>Follow
+                <code class="inline">terraform-{provider}-{name}</code> for VCS
+                modules. Renaming later breaks VCS caching. Get it right before
+                creating the module in PMR.
+              </div>
+            </li>
+            <li style="--li-i: 2">
+              <span class="takeaway-num">03</span>
+              <div class="takeaway-text">
+                <strong>Get token permissions right on day one</strong>Team
+                tokens with Manage Modules. Verify the token can both read and
+                write. HTTP 404 on publish means wrong permissions, not wrong
+                URL.
+              </div>
+            </li>
+            <li style="--li-i: 3">
+              <span class="takeaway-num">04</span>
+              <div class="takeaway-text">
+                <strong>Versions and READMEs are frozen once published</strong
+                >No overwrites. Run terraform-docs and verify prose README
+                before every release. A bad release means a new patch version.
+              </div>
+            </li>
+            <li style="--li-i: 4">
+              <span class="takeaway-num">05</span>
+              <div class="takeaway-text">
+                <strong>Automate with PR-merge triggers</strong>Use
+                <code class="inline">pull_request: closed</code> (not push) for
+                label access. Enforce semver labels via required status checks
+                to prevent unrecoverable failures.
+              </div>
+            </li>
+            <li style="--li-i: 5">
+              <span class="takeaway-num">06</span>
+              <div class="takeaway-text">
+                <strong>Test before you ship</strong>Make unit tests blocking in
+                CI. Branch-based modules can additionally use PMR&rsquo;s
+                built-in testing with
+                <code class="inline">terraform test -cloud-run</code>.
+              </div>
+            </li>
+          </ul>
+        </div>
+      </section>
+    </div>
+    <!-- /deck -->
+
+    <script>
+      const deck = document.getElementById("deck");
+      const slides = document.querySelectorAll(".slide");
+      const dotNav = document.getElementById("dotNav");
+      const counter = document.getElementById("slideCounter");
+      const progressBar = document.getElementById("progressBar");
+      let current = 0;
+
+      // Build dot nav
+      slides.forEach((_, i) => {
+        const btn = document.createElement("button");
+        btn.setAttribute("aria-label", `Slide ${i + 1}`);
+        btn.addEventListener("click", () => goTo(i));
+        dotNav.appendChild(btn);
+      });
+
+      function goTo(index) {
+        current = Math.max(0, Math.min(index, slides.length - 1));
+        deck.style.transform = `translateX(-${current * 100}vw)`;
+        updateUI();
+        // Trigger reveals for current slide
+        slides[current]
+          .querySelectorAll(".reveal, .approach-card, .takeaway-list")
+          .forEach((el) => el.classList.add("visible"));
+      }
+
+      function updateUI() {
+        dotNav
+          .querySelectorAll("button")
+          .forEach((btn, i) => btn.classList.toggle("active", i === current));
+        counter.textContent = `${current + 1} / ${slides.length}`;
+        progressBar.style.width = (current / (slides.length - 1)) * 100 + "%";
+        // SCQA pills
+        const pillS = document.getElementById("pill-s");
+        const pillC = document.getElementById("pill-c");
+        const pillA = document.getElementById("pill-a");
+        if (pillS) pillS.dataset.active = current === 1;
+        if (pillC) pillC.dataset.active = current >= 2 && current <= 3;
+        if (pillA) pillA.dataset.active = current >= 4;
+      }
+
+      // Keyboard nav
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") {
+          e.preventDefault();
+          goTo(current + 1);
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+          e.preventDefault();
+          goTo(current - 1);
+        } else if (e.key === "Home") {
+          e.preventDefault();
+          goTo(0);
+        } else if (e.key === "End") {
+          e.preventDefault();
+          goTo(slides.length - 1);
+        }
+      });
+
+      // Touch/swipe support
+      let touchStartX = 0;
+      document.addEventListener(
+        "touchstart",
+        (e) => {
+          touchStartX = e.changedTouches[0].screenX;
+        },
+        { passive: true },
+      );
+      document.addEventListener("touchend", (e) => {
+        const dx = e.changedTouches[0].screenX - touchStartX;
+        if (Math.abs(dx) > 50) goTo(current + (dx < 0 ? 1 : -1));
+      });
+
+      // Wheel (debounced)
+      let wheelLock = false;
+      document.addEventListener(
+        "wheel",
+        (e) => {
+          if (wheelLock) return;
+          if (
+            Math.abs(e.deltaX) > Math.abs(e.deltaY)
+              ? Math.abs(e.deltaX) > 30
+              : Math.abs(e.deltaY) > 30
+          ) {
+            const dir =
+              Math.abs(e.deltaX) > Math.abs(e.deltaY)
+                ? Math.sign(e.deltaX)
+                : Math.sign(e.deltaY);
+            goTo(current + dir);
+            wheelLock = true;
+            setTimeout(() => (wheelLock = false), 700);
+          }
+        },
+        { passive: true },
+      );
+
+      // Hero animation
+      window.addEventListener("load", () => {
+        const badge = document.querySelector(".hero-badge");
+        const words = document.querySelectorAll(".hero-word");
+        const subtitle = document.getElementById("heroSubtitle");
+        const scqa = document.getElementById("heroScqa");
+        const hint = document.getElementById("scrollHint");
+        if (badge) setTimeout(() => badge.classList.add("visible"), 200);
+        words.forEach((w, i) =>
+          setTimeout(() => w.classList.add("show"), 400 + i * 150),
+        );
+        if (subtitle) setTimeout(() => subtitle.classList.add("show"), 1200);
+        if (scqa) setTimeout(() => scqa.classList.add("show"), 1600);
+        if (hint) setTimeout(() => hint.classList.add("show"), 2000);
+        // Reveal first slide
+        slides[0]
+          .querySelectorAll(".reveal")
+          .forEach((el) => el.classList.add("visible"));
+      });
+
+      // Stagger list items
+      document
+        .querySelectorAll(".approach-card .pro, .approach-card .con")
+        .forEach((li) => {
+          const p = li.closest(".approach-card");
+          li.style.setProperty(
+            "--li-i",
+            Array.from(p.querySelectorAll(".pro,.con")).indexOf(li),
+          );
+        });
+      document
+        .querySelectorAll(".takeaway-list li")
+        .forEach((li, i) => li.style.setProperty("--li-i", i));
+
+      goTo(0);
+    </script>
+  </body>
+</html>
