@@ -90,7 +90,7 @@ run "test_idle_session_ttl_above_maximum_rejected" {
     environment         = "dev"
     owner               = "platform-team"
     cost_center         = "CC-1234"
-    idle_session_ttl    = 3901
+    idle_session_ttl    = 7201
   }
 
   expect_failures = [var.idle_session_ttl]
