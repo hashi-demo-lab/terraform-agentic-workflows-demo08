@@ -29,7 +29,7 @@ module "bedrock_agent" {
   agent_name          = "complete-assistant"
   foundation_model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
   agent_instruction   = "You are an advanced enterprise assistant that helps employees find information in the company knowledge base, execute data analysis tasks, and interact with internal APIs. Always cite your sources when retrieving information from the knowledge base."
-  idle_session_ttl    = 1800 # 30 minutes
+  idle_session_ttl    = 800 # 30 minutes
 
   # -------------------------------------------------------------------------
   # Code interpreter (enabled by default, shown explicitly for clarity)
